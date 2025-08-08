@@ -1,0 +1,182 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <%- include('../partials/sidebar', { user: user }) %>
+        
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-plus me-2"></i>
+                    Bind Controller
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="/controllers" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Controllers
+                    </a>
+                </div>
+            </div>
+
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <%= error %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <% } %>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card dashboard-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-link me-2"></i>
+                                Bind Controller to Your Account
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Important:</strong> You can only bind controllers that have already reported to the system via MQTT. 
+                                Make sure your controller is powered on and connected to the network.
+                            </div>
+
+                            <form method="POST" action="/controllers/bind">
+                                <div class="mb-3">
+                                    <label for="serialNumber" class="form-label">
+                                        <i class="fas fa-barcode me-1"></i>
+                                        Controller Serial Number
+                                    </label>
+                                    <input type="text" class="form-control" id="serialNumber" name="serialNumber" 
+                                           placeholder="Enter controller serial number" required>
+                                    <div class="form-text">
+                                        The serial number should be printed on your controller device or available in its documentation.
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-link me-2"></i>
+                                        Bind Controller
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i>
+                                Available Controllers
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <% if (availableControllers.length === 0) { %>
+                                <div class="text-center py-3">
+                                    <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted mb-0">No unbound controllers found</p>
+                                    <small class="text-muted">
+                                        Controllers must report to the system via MQTT before they can be bound.
+                                    </small>
+                                </div>
+                            <% } else { %>
+                                <p class="text-muted small mb-3">
+                                    The following controllers have reported to the system and are available for binding:
+                                </p>
+                                
+                                <div class="list-group list-group-flush">
+                                    <% availableControllers.forEach(controller => { %>
+                                        <div class="list-group-item p-2 cursor-pointer" onclick="selectController('<%= controller.serialNumber %>')">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">
+                                                    <code><%= controller.serialNumber %></code>
+                                                </h6>
+                                                <span class="status-indicator <%= controller.isOnline ? 'online' : 'offline' %>"></span>
+                                            </div>
+                                            <p class="mb-1">
+                                                <span class="badge bg-secondary">
+                                                    <%= controller.type.charAt(0).toUpperCase() + controller.type.slice(1) %>
+                                                </span>
+                                            </p>
+                                            <small class="text-muted">
+                                                <% if (controller.lastSeen) { %>
+                                                    Last seen: <%= new Date(controller.lastSeen).toLocaleString() %>
+                                                <% } else { %>
+                                                    Never seen
+                                                <% } %>
+                                            </small>
+                                        </div>
+                                    <% }) %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Controller Types Info -->
+                    <div class="card dashboard-card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Controller Types
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                                    <strong>Speed Radar</strong>
+                                    <br>
+                                    <small class="text-muted">Measures vehicle speeds and traffic data</small>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-wind text-info me-2"></i>
+                                    <strong>Beaufort Meter</strong>
+                                    <br>
+                                    <small class="text-muted">Measures wind speed and direction</small>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-cloud-sun text-warning me-2"></i>
+                                    <strong>Weather Station</strong>
+                                    <br>
+                                    <small class="text-muted">Comprehensive weather monitoring</small>
+                                </li>
+                                <li class="mb-0">
+                                    <i class="fas fa-camera text-success me-2"></i>
+                                    <strong>AI Camera</strong>
+                                    <br>
+                                    <small class="text-muted">Intelligent video monitoring and analysis</small>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+function selectController(serialNumber) {
+    document.getElementById('serialNumber').value = serialNumber;
+    
+    // Highlight selected controller
+    document.querySelectorAll('.list-group-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    event.currentTarget.classList.add('active');
+}
+
+// Auto-refresh available controllers every 30 seconds
+setInterval(function() {
+    if (document.querySelectorAll('.list-group-item').length > 0) {
+        window.location.reload();
+    }
+}, 30000);
+</script>
+
+<%- include('../partials/footer') %>

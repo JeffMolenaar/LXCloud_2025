@@ -1,75 +1,305 @@
-LXCloud web project
+# LXCloud - IoT Controller Management Platform
 
-LXCloud is a cloud dashboard where users can interact with their controllers, those controllers are sending data to the cloud and users should be able to view graphs and analytics based on those data.
-We want you to build the full cloud platform with dashboard, controller management and user management interfaces and a lot more.
+LXCloud is a comprehensive cloud-based dashboard platform for managing IoT controllers and visualizing their data. The platform supports real-time data collection via MQTT, user management with 2FA, and an extensible architecture for future enhancements.
 
-Controller working explained:
--	The controller sends the following data to a MQTT Mosquitto server
-o	Serial Number
-o	Type of controller, the types are (speedradar, beaufortmeter, weatherstation, aicamera).
-The types are also expandable in the future.
-o	Data, the data is sended as a json string and should be read via the web portal.
-	The web portal should be able to have addons so there is a possibility to easily intergrate new controllers types and the web portal can use those addons to read the data and convert those to the dashboard.
+## Features
 
-The things we want for the first startup of this project are as follows.
+### Core Platform Features
+- **Real-time Dashboard** with live controller status monitoring
+- **Interactive Map View** showing controller locations and status
+- **User Authentication** with JWT and optional 2FA (TOTP)
+- **Role-based Access Control** (regular users vs administrators)
+- **MQTT Integration** for real-time controller data collection
+- **WebSocket Support** for live UI updates
+- **Responsive Web Interface** built with Bootstrap 5
 
-For logged in users:
--	Dashboard
-o	A live map view where the controllers are shown as pinpoints, when you click on one of those controllers it should take the user to another page where they can modify the controller or watch it’s data.
-o	Controller statuses (online/offline)
+### Supported Controller Types
+- **Speed Radar** - Vehicle speed and traffic monitoring
+- **Beaufort Meter** - Wind speed and direction measurement
+- **Weather Station** - Comprehensive weather data collection
+- **AI Camera** - Intelligent video monitoring and analysis
+- **Extensible Architecture** for future controller types
 
--	Screen management
-o	Binding controller to the user by serial number controller, but only if the serial number has once reported live status to the server via MQTT.
-o	Changing name of the controller (Serial number controller).
-o	Removing binded controller.
-o	View data of binded controller.
+### User Features
+- **Controller Management**: Bind, configure, and monitor controllers
+- **Dashboard**: Real-time status overview with mini-map
+- **Map View**: Interactive map showing all controller locations
+- **Profile Management**: Update personal information and security settings
+- **Two-Factor Authentication**: Enhanced security with TOTP support
 
--	User management
-o	Change name, address,e-mail,password
-o	2FA enable option, (for logging in cloud platform)
-o	Remove account option (by removing should every screen that is connected to this user unbind automatically)
+### Administrator Features
+- **System-wide Controller Management**: View and manage all controllers
+- **User Administration**: Manage user accounts, reset passwords, disable 2FA
+- **UI Customization**: Customize interface appearance (planned)
+- **Addon Management**: Extensible plugin system (planned)
+- **System Monitoring**: Comprehensive platform oversight
 
+## Technology Stack
 
+### Backend
+- **Node.js** with Express.js framework
+- **MariaDB** database with connection pooling
+- **MQTT.js** for IoT device communication
+- **Socket.IO** for real-time web updates
+- **JWT** authentication with refresh tokens
+- **Speakeasy** for 2FA implementation
+- **Winston** for comprehensive logging
 
+### Frontend
+- **EJS** templating engine
+- **Bootstrap 5** for responsive UI
+- **FontAwesome** for icons
+- **Leaflet.js** for interactive maps
+- **Socket.IO Client** for real-time updates
 
+### Security & Infrastructure
+- **Helmet.js** for security headers
+- **Rate Limiting** for API protection
+- **Input Validation** with express-validator
+- **Nginx** reverse proxy configuration
+- **Systemd** service management
 
+## Quick Start
 
+### Prerequisites
+- Ubuntu Server LTS 24.04
+- Root or sudo access
+- Internet connection
 
+### Installation
 
+1. **Clone the repository:**
+```bash
+git clone https://github.com/JeffMolenaar/LXCloud_2025.git
+cd LXCloud_2025
+```
 
+2. **Run the installation script:**
+```bash
+sudo ./scripts/install.sh
+```
 
-For logged in super admin
--	Dashboard (the same as for users)
--	Screen management (same as for users but more)
-o	As super admin its possible to unbind every screen from any user.
-o	As super admin its possible to view all data from any screen from any user.
-o	As super admin its possible to view and manage unbind controllers aswell.
--	User management (same as for users but more)
-o	As super admin its possible to remove 2FA from any user.
-o	As super admin its possible to change the password of any user.
-o	As super admin its possible to delete any user completely (any controller binded to that user should be unbind automatically.
--	U.I. Customization
-o	As super admin its possible to customize the complete cloud U.I. interface via custom CSS (per page)
-o	As super admin its possible to modify the complete header (height, width, header logo or text, colors and so on.
-o	As super admin its possible to modify the complete footer (height, width, footer logo or text, colors and so on.
-o	As super admin its possible to change marker icons for the dashboard map (via uploading new ones)
-o	As super admin it should be possible to modify any u.i. element via buttons/dropdown menu’s/sizes and so on.
--	Addon management
-o	As super admin its possible to add new addons (which can also include elements that can be shown on the dashboard and should also be placeable on the dashboard aswell.
-o	As super admin its possible to remove addons or edit them.
+The installation script will automatically:
+- Install Node.js, MariaDB, Mosquitto MQTT, and Nginx
+- Configure all services and security settings
+- Create database schema and default admin user
+- Set up systemd services and firewall rules
+- Generate secure configuration files
 
+3. **Access the platform:**
+- Open your browser and navigate to `http://your-server-ip`
+- Login with default credentials:
+  - Email: `admin@lxcloud.local`
+  - Password: `admin123`
+- **Important**: Change the default password immediately!
 
+### Post-Installation Setup
 
+1. **Configure SSL/TLS (recommended):**
+```bash
+sudo certbot --nginx
+```
 
+2. **Update admin credentials:**
+- Login to the web interface
+- Go to Profile Settings
+- Change password and email address
+- Enable 2FA for enhanced security
 
+## Controller Integration
 
-This cloud based platform is a bit inspired by Home Assistant (like adding addons and stuff and showing them on display). It must feel easy and user friendly to implement controllers and watch their data. Even having cards that can be placed in the dashboard and so on.
-The dashboard must have a modern look, that is easy to understand.
+### MQTT Topics
+Controllers communicate using the following MQTT topic structure:
 
+```
+lxcloud/controllers/{serial_number}/register  - Controller registration
+lxcloud/controllers/{serial_number}/data      - Data transmission
+lxcloud/controllers/{serial_number}/status    - Status updates
+```
 
-As database I want to use MariaDB.
+### Registration Message Format
+```json
+{
+  "type": "weatherstation",
+  "latitude": 52.5200,
+  "longitude": 13.4050,
+  "name": "Weather Station 001"
+}
+```
 
-I want a complete installation script for ubuntu server LTS 24.
-If their going to be updates in the github repository it should be easy to run this update via an update script aswell.
-Also every update that is make should give the version number a bump, starting at V1.0.0
-As example after an update the version should say V1.0.1 and so on.
+### Data Message Format
+```json
+{
+  "data": {
+    "temperature": 23.5,
+    "humidity": 65,
+    "pressure": 1013.25
+  },
+  "timestamp": "2025-01-01T12:00:00Z"
+}
+```
+
+### Status Message Format
+```json
+{
+  "status": "online",
+  "timestamp": "2025-01-01T12:00:00Z"
+}
+```
+
+## Development
+
+### Local Development Setup
+
+1. **Install dependencies:**
+```bash
+npm install
+```
+
+2. **Configure environment:**
+```bash
+cp .env.example .env
+# Edit .env with your local settings
+```
+
+3. **Start development server:**
+```bash
+npm run dev
+```
+
+### Available Scripts
+- `npm start` - Start production server
+- `npm run dev` - Start development server with nodemon
+- `npm test` - Run test suite
+- `npm run setup-db` - Initialize database schema
+
+## Updating
+
+To update LXCloud to the latest version:
+
+```bash
+sudo /opt/lxcloud/update.sh
+```
+
+The update script will:
+- Create a backup of the current installation
+- Pull latest changes from Git
+- Update dependencies
+- Run database migrations
+- Restart services
+- Clean up old backups
+
+## Configuration
+
+### Environment Variables
+Key configuration options in `.env`:
+
+```env
+# Database
+DB_HOST=localhost
+DB_NAME=lxcloud
+DB_USER=lxcloud_user
+DB_PASSWORD=your_secure_password
+
+# MQTT
+MQTT_BROKER_URL=mqtt://localhost:1883
+MQTT_USERNAME=lxcloud_mqtt
+MQTT_PASSWORD=your_mqtt_password
+
+# Security
+JWT_SECRET=your_jwt_secret
+SESSION_SECRET=your_session_secret
+```
+
+### Service Management
+```bash
+# View logs
+sudo journalctl -u lxcloud -f
+
+# Restart service
+sudo systemctl restart lxcloud
+
+# Check status
+sudo systemctl status lxcloud
+```
+
+## Architecture
+
+### Database Schema
+The platform uses a comprehensive database schema with the following key tables:
+- `users` - User accounts and authentication
+- `controllers` - IoT device registry
+- `controller_data` - Time-series data from devices
+- `sessions` - User session management
+- `ui_customizations` - Interface customization settings
+- `addons` - Extensible plugin system
+
+### Security Features
+- **Password Hashing** with bcrypt (configurable rounds)
+- **JWT Authentication** with refresh tokens
+- **Rate Limiting** on sensitive endpoints
+- **Input Validation** on all user inputs
+- **CSRF Protection** via session tokens
+- **Security Headers** via Helmet.js
+
+### Real-time Architecture
+- **MQTT Broker** receives data from IoT controllers
+- **Node.js Service** processes MQTT messages
+- **Database** stores controller data and state
+- **WebSocket** pushes updates to connected clients
+- **Frontend** updates UI in real-time
+
+## Troubleshooting
+
+### Common Issues
+
+**Service won't start:**
+```bash
+sudo journalctl -u lxcloud -n 50
+```
+
+**Database connection issues:**
+```bash
+sudo systemctl status mariadb
+sudo mysql -u lxcloud_user -p lxcloud
+```
+
+**MQTT connection problems:**
+```bash
+sudo systemctl status mosquitto
+mosquitto_pub -h localhost -u lxcloud_mqtt -P your_password -t test -m "hello"
+```
+
+**Permission issues:**
+```bash
+sudo chown -R lxcloud:lxcloud /opt/lxcloud
+sudo chmod +x /opt/lxcloud/scripts/*.sh
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+## Support
+
+For support and documentation:
+- Check the troubleshooting section above
+- Review the logs: `sudo journalctl -u lxcloud -f`
+- Open an issue on GitHub
+
+## Version History
+
+- **v1.0.0** - Initial release with core functionality
+  - User authentication and management
+  - Controller binding and monitoring
+  - Real-time dashboard and map view
+  - MQTT integration
+  - Admin panel basics

@@ -1,0 +1,38 @@
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
+    <div class="row w-100">
+        <div class="col-md-6 col-lg-4 mx-auto">
+            <div class="card shadow-lg">
+                <div class="card-header bg-danger text-white text-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <%= title %>
+                    </h3>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <% if (error && error.status) { %>
+                        <h1 class="display-1 text-muted"><%= error.status %></h1>
+                    <% } %>
+                    
+                    <p class="lead mb-4"><%= message %></p>
+                    
+                    <% if (process.env.NODE_ENV === 'development' && error && error.stack) { %>
+                        <div class="alert alert-secondary text-start">
+                            <pre><%= error.stack %></pre>
+                        </div>
+                    <% } %>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="javascript:history.back()" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Go Back
+                        </a>
+                        <a href="/dashboard" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>
+                            Go to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
