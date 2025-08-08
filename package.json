@@ -9,6 +9,7 @@
     "install-system": "sudo ./scripts/install.sh",
     "update": "./scripts/update.sh",
     "setup-db": "node scripts/setup-database.js",
+    "test-db": "node scripts/test-database.js",
     "test": "jest"
   },
   "keywords": [
