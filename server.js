@@ -32,21 +32,30 @@ const io = new Server(server, {
   }
 });
 
-// Security middleware - disable HTTPS enforcement
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
-      imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "ws:", "wss:"],
-      fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
+// Security middleware - disable HTTPS enforcement for local networks
+app.use((req, res, next) => {
+  const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+  const isLocalNetwork = /^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.|127\.|::1|localhost)/.test(clientIP);
+  
+  // Configure helmet based on request source
+  const helmetConfig = {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        connectSrc: ["'self'", "ws:", "wss:"],
+        fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
+      },
     },
-  },
-  hsts: false, // Disable HTTP Strict Transport Security
-  forceHTTPS: false // Ensure no HTTPS redirection
-}));
+    hsts: false, // Always disable HTTP Strict Transport Security
+    forceHTTPS: false // Always ensure no HTTPS redirection
+  };
+  
+  // Apply helmet with local network friendly settings
+  helmet(helmetConfig)(req, res, next);
+});
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -76,6 +85,24 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
+
+// Middleware to prevent HTTPS redirects for local network requests
+app.use((req, res, next) => {
+  const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
+  const isLocalNetwork = /^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.|127\.|::1|localhost)/.test(clientIP);
+  
+  // For local network requests, ensure HTTP is allowed
+  if (isLocalNetwork) {
+    // Override any HTTPS redirect headers that might have been set
+    res.removeHeader('Strict-Transport-Security');
+    res.removeHeader('Location');
+    
+    // Set headers to allow HTTP for local networks
+    res.setHeader('X-Local-Network', 'true');
+  }
+  
+  next();
+});
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
