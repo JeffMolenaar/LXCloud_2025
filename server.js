@@ -24,8 +24,11 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' ? false : "http://localhost:3000",
-    methods: ["GET", "POST"]
+    origin: process.env.NODE_ENV === 'production' ? 
+      ["http://192.168.2.171:3000", "http://localhost:3000"] : 
+      ["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.2.171:3000"],
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
@@ -43,7 +46,26 @@ app.use(helmet({
   },
 }));
 
-app.use(cors());
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost and 192.168.x.x network
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'http://192.168.2.171:3000'
+    ];
+    
+    if (allowedOrigins.includes(origin) || origin.match(/^http:\/\/192\.168\.\d+\.\d+:\d+$/)) {
+      return callback(null, true);
+    }
+    
+    return callback(null, true); // Allow all in development
+  },
+  credentials: true
+}));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -147,9 +169,12 @@ async function startServer() {
     
     // Start server
     const PORT = process.env.PORT || 3000;
-    server.listen(PORT, () => {
-      logger.info(`LXCloud server running on port ${PORT}`);
+    const HOST = process.env.HOST || '0.0.0.0'; // Listen on all interfaces
+    
+    server.listen(PORT, HOST, () => {
+      logger.info(`LXCloud server running on ${HOST}:${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`Server accessible via: http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
     });
     
   } catch (error) {

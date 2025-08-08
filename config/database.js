@@ -20,9 +20,7 @@ class Database {
         database: process.env.DB_NAME || 'lxcloud',
         waitForConnections: true,
         connectionLimit: 10,
-        queueLimit: 0,
-        acquireTimeout: 10000,
-        timeout: 10000
+        queueLimit: 0
       });
 
       // Test connection
