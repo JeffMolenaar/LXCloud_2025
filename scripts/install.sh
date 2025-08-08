@@ -86,7 +86,7 @@ sudo chown -R lxcloud:lxcloud /opt/lxcloud
 # Install Node.js dependencies
 log "Installing Node.js dependencies..."
 cd /opt/lxcloud
-sudo -u lxcloud npm install --production
+sudo -u lxcloud npm install --omit=dev
 
 # Create environment file
 log "Creating environment configuration..."
@@ -98,11 +98,17 @@ SESSION_SECRET=$(openssl rand -base64 32)
 DB_PASSWORD=$(openssl rand -base64 16)
 MQTT_PASSWORD=$(openssl rand -base64 16)
 
+# Escape secrets for sed
+ESCAPED_JWT_SECRET=$(printf '%s\n' "$JWT_SECRET" | sed 's/[\/&]/\\&/g')
+ESCAPED_SESSION_SECRET=$(printf '%s\n' "$SESSION_SECRET" | sed 's/[\/&]/\\&/g')
+ESCAPED_DB_PASSWORD=$(printf '%s\n' "$DB_PASSWORD" | sed 's/[\/&]/\\&/g')
+ESCAPED_MQTT_PASSWORD=$(printf '%s\n' "$MQTT_PASSWORD" | sed 's/[\/&]/\\&/g')
+
 # Update environment file
-sudo -u lxcloud sed -i "s|your_jwt_secret_key_change_this|$JWT_SECRET|" /opt/lxcloud/.env
-sudo -u lxcloud sed -i "s|your_session_secret_change_this|$SESSION_SECRET|" /opt/lxcloud/.env
-sudo -u lxcloud sed -i "s|change_this_password|$DB_PASSWORD|" /opt/lxcloud/.env
-sudo -u lxcloud sed -i "s|change_this_mqtt_password|$MQTT_PASSWORD|" /opt/lxcloud/.env
+sudo -u lxcloud sed -i "s|your_jwt_secret_key_change_this|$ESCAPED_JWT_SECRET|" /opt/lxcloud/.env
+sudo -u lxcloud sed -i "s|your_session_secret_change_this|$ESCAPED_SESSION_SECRET|" /opt/lxcloud/.env
+sudo -u lxcloud sed -i "s|change_this_password|$ESCAPED_DB_PASSWORD|" /opt/lxcloud/.env
+sudo -u lxcloud sed -i "s|change_this_mqtt_password|$ESCAPED_MQTT_PASSWORD|" /opt/lxcloud/.env
 
 # Create MariaDB database and user
 log "Setting up MariaDB database..."
@@ -123,10 +129,8 @@ password_file /etc/mosquitto/passwd
 
 # Persistence
 persistence true
-persistence_location /var/lib/mosquitto/
 
 # Logging
-log_dest file /var/log/mosquitto/mosquitto.log
 log_type error
 log_type warning
 log_type notice
@@ -138,8 +142,10 @@ max_inflight_messages 20
 max_queued_messages 100
 EOF
 
-# Create MQTT user
+# Create MQTT user and fix permissions
 sudo mosquitto_passwd -c -b /etc/mosquitto/passwd lxcloud_mqtt "$MQTT_PASSWORD"
+sudo chown mosquitto:mosquitto /etc/mosquitto/passwd
+sudo chmod 600 /etc/mosquitto/passwd
 
 # Restart Mosquitto
 sudo systemctl restart mosquitto
@@ -254,35 +260,6 @@ sudo ufw allow ssh
 sudo ufw allow 'Nginx Full'
 sudo ufw --force enable
 
-# Create default admin user
-log "Creating default admin user..."
-cd /opt/lxcloud
-sudo -u lxcloud NODE_ENV=production node -e "
-const bcrypt = require('bcryptjs');
-const database = require('./config/database');
-
-async function createAdmin() {
-    try {
-        await database.initialize();
-        const hashedPassword = await bcrypt.hash('admin123', 12);
-        await database.query(
-            'INSERT IGNORE INTO users (email, password, name, role) VALUES (?, ?, ?, ?)',
-            ['admin@lxcloud.local', hashedPassword, 'Administrator', 'admin']
-        );
-        console.log('Default admin user created successfully');
-        console.log('Email: admin@lxcloud.local');
-        console.log('Password: admin123');
-        console.log('Please change the password after first login!');
-        process.exit(0);
-    } catch (error) {
-        console.error('Failed to create admin user:', error);
-        process.exit(1);
-    }
-}
-
-createAdmin();
-"
-
 # Create update script
 log "Creating update script..."
 sudo tee /opt/lxcloud/update.sh > /dev/null <<'EOF'
@@ -312,7 +289,7 @@ cd /opt/lxcloud
 sudo -u lxcloud git pull origin main
 
 # Install/update dependencies
-sudo -u lxcloud npm install --production
+sudo -u lxcloud npm install --omit=dev
 
 # Run database migrations
 sudo -u lxcloud NODE_ENV=production node -e "
