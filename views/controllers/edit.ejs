@@ -1,0 +1,411 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <%- include('../partials/sidebar', { user: user }) %>
+        
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-edit me-2"></i>
+                    Edit Controller
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <a href="/dashboard/controller/<%= controller.id %>" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i>
+                            View Details
+                        </a>
+                        <a href="/controllers" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-list me-1"></i>
+                            All Controllers
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <%= error %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <% } %>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card dashboard-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cog me-2"></i>
+                                Controller Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="/controllers/<%= controller.id %>/edit">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="serialNumber" class="form-label">
+                                                <i class="fas fa-barcode me-1"></i>
+                                                Serial Number
+                                            </label>
+                                            <input type="text" class="form-control" id="serialNumber" 
+                                                   value="<%= controller.serialNumber %>" readonly>
+                                            <div class="form-text">Serial number cannot be changed</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="type" class="form-label">
+                                                <i class="fas fa-tag me-1"></i>
+                                                Controller Type
+                                            </label>
+                                            <input type="text" class="form-control" id="type" 
+                                                   value="<%= controller.type.charAt(0).toUpperCase() + controller.type.slice(1) %>" readonly>
+                                            <div class="form-text">Controller type is determined automatically</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">
+                                        <i class="fas fa-signature me-1"></i>
+                                        Controller Name
+                                    </label>
+                                    <input type="text" class="form-control" id="name" name="name" 
+                                           value="<%= controller.name || '' %>" 
+                                           placeholder="Enter a friendly name for this controller">
+                                    <div class="form-text">
+                                        Give your controller a memorable name to easily identify it
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="latitude" class="form-label">
+                                                <i class="fas fa-map-marker-alt me-1"></i>
+                                                Latitude
+                                            </label>
+                                            <input type="number" class="form-control" id="latitude" name="latitude" 
+                                                   value="<%= controller.latitude || '' %>" 
+                                                   step="0.000001" min="-90" max="90"
+                                                   placeholder="e.g., 52.5200">
+                                            <div class="form-text">Decimal degrees (-90 to 90)</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="longitude" class="form-label">
+                                                <i class="fas fa-map-marker-alt me-1"></i>
+                                                Longitude
+                                            </label>
+                                            <input type="number" class="form-control" id="longitude" name="longitude" 
+                                                   value="<%= controller.longitude || '' %>" 
+                                                   step="0.000001" min="-180" max="180"
+                                                   placeholder="e.g., 13.4050">
+                                            <div class="form-text">Decimal degrees (-180 to 180)</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label class="form-label">
+                                                <i class="fas fa-map me-1"></i>
+                                                Location on Map
+                                            </label>
+                                            <div id="location-map" style="height: 300px; border: 1px solid #dee2e6; border-radius: 0.375rem;"></div>
+                                            <div class="form-text">
+                                                Click on the map to set the controller location, or enter coordinates manually above
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="/controllers" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2"></i>
+                                        Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Controller Status
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="status-indicator <%= controller.isOnline ? 'online' : 'offline' %> me-3"></span>
+                                <div>
+                                    <h6 class="mb-0 <%= controller.isOnline ? 'text-success' : 'text-danger' %>">
+                                        <%= controller.isOnline ? 'Online' : 'Offline' %>
+                                    </h6>
+                                    <small class="text-muted">Current Status</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <h6 class="mb-1">Last Seen</h6>
+                                <% if (controller.lastSeen) { %>
+                                    <p class="mb-0" data-timestamp="<%= controller.lastSeen %>">
+                                        <%= new Date(controller.lastSeen).toLocaleString() %>
+                                    </p>
+                                <% } else { %>
+                                    <p class="mb-0 text-muted">Never</p>
+                                <% } %>
+                            </div>
+
+                            <div class="mb-3">
+                                <h6 class="mb-1">Bound Since</h6>
+                                <p class="mb-0" data-timestamp="<%= controller.createdAt %>">
+                                    <%= new Date(controller.createdAt).toLocaleString() %>
+                                </p>
+                            </div>
+
+                            <hr>
+
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="confirmUnbind('<%= controller.id %>', '<%= controller.name || controller.serialNumber %>')">
+                                    <i class="fas fa-unlink me-2"></i>
+                                    Unbind Controller
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Helper -->
+                    <div class="card dashboard-card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-location-arrow me-2"></i>
+                                Location Helper
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-outline-info btn-sm" onclick="getCurrentLocation()">
+                                    <i class="fas fa-crosshairs me-1"></i>
+                                    Use My Location
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearLocation()">
+                                    <i class="fas fa-times me-1"></i>
+                                    Clear Location
+                                </button>
+                            </div>
+                            <div class="form-text mt-2">
+                                <small>Use "My Location" if the controller is at your current position.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Unbind Confirmation Modal -->
+<div class="modal fade" id="unbindModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-unlink me-2"></i>
+                    Unbind Controller
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to unbind <strong id="unbind-controller-name"></strong>?</p>
+                <p class="text-muted">
+                    This will remove your access to this controller's data and make it available for binding by other users.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-unbind">
+                    <i class="fas fa-unlink me-2"></i>
+                    Unbind Controller
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let map;
+let marker;
+let controllerToUnbind = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMap();
+    setupFormHandlers();
+    updateTimestamps();
+});
+
+function initializeMap() {
+    const lat = parseFloat(document.getElementById('latitude').value) || 51.505;
+    const lng = parseFloat(document.getElementById('longitude').value) || -0.09;
+    
+    map = L.map('location-map').setView([lat, lng], 10);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    // Add marker if coordinates exist
+    if (document.getElementById('latitude').value && document.getElementById('longitude').value) {
+        marker = L.marker([lat, lng]).addTo(map);
+    }
+    
+    // Handle map clicks
+    map.on('click', function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        
+        // Update form fields
+        document.getElementById('latitude').value = lat.toFixed(6);
+        document.getElementById('longitude').value = lng.toFixed(6);
+        
+        // Update or create marker
+        if (marker) {
+            marker.setLatLng(e.latlng);
+        } else {
+            marker = L.marker(e.latlng).addTo(map);
+        }
+    });
+}
+
+function setupFormHandlers() {
+    // Update map when coordinates change
+    document.getElementById('latitude').addEventListener('input', updateMapFromCoordinates);
+    document.getElementById('longitude').addEventListener('input', updateMapFromCoordinates);
+}
+
+function updateMapFromCoordinates() {
+    const lat = parseFloat(document.getElementById('latitude').value);
+    const lng = parseFloat(document.getElementById('longitude').value);
+    
+    if (isNaN(lat) || isNaN(lng)) return;
+    
+    map.setView([lat, lng], Math.max(map.getZoom(), 10));
+    
+    if (marker) {
+        marker.setLatLng([lat, lng]);
+    } else {
+        marker = L.marker([lat, lng]).addTo(map);
+    }
+}
+
+function getCurrentLocation() {
+    if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                document.getElementById('latitude').value = lat.toFixed(6);
+                document.getElementById('longitude').value = lng.toFixed(6);
+                
+                map.setView([lat, lng], 15);
+                
+                if (marker) {
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    marker = L.marker([lat, lng]).addTo(map);
+                }
+                
+                LXCloud.showNotification('Location updated successfully', 'success');
+            },
+            function(error) {
+                console.error('Geolocation error:', error);
+                LXCloud.showNotification('Unable to get your location', 'warning');
+            }
+        );
+    } else {
+        LXCloud.showNotification('Geolocation is not supported by this browser', 'warning');
+    }
+}
+
+function clearLocation() {
+    document.getElementById('latitude').value = '';
+    document.getElementById('longitude').value = '';
+    
+    if (marker) {
+        map.removeLayer(marker);
+        marker = null;
+    }
+    
+    map.setView([51.505, -0.09], 2);
+}
+
+function confirmUnbind(controllerId, controllerName) {
+    controllerToUnbind = controllerId;
+    document.getElementById('unbind-controller-name').textContent = controllerName;
+    
+    const modal = new bootstrap.Modal(document.getElementById('unbindModal'));
+    modal.show();
+}
+
+document.getElementById('confirm-unbind').addEventListener('click', async function() {
+    if (!controllerToUnbind) return;
+    
+    try {
+        const response = await fetch(`/controllers/${controllerToUnbind}/unbind`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            LXCloud.showNotification('Controller unbound successfully', 'success');
+            window.location.href = '/controllers';
+        } else {
+            const error = await response.json();
+            LXCloud.showNotification(error.error || 'Failed to unbind controller', 'danger');
+        }
+    } catch (error) {
+        console.error('Unbind error:', error);
+        LXCloud.showNotification('Network error occurred', 'danger');
+    }
+    
+    // Hide modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('unbindModal'));
+    modal.hide();
+    controllerToUnbind = null;
+});
+
+function updateTimestamps() {
+    document.querySelectorAll('[data-timestamp]').forEach(element => {
+        const timestamp = element.getAttribute('data-timestamp');
+        if (timestamp) {
+            element.textContent = LXCloud.formatTimestamp(timestamp);
+        }
+    });
+}
+
+// Update timestamps every minute
+setInterval(updateTimestamps, 60000);
+</script>
+
+<%- include('../partials/footer') %>

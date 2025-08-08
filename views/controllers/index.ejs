@@ -1,0 +1,282 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <%- include('../partials/sidebar', { user: user }) %>
+        
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-microchip me-2"></i>
+                    My Controllers
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <a href="/controllers/bind" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus me-1"></i>
+                            Bind Controller
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshControllers()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <% if (success === 'bound') { %>
+                        Controller bound successfully!
+                    <% } else if (success === 'updated') { %>
+                        Controller updated successfully!
+                    <% } %>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            <% } %>
+
+            <!-- Controllers Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card dashboard-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i>
+                                Controller List
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <% if (controllers.length === 0) { %>
+                                <div class="text-center py-5">
+                                    <i class="fas fa-microchip fa-4x text-muted mb-3"></i>
+                                    <h4 class="text-muted">No Controllers</h4>
+                                    <p class="text-muted mb-4">
+                                        You haven't bound any controllers yet. Controllers must first report to the system via MQTT before they can be bound.
+                                    </p>
+                                    <a href="/controllers/bind" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>
+                                        Bind Your First Controller
+                                    </a>
+                                </div>
+                            <% } else { %>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Serial Number</th>
+                                                <th>Type</th>
+                                                <th>Status</th>
+                                                <th>Location</th>
+                                                <th>Last Seen</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% controllers.forEach(controller => { %>
+                                                <tr data-controller-id="<%= controller.id %>">
+                                                    <td>
+                                                        <strong><%= controller.name || 'Unnamed' %></strong>
+                                                    </td>
+                                                    <td>
+                                                        <code><%= controller.serialNumber %></code>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-secondary">
+                                                            <%= controller.type.charAt(0).toUpperCase() + controller.type.slice(1) %>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="status-indicator <%= controller.isOnline ? 'online' : 'offline' %>"></span>
+                                                        <span class="status-text <%= controller.isOnline ? 'status-online' : 'status-offline' %>">
+                                                            <%= controller.isOnline ? 'Online' : 'Offline' %>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <% if (controller.latitude && controller.longitude) { %>
+                                                            <i class="fas fa-map-marker-alt text-success me-1"></i>
+                                                            <small><%= controller.latitude.toFixed(4) %>, <%= controller.longitude.toFixed(4) %></small>
+                                                        <% } else { %>
+                                                            <i class="fas fa-map-marker-alt text-muted me-1"></i>
+                                                            <small class="text-muted">No location</small>
+                                                        <% } %>
+                                                    </td>
+                                                    <td>
+                                                        <% if (controller.lastSeen) { %>
+                                                            <span class="last-seen" data-timestamp="<%= controller.lastSeen %>">
+                                                                <%= new Date(controller.lastSeen).toLocaleString() %>
+                                                            </span>
+                                                        <% } else { %>
+                                                            <span class="text-muted">Never</span>
+                                                        <% } %>
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group btn-group-sm">
+                                                            <a href="/dashboard/controller/<%= controller.id %>" class="btn btn-outline-primary" title="View Details">
+                                                                <i class="fas fa-eye"></i>
+                                                            </a>
+                                                            <a href="/controllers/<%= controller.id %>/edit" class="btn btn-outline-secondary" title="Edit">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            <button type="button" class="btn btn-outline-danger" title="Unbind" onclick="unbindController(<%= controller.id %>, '<%= controller.name || controller.serialNumber %>')">
+                                                                <i class="fas fa-unlink"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <% }) %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Unbind Confirmation Modal -->
+<div class="modal fade" id="unbindModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-unlink me-2"></i>
+                    Unbind Controller
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to unbind <strong id="unbind-controller-name"></strong>?</p>
+                <p class="text-muted">
+                    This will remove your access to this controller's data and make it available for binding by other users.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-unbind">
+                    <i class="fas fa-unlink me-2"></i>
+                    Unbind Controller
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    setupRealTimeUpdates();
+    updateTimestamps();
+    setInterval(updateTimestamps, 60000);
+});
+
+let controllerToUnbind = null;
+
+function refreshControllers() {
+    window.location.reload();
+}
+
+function unbindController(controllerId, controllerName) {
+    controllerToUnbind = controllerId;
+    document.getElementById('unbind-controller-name').textContent = controllerName;
+    
+    const modal = new bootstrap.Modal(document.getElementById('unbindModal'));
+    modal.show();
+}
+
+document.getElementById('confirm-unbind').addEventListener('click', async function() {
+    if (!controllerToUnbind) return;
+    
+    try {
+        const response = await fetch(`/controllers/${controllerToUnbind}/unbind`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            LXCloud.showNotification('Controller unbound successfully', 'success');
+            
+            // Remove row from table
+            const row = document.querySelector(`tr[data-controller-id="${controllerToUnbind}"]`);
+            if (row) {
+                row.remove();
+            }
+            
+            // Check if table is now empty
+            const tbody = document.querySelector('tbody');
+            if (tbody && tbody.children.length === 0) {
+                window.location.reload();
+            }
+        } else {
+            const error = await response.json();
+            LXCloud.showNotification(error.error || 'Failed to unbind controller', 'danger');
+        }
+    } catch (error) {
+        console.error('Unbind error:', error);
+        LXCloud.showNotification('Network error occurred', 'danger');
+    }
+    
+    // Hide modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('unbindModal'));
+    modal.hide();
+    controllerToUnbind = null;
+});
+
+function setupRealTimeUpdates() {
+    if (typeof io !== 'undefined') {
+        const socket = io();
+        socket.emit('join-user-room', <%= user.id %>);
+        
+        socket.on('controller-updated', function(controller) {
+            updateControllerRow(controller);
+        });
+    }
+}
+
+function updateControllerRow(controller) {
+    const row = document.querySelector(`tr[data-controller-id="${controller.id}"]`);
+    if (!row) return;
+    
+    // Update status indicator
+    const statusIndicator = row.querySelector('.status-indicator');
+    const statusText = row.querySelector('.status-text');
+    
+    if (statusIndicator && statusText) {
+        statusIndicator.className = `status-indicator ${controller.isOnline ? 'online' : 'offline'}`;
+        statusText.className = `status-text ${controller.isOnline ? 'status-online' : 'status-offline'}`;
+        statusText.textContent = controller.isOnline ? 'Online' : 'Offline';
+    }
+    
+    // Update last seen
+    const lastSeenElement = row.querySelector('.last-seen');
+    if (lastSeenElement && controller.lastSeen) {
+        lastSeenElement.setAttribute('data-timestamp', controller.lastSeen);
+        lastSeenElement.textContent = new Date(controller.lastSeen).toLocaleString();
+    }
+    
+    // Update location if changed
+    const locationCell = row.cells[4];
+    if (controller.latitude && controller.longitude) {
+        locationCell.innerHTML = `
+            <i class="fas fa-map-marker-alt text-success me-1"></i>
+            <small>${controller.latitude.toFixed(4)}, ${controller.longitude.toFixed(4)}</small>
+        `;
+    }
+}
+
+function updateTimestamps() {
+    document.querySelectorAll('[data-timestamp]').forEach(element => {
+        const timestamp = element.getAttribute('data-timestamp');
+        if (timestamp) {
+            element.textContent = LXCloud.formatTimestamp(timestamp);
+        }
+    });
+}
+</script>
+
+<%- include('../partials/footer') %>
