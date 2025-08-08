@@ -99,10 +99,10 @@ DB_PASSWORD=$(openssl rand -base64 16)
 MQTT_PASSWORD=$(openssl rand -base64 16)
 
 # Update environment file
-sudo -u lxcloud sed -i "s/your_jwt_secret_key_change_this/$JWT_SECRET/" /opt/lxcloud/.env
-sudo -u lxcloud sed -i "s/your_session_secret_change_this/$SESSION_SECRET/" /opt/lxcloud/.env
-sudo -u lxcloud sed -i "s/change_this_password/$DB_PASSWORD/" /opt/lxcloud/.env
-sudo -u lxcloud sed -i "s/change_this_mqtt_password/$MQTT_PASSWORD/" /opt/lxcloud/.env
+sudo -u lxcloud sed -i "s|your_jwt_secret_key_change_this|$JWT_SECRET|" /opt/lxcloud/.env
+sudo -u lxcloud sed -i "s|your_session_secret_change_this|$SESSION_SECRET|" /opt/lxcloud/.env
+sudo -u lxcloud sed -i "s|change_this_password|$DB_PASSWORD|" /opt/lxcloud/.env
+sudo -u lxcloud sed -i "s|change_this_mqtt_password|$MQTT_PASSWORD|" /opt/lxcloud/.env
 
 # Create MariaDB database and user
 log "Setting up MariaDB database..."
