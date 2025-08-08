@@ -162,7 +162,26 @@ cp .env.example .env
 # Edit .env with your local settings
 ```
 
-3. **Start development server:**
+3. **Set up database:**
+```bash
+# Run the database setup script to create lxadmin user
+npm run setup-db
+
+# Or manually create the database user:
+mysql -u root -p
+CREATE DATABASE IF NOT EXISTS lxcloud;
+CREATE USER IF NOT EXISTS 'lxadmin'@'localhost' IDENTIFIED BY 'lxadmin';
+GRANT ALL PRIVILEGES ON lxcloud.* TO 'lxadmin'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+4. **Test database connection:**
+```bash
+npm run test-db
+```
+
+5. **Start development server:**
 ```bash
 npm run dev
 ```
@@ -171,7 +190,8 @@ npm run dev
 - `npm start` - Start production server
 - `npm run dev` - Start development server with nodemon
 - `npm test` - Run test suite
-- `npm run setup-db` - Initialize database schema
+- `npm run setup-db` - Initialize database schema and create lxadmin user
+- `npm run test-db` - Test database connection
 
 ## Updating
 
@@ -198,8 +218,8 @@ Key configuration options in `.env`:
 # Database
 DB_HOST=localhost
 DB_NAME=lxcloud
-DB_USER=lxcloud_user
-DB_PASSWORD=your_secure_password
+DB_USER=lxadmin
+DB_PASSWORD=lxadmin
 
 # MQTT
 MQTT_BROKER_URL=mqtt://localhost:1883
@@ -261,7 +281,9 @@ sudo journalctl -u lxcloud -n 50
 **Database connection issues:**
 ```bash
 sudo systemctl status mariadb
-sudo mysql -u lxcloud_user -p lxcloud
+sudo mysql -u lxadmin -p lxcloud
+# Or test the connection:
+npm run test-db
 ```
 
 **MQTT connection problems:**
