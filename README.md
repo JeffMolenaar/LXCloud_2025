@@ -194,14 +194,14 @@ cp .env.example .env
 
 3. **Set up database:**
 ```bash
-# Run the database setup script to create lxadmin user
+# Run the database setup script to create lxcloud user
 npm run setup-db
 
 # Or manually create the database user:
 mysql -u root -p
 CREATE DATABASE IF NOT EXISTS lxcloud;
-CREATE USER IF NOT EXISTS 'lxadmin'@'localhost' IDENTIFIED BY 'lxadmin';
-GRANT ALL PRIVILEGES ON lxcloud.* TO 'lxadmin'@'localhost';
+CREATE USER IF NOT EXISTS 'lxcloud'@'localhost' IDENTIFIED BY 'lxcloud';
+GRANT ALL PRIVILEGES ON lxcloud.* TO 'lxcloud'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 ```
@@ -220,7 +220,8 @@ npm run dev
 - `npm start` - Start production server
 - `npm run dev` - Start development server with nodemon
 - `npm test` - Run test suite
-- `npm run setup-db` - Initialize database schema and create lxadmin user
+- `npm run setup-db` - Initialize database schema and create lxcloud user
+- `npm run init-db` - Automated database setup for localhost (bash script)
 - `npm run test-db` - Test database connection
 
 ## Updating
@@ -248,8 +249,8 @@ Key configuration options in `.env`:
 # Database
 DB_HOST=localhost
 DB_NAME=lxcloud
-DB_USER=lxadmin
-DB_PASSWORD=lxadmin
+DB_USER=lxcloud
+DB_PASSWORD=lxcloud
 
 # MQTT
 MQTT_BROKER_URL=mqtt://localhost:1883
@@ -353,7 +354,7 @@ The platform uses a comprehensive database schema with the following key tables:
 sudo systemctl status mariadb
 
 # Test database connection
-mysql -u lxadmin -plxadmin123 lxcloud -e "SELECT 1"
+mysql -u lxcloud -plxcloud lxcloud -e "SELECT 1"
 
 # Restart MariaDB
 sudo systemctl restart mariadb
@@ -433,7 +434,7 @@ If the system is completely broken:
    ls -la /opt/lxcloud/backups/
    
    # Restore database
-   mysql -u lxadmin -plxadmin123 lxcloud < /opt/lxcloud/backups/database_YYYYMMDD_HHMMSS.sql
+   mysql -u lxcloud -plxcloud lxcloud < /opt/lxcloud/backups/database_YYYYMMDD_HHMMSS.sql
    ```
 
 3. **Check system resources:**
@@ -476,7 +477,7 @@ If the system is completely broken:
    curl -I http://localhost:3000/api/health
    
    # Test database
-   mysql -u lxadmin -plxadmin123 -e "SELECT 1"
+   mysql -u lxcloud -plxcloud -e "SELECT 1"
    
    # Test MQTT
    mosquitto_pub -h localhost -u lxcloud_mqtt -P [password] -t test -m hello
@@ -499,7 +500,7 @@ If you experience slow performance:
 2. **Optimize database:**
    ```bash
    # From the admin panel, or manually:
-   mysql -u lxadmin -plxadmin123 lxcloud -e "OPTIMIZE TABLE users, controllers, controller_data"
+   mysql -u lxcloud -plxcloud lxcloud -e "OPTIMIZE TABLE users, controllers, controller_data"
    ```
 
 3. **Clean up old data:**
