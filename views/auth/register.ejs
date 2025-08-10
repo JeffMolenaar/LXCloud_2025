@@ -184,10 +184,18 @@
                     <div class="alert alert-danger" role="alert">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         <%= error %>
+                        <% if (error.includes('connection refused') || error.includes('database')) { %>
+                            <div class="mt-2">
+                                <small>
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Server is running in fallback mode. If this persists, please check server logs.
+                                </small>
+                            </div>
+                        <% } %>
                     </div>
                 <% } %>
 
-                <form method="POST" action="/auth/register">
+                <form method="POST" action="/auth/register" id="registerForm">
                     <div class="form-floating">
                         <input type="text" class="form-control" id="name" name="name" placeholder="Full Name" required>
                         <label for="name">
@@ -227,9 +235,12 @@
                         </label>
                     </div>
 
-                    <button type="submit" class="btn btn-register">
-                        <i class="fas fa-user-plus me-2"></i>
-                        Create Account
+                    <button type="submit" class="btn btn-register" id="registerButton">
+                        <span class="button-text">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Create Account
+                        </span>
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                     </button>
                 </form>
 
@@ -249,15 +260,63 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Password confirmation validation
-        document.getElementById('confirmPassword').addEventListener('input', function() {
-            const password = document.getElementById('password').value;
-            const confirmPassword = this.value;
+        // Enhanced register form handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const registerForm = document.getElementById('registerForm');
+            const registerButton = document.getElementById('registerButton');
+            const passwordField = document.getElementById('password');
+            const confirmPasswordField = document.getElementById('confirmPassword');
             
-            if (password !== confirmPassword) {
-                this.setCustomValidity('Passwords do not match');
-            } else {
-                this.setCustomValidity('');
+            // Password confirmation validation
+            function validatePasswords() {
+                const password = passwordField.value;
+                const confirmPassword = confirmPasswordField.value;
+                
+                if (password !== confirmPassword) {
+                    confirmPasswordField.setCustomValidity('Passwords do not match');
+                    return false;
+                } else {
+                    confirmPasswordField.setCustomValidity('');
+                    return true;
+                }
+            }
+            
+            // Real-time password validation
+            confirmPasswordField.addEventListener('input', validatePasswords);
+            passwordField.addEventListener('input', validatePasswords);
+            
+            // Handle form submission
+            registerForm.addEventListener('submit', function(e) {
+                if (!validatePasswords()) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                showLoading(true);
+                
+                // Reset after timeout
+                setTimeout(() => {
+                    if (registerButton) {
+                        showLoading(false);
+                    }
+                }, 10000);
+            });
+            
+            function showLoading(show) {
+                if (!registerButton) return;
+                
+                const spinner = registerButton.querySelector('.spinner-border');
+                const buttonText = registerButton.querySelector('.button-text');
+                
+                if (show) {
+                    spinner.classList.remove('d-none');
+                    buttonText.style.opacity = '0.7';
+                    registerButton.disabled = true;
+                } else {
+                    spinner.classList.add('d-none');
+                    buttonText.style.opacity = '1';
+                    registerButton.disabled = false;
+                }
             }
         });
     </script>

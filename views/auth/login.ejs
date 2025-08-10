@@ -173,10 +173,26 @@
                     <div class="alert alert-danger" role="alert">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         <%= error %>
+                        <% if (error.includes('connection refused') || error.includes('database')) { %>
+                            <div class="mt-2">
+                                <small>
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Server is running in fallback mode. If this persists, please check server logs.
+                                </small>
+                            </div>
+                        <% } %>
                     </div>
                 <% } %>
+                
+                <!-- Connection status indicator -->
+                <div id="connection-status" class="d-none">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-wifi me-2"></i>
+                        <span id="connection-message">Checking connection...</span>
+                    </div>
+                </div>
 
-                <form method="POST" action="/auth/login">
+                <form method="POST" action="/auth/login" id="loginForm">
                     <div class="form-floating">
                         <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required 
                                value="<%= typeof email !== 'undefined' ? email : '' %>">
@@ -202,9 +218,12 @@
                         </div>
                     <% } %>
 
-                    <button type="submit" class="btn btn-login">
-                        <i class="fas fa-sign-in-alt me-2"></i>
-                        Sign In
+                    <button type="submit" class="btn btn-login" id="loginButton">
+                        <span class="button-text">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Sign In
+                        </span>
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                     </button>
                 </form>
 
@@ -224,5 +243,76 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Enhanced login form handling with better error feedback
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const loginButton = document.getElementById('loginButton');
+            const connectionStatus = document.getElementById('connection-status');
+            
+            // Check if we can reach the server
+            checkServerConnection();
+            
+            // Handle form submission
+            loginForm.addEventListener('submit', function(e) {
+                showLoading(true);
+                
+                // Let the form submit normally, but provide visual feedback
+                setTimeout(() => {
+                    if (loginButton) {
+                        showLoading(false);
+                    }
+                }, 10000); // Reset after 10 seconds if no response
+            });
+            
+            function showLoading(show) {
+                if (!loginButton) return;
+                
+                const spinner = loginButton.querySelector('.spinner-border');
+                const buttonText = loginButton.querySelector('.button-text');
+                
+                if (show) {
+                    spinner.classList.remove('d-none');
+                    buttonText.style.opacity = '0.7';
+                    loginButton.disabled = true;
+                } else {
+                    spinner.classList.add('d-none');
+                    buttonText.style.opacity = '1';
+                    loginButton.disabled = false;
+                }
+            }
+            
+            function checkServerConnection() {
+                fetch('/api/health', {
+                    method: 'GET',
+                    cache: 'no-cache'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        hideConnectionWarning();
+                    } else {
+                        showConnectionWarning('Server responding but may have issues');
+                    }
+                })
+                .catch(error => {
+                    showConnectionWarning('Unable to connect to server');
+                    console.warn('Connection check failed:', error);
+                });
+            }
+            
+            function showConnectionWarning(message) {
+                if (connectionStatus) {
+                    document.getElementById('connection-message').textContent = message;
+                    connectionStatus.classList.remove('d-none');
+                }
+            }
+            
+            function hideConnectionWarning() {
+                if (connectionStatus) {
+                    connectionStatus.classList.add('d-none');
+                }
+            }
+        });
+    </script>
 </body>
 </html>
