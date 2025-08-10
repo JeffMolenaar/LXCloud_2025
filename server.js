@@ -160,19 +160,81 @@ app.use('/users', userRoutes);
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
 
-// Enhanced health check endpoint
-app.get('/api/health', (req, res) => {
-  const sessionService = container.get('sessionService');
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    mockMode: database.mockMode,
-    version: process.env.npm_package_version || '1.0.0',
-    services: {
-      database: database.mockMode ? 'mock' : 'connected',
-      session: 'available',
-      auth: 'available'
+// Enhanced health check endpoint with detailed system information
+app.get('/api/health', async (req, res) => {
+  try {
+    const sessionService = container.get('sessionService');
+    
+    // Check database connectivity
+    let dbStatus = 'connected';
+    let dbError = null;
+    try {
+      await database.query('SELECT 1');
+    } catch (error) {
+      dbStatus = database.mockMode ? 'mock' : 'error';
+      dbError = error.message;
     }
+    
+    // Get system information
+    const os = require('os');
+    const uptime = process.uptime();
+    const memUsage = process.memoryUsage();
+    
+    const healthInfo = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: Math.floor(uptime),
+      version: process.env.npm_package_version || '1.0.0',
+      environment: process.env.NODE_ENV || 'development',
+      services: {
+        database: dbStatus,
+        session: 'available',
+        auth: 'available',
+        mqtt: 'available'
+      },
+      system: {
+        platform: os.platform(),
+        arch: os.arch(),
+        nodeVersion: process.version,
+        cpus: os.cpus().length,
+        totalMemory: Math.round(os.totalmem() / 1024 / 1024),
+        freeMemory: Math.round(os.freemem() / 1024 / 1024),
+        loadAverage: os.loadavg()
+      },
+      memory: {
+        rss: Math.round(memUsage.rss / 1024 / 1024),
+        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
+        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
+        external: Math.round(memUsage.external / 1024 / 1024)
+      }
+    };
+    
+    // Add database error details if present
+    if (dbError) {
+      healthInfo.database_error = dbError;
+    }
+    
+    // Set appropriate HTTP status
+    const httpStatus = dbStatus === 'error' ? 503 : 200;
+    
+    res.status(httpStatus).json(healthInfo);
+    
+  } catch (error) {
+    logger.error('Health check error:', error);
+    res.status(500).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      error: error.message
+    });
+  }
+});
+
+// Simple connectivity test endpoint
+app.get('/api/ping', (req, res) => {
+  res.json({
+    status: 'pong',
+    timestamp: new Date().toISOString(),
+    server: 'LXCloud'
   });
 });
 
