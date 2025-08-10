@@ -5,76 +5,58 @@ async function setupDatabase() {
   try {
     console.log('[2025-08-10 12:14:36] Setting up database schema...');
     
-    // Connect as root to create database and user
+    // For localhost installations, try to setup database automatically
     let connection;
-    
-    // Try multiple root authentication methods
-    const rootAuthMethods = [
-      { user: 'root', password: '' }, // No password (common in Docker/dev)
-      { user: 'root', password: 'root' }, // Common default
-      { user: 'root', password: 'password' }, // Another common default
-      { user: 'root', auth_plugin: 'mysql_native_password', password: '' } // MySQL 8.0+ native auth
-    ];
-    
     let connectionSuccess = false;
     
-    for (const authMethod of rootAuthMethods) {
+    // Try connecting as root without password first (common for localhost MariaDB)
+    try {
+      console.log('Attempting to connect as root without password...');
+      connection = await mysql.createConnection({
+        host: 'localhost',
+        user: 'root',
+        password: ''
+      });
+      console.log('✅ Connected to MySQL as root');
+      connectionSuccess = true;
+    } catch (error) {
+      console.log(`❌ Root connection failed: ${error.message}`);
+      
+      // Try using sudo mysql for localhost systems
+      console.log('Attempting automated database setup via sudo mysql...');
       try {
-        console.log(`Attempting to connect as root with auth method: ${JSON.stringify({user: authMethod.user, hasPassword: !!authMethod.password, auth_plugin: authMethod.auth_plugin})}`);
+        const { execSync } = require('child_process');
         
-        // Use only valid MySQL2 connection options
-        const connectionConfig = {
+        // Execute SQL commands directly through sudo mysql
+        const sqlCommands = `
+          CREATE DATABASE IF NOT EXISTS lxcloud;
+          CREATE USER IF NOT EXISTS 'lxcloud'@'localhost' IDENTIFIED BY 'lxcloud';
+          GRANT ALL PRIVILEGES ON lxcloud.* TO 'lxcloud'@'localhost';
+          FLUSH PRIVILEGES;
+        `;
+        
+        execSync(`sudo mysql -e "${sqlCommands}"`, { stdio: 'inherit' });
+        console.log('✅ Database setup completed via sudo mysql');
+        
+        // Test connection with new user
+        const testConnection = await mysql.createConnection({
           host: 'localhost',
-          user: authMethod.user,
-          password: authMethod.password
-        };
+          user: 'lxcloud',
+          password: 'lxcloud',
+          database: 'lxcloud'
+        });
         
-        // Add auth_plugin if specified
-        if (authMethod.auth_plugin) {
-          connectionConfig.authPlugins = {
-            mysql_native_password: () => authMethod.auth_plugin
-          };
-        }
+        await testConnection.ping();
+        await testConnection.end();
+        console.log('✅ Database connection test successful');
         
-        connection = await mysql.createConnection(connectionConfig);
-        console.log('✅ Connected to MySQL as root');
-        connectionSuccess = true;
-        break;
-      } catch (error) {
-        console.log(`❌ Failed: ${error.message}`);
-        continue;
+        return true;
+      } catch (sudoError) {
+        console.log(`❌ Sudo mysql failed: ${sudoError.message}`);
       }
     }
     
-    if (!connectionSuccess) {
-      console.log('\n🔧 Manual Database Setup Required');
-      console.log('==========================================');
-      console.log('All automatic connection attempts failed. Common reasons:');
-      console.log('1. MySQL root user requires a password');
-      console.log('2. MySQL root user is configured for socket authentication only');
-      console.log('3. MySQL service is not running');
-      console.log('');
-      console.log('Please run the following SQL commands as MySQL root user:');
-      console.log('');
-      console.log('# Connect to MySQL as root:');
-      console.log('sudo mysql -u root');
-      console.log('# OR if password required:');
-      console.log('mysql -u root -p');
-      console.log('');
-      console.log('# Then execute these SQL commands:');
-      console.log('CREATE DATABASE IF NOT EXISTS lxcloud;');
-      console.log('CREATE USER IF NOT EXISTS \'lxcloud\'@\'localhost\' IDENTIFIED BY \'lxcloud\';');
-      console.log('GRANT ALL PRIVILEGES ON lxcloud.* TO \'lxcloud\'@\'localhost\';');
-      console.log('FLUSH PRIVILEGES;');
-      console.log('EXIT;');
-      console.log('');
-      console.log('After running these commands, the LXCloud application should be able to connect.');
-      console.log('==========================================\n');
-      
-      return false;
-    }
-    
-    if (connection) {
+    if (connectionSuccess && connection) {
       // Create database
       await connection.execute('CREATE DATABASE IF NOT EXISTS lxcloud');
       console.log('✅ Database "lxcloud" created or already exists');
@@ -99,6 +81,32 @@ async function setupDatabase() {
       console.log('  - Database: lxcloud\n');
       return true;
     }
+    
+    // Fallback: Provide manual instructions
+    console.log('\n🔧 Manual Database Setup Required');
+    console.log('==========================================');
+    console.log('Automatic setup failed. Please run ONE of the following:');
+    console.log('');
+    console.log('Option 1 - Using sudo (recommended for localhost):');
+    console.log('sudo mysql -e "CREATE DATABASE IF NOT EXISTS lxcloud; CREATE USER IF NOT EXISTS \'lxcloud\'@\'localhost\' IDENTIFIED BY \'lxcloud\'; GRANT ALL PRIVILEGES ON lxcloud.* TO \'lxcloud\'@\'localhost\'; FLUSH PRIVILEGES;"');
+    console.log('');
+    console.log('Option 2 - Manual MySQL connection:');
+    console.log('# Connect to MySQL as root:');
+    console.log('sudo mysql -u root');
+    console.log('# OR if password required:');
+    console.log('mysql -u root -p');
+    console.log('');
+    console.log('# Then execute these SQL commands:');
+    console.log('CREATE DATABASE IF NOT EXISTS lxcloud;');
+    console.log('CREATE USER IF NOT EXISTS \'lxcloud\'@\'localhost\' IDENTIFIED BY \'lxcloud\';');
+    console.log('GRANT ALL PRIVILEGES ON lxcloud.* TO \'lxcloud\'@\'localhost\';');
+    console.log('FLUSH PRIVILEGES;');
+    console.log('EXIT;');
+    console.log('');
+    console.log('After running these commands, the LXCloud application should be able to connect.');
+    console.log('==========================================\n');
+    
+    return false;
     
   } catch (error) {
     console.error('❌ Database setup failed:', error.message);

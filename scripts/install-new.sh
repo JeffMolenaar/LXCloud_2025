@@ -19,8 +19,8 @@ NC='\033[0m' # No Color
 INSTALL_DIR="/opt/lxcloud"
 SERVICE_USER="lxcloud"
 DATABASE_NAME="lxcloud"
-DATABASE_USER="lxadmin"
-DATABASE_PASSWORD="lxadmin123"
+DATABASE_USER="lxcloud"
+DATABASE_PASSWORD="lxcloud"
 MQTT_USER="lxcloud_mqtt"
 MQTT_PASSWORD=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-16)
 
@@ -320,7 +320,8 @@ install_application() {
     # Update environment file with proper escaping
     sudo -u "$SERVICE_USER" sed -i "s|your_jwt_secret_key_change_this|$JWT_SECRET|" "$INSTALL_DIR/.env"
     sudo -u "$SERVICE_USER" sed -i "s|your_session_secret_change_this|$SESSION_SECRET|" "$INSTALL_DIR/.env"
-    sudo -u "$SERVICE_USER" sed -i "s|DB_PASSWORD=lxadmin|DB_PASSWORD=$DATABASE_PASSWORD|" "$INSTALL_DIR/.env"
+    sudo -u "$SERVICE_USER" sed -i "s|DB_USER=lxcloud|DB_USER=$DATABASE_USER|" "$INSTALL_DIR/.env"
+    sudo -u "$SERVICE_USER" sed -i "s|DB_PASSWORD=lxcloud|DB_PASSWORD=$DATABASE_PASSWORD|" "$INSTALL_DIR/.env"
     sudo -u "$SERVICE_USER" sed -i "s|change_this_mqtt_password|$MQTT_PASSWORD|" "$INSTALL_DIR/.env"
     
     success "Application installed successfully"
@@ -642,7 +643,7 @@ mkdir -p "$BACKUP_DIR"
 
 # Backup database
 log "Backing up database..."
-mysqldump -u lxadmin -plxadmin123 lxcloud > "$BACKUP_DIR/database_$DATE.sql"
+mysqldump -u "$DATABASE_USER" -p"$DATABASE_PASSWORD" "$DATABASE_NAME" > "$BACKUP_DIR/database_$DATE.sql"
 
 # Backup application files (excluding node_modules and logs)
 log "Backing up application files..."
