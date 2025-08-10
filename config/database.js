@@ -12,16 +12,59 @@ class Database {
 
   async initialize() {
     try {
-      this.pool = mysql.createPool({
+      // Define valid MySQL2 pool configuration options only
+      const poolConfig = {
         host: process.env.DB_HOST || 'localhost',
-        port: process.env.DB_PORT || 3306,
-        user: process.env.DB_USER || 'lxadmin',
-        password: process.env.DB_PASSWORD || 'lxadmin',
+        port: parseInt(process.env.DB_PORT || '3306'),
+        user: process.env.DB_USER || 'lxcloud',
+        password: process.env.DB_PASSWORD || 'lxcloud',
         database: process.env.DB_NAME || 'lxcloud',
         waitForConnections: true,
         connectionLimit: 10,
-        queueLimit: 0
+        queueLimit: 0,
+        // Valid MySQL2 options only
+        idleTimeout: 60000,
+        charset: 'utf8mb4'
+      };
+
+      // Validate and clean configuration to prevent invalid options
+      const invalidOptions = ['acquireTimeout', 'timeout', 'reconnect'];
+      invalidOptions.forEach(option => {
+        if (poolConfig[option] !== undefined) {
+          logger.warn(`Removing invalid MySQL2 option: ${option}`);
+          delete poolConfig[option];
+        }
       });
+
+      // Clean environment variables that might set invalid options
+      invalidOptions.forEach(option => {
+        const envKey = `DB_${option.toUpperCase()}`;
+        if (process.env[envKey]) {
+          logger.warn(`Ignoring invalid environment variable: ${envKey}`);
+        }
+      });
+
+      // Additional safeguard: ensure only known valid options are passed
+      const validOptions = [
+        'host', 'port', 'user', 'password', 'database', 'charset', 'timezone',
+        'connectTimeout', 'acquireTimeout', 'timeout', 'idleTimeout', 'queueLimit',
+        'connectionLimit', 'waitForConnections', 'reconnect', 'maxReconnects',
+        'reconnectDelay', 'ssl', 'debug', 'trace', 'stringifyObjects',
+        'supportBigNumbers', 'bigNumberStrings', 'dateStrings', 'nestTables',
+        'typeCast', 'queryFormat', 'pool', 'acquireTimeout', 'timeout', 'reconnect'
+      ];
+      
+      // MySQL2 v3+ deprecated options - remove them explicitly
+      const deprecatedOptions = ['acquireTimeout', 'timeout', 'reconnect'];
+      deprecatedOptions.forEach(option => {
+        if (poolConfig[option] !== undefined) {
+          logger.warn(`Removing deprecated MySQL2 option: ${option} (not supported in MySQL2 v3+)`);
+          delete poolConfig[option];
+        }
+      });
+
+      logger.info('Creating MySQL2 connection pool with valid configuration only');
+      this.pool = mysql.createPool(poolConfig);
 
       // Test connection
       const connection = await this.pool.getConnection();

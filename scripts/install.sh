@@ -107,16 +107,15 @@ ESCAPED_MQTT_PASSWORD=$(printf '%s\n' "$MQTT_PASSWORD" | sed 's/[\/&]/\\&/g')
 # Update environment file
 sudo -u lxcloud sed -i "s|your_jwt_secret_key_change_this|$ESCAPED_JWT_SECRET|" /opt/lxcloud/.env
 sudo -u lxcloud sed -i "s|your_session_secret_change_this|$ESCAPED_SESSION_SECRET|" /opt/lxcloud/.env
-sudo -u lxcloud sed -i "s|change_this_password|lxadmin|" /opt/lxcloud/.env
-sudo -u lxcloud sed -i "s|lxcloud_user|lxadmin|" /opt/lxcloud/.env
+sudo -u lxcloud sed -i "s|lxadmin|lxcloud|g" /opt/lxcloud/.env
 sudo -u lxcloud sed -i "s|change_this_mqtt_password|$ESCAPED_MQTT_PASSWORD|" /opt/lxcloud/.env
 
 # Create MariaDB database and user
 log "Setting up MariaDB database..."
 mysql -u root -p <<EOF
 CREATE DATABASE IF NOT EXISTS lxcloud;
-CREATE USER IF NOT EXISTS 'lxadmin'@'localhost' IDENTIFIED BY 'lxadmin';
-GRANT ALL PRIVILEGES ON lxcloud.* TO 'lxadmin'@'localhost';
+CREATE USER IF NOT EXISTS 'lxcloud'@'localhost' IDENTIFIED BY 'lxcloud';
+GRANT ALL PRIVILEGES ON lxcloud.* TO 'lxcloud'@'localhost';
 FLUSH PRIVILEGES;
 EOF
 
