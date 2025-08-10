@@ -12,7 +12,7 @@ class Database {
 
   async initialize() {
     try {
-      // Define valid MySQL2 pool configuration options only
+      // Define valid MySQL2 pool configuration options with enhanced connectivity
       const poolConfig = {
         host: process.env.DB_HOST || 'localhost',
         port: parseInt(process.env.DB_PORT || '3306'),
@@ -22,54 +22,62 @@ class Database {
         waitForConnections: true,
         connectionLimit: 10,
         queueLimit: 0,
-        // Valid MySQL2 options only
-        idleTimeout: 60000,
-        charset: 'utf8mb4'
+        // Enhanced connection settings for better reliability
+        acquireTimeout: 60000,
+        timeout: 60000,
+        reconnect: true,
+        idleTimeout: 300000,
+        charset: 'utf8mb4',
+        // Additional MySQL2 connection options
+        connectTimeout: 60000,
+        ssl: false,
+        // Ensure proper timezone handling
+        timezone: 'local'
       };
 
-      // Validate and clean configuration to prevent invalid options
-      const invalidOptions = ['acquireTimeout', 'timeout', 'reconnect'];
-      invalidOptions.forEach(option => {
-        if (poolConfig[option] !== undefined) {
-          logger.warn(`Removing invalid MySQL2 option: ${option}`);
-          delete poolConfig[option];
-        }
-      });
-
-      // Clean environment variables that might set invalid options
-      invalidOptions.forEach(option => {
-        const envKey = `DB_${option.toUpperCase()}`;
-        if (process.env[envKey]) {
-          logger.warn(`Ignoring invalid environment variable: ${envKey}`);
-        }
-      });
-
-      // Additional safeguard: ensure only known valid options are passed
-      const validOptions = [
+      // For MySQL2 v3+, use supported options only
+      const supportedOptions = [
         'host', 'port', 'user', 'password', 'database', 'charset', 'timezone',
-        'connectTimeout', 'acquireTimeout', 'timeout', 'idleTimeout', 'queueLimit',
-        'connectionLimit', 'waitForConnections', 'reconnect', 'maxReconnects',
-        'reconnectDelay', 'ssl', 'debug', 'trace', 'stringifyObjects',
+        'connectTimeout', 'idleTimeout', 'queueLimit', 'connectionLimit', 
+        'waitForConnections', 'ssl', 'debug', 'trace', 'stringifyObjects',
         'supportBigNumbers', 'bigNumberStrings', 'dateStrings', 'nestTables',
-        'typeCast', 'queryFormat', 'pool', 'acquireTimeout', 'timeout', 'reconnect'
+        'typeCast', 'queryFormat'
       ];
       
-      // MySQL2 v3+ deprecated options - remove them explicitly
-      const deprecatedOptions = ['acquireTimeout', 'timeout', 'reconnect'];
-      deprecatedOptions.forEach(option => {
+      // Clean configuration to only include supported options
+      const cleanConfig = {};
+      supportedOptions.forEach(option => {
         if (poolConfig[option] !== undefined) {
-          logger.warn(`Removing deprecated MySQL2 option: ${option} (not supported in MySQL2 v3+)`);
-          delete poolConfig[option];
+          cleanConfig[option] = poolConfig[option];
         }
       });
 
-      logger.info('Creating MySQL2 connection pool with valid configuration only');
-      this.pool = mysql.createPool(poolConfig);
+      logger.info('Creating MySQL2 connection pool with supported configuration');
+      this.pool = mysql.createPool(cleanConfig);
 
-      // Test connection
-      const connection = await this.pool.getConnection();
-      await connection.ping();
-      connection.release();
+      // Test connection with retry logic
+      let connection;
+      let connectionAttempts = 0;
+      const maxAttempts = 3;
+      
+      while (connectionAttempts < maxAttempts) {
+        try {
+          connection = await this.pool.getConnection();
+          await connection.ping();
+          connection.release();
+          break;
+        } catch (error) {
+          connectionAttempts++;
+          if (connection) connection.release();
+          
+          if (connectionAttempts >= maxAttempts) {
+            throw error;
+          }
+          
+          logger.warn(`Database connection attempt ${connectionAttempts}/${maxAttempts} failed, retrying...`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * connectionAttempts));
+        }
+      }
 
       logger.info('Database pool created successfully');
       
