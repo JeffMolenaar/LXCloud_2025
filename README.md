@@ -62,11 +62,12 @@ LXCloud is a comprehensive cloud-based dashboard platform for managing IoT contr
 ## Quick Start
 
 ### Prerequisites
-- Ubuntu Server LTS 24.04
-- Root or sudo access
+- Ubuntu Server LTS 24.04 (other versions may work)
+- Regular user account with sudo privileges
 - Internet connection
+- At least 2GB RAM and 10GB disk space
 
-### Installation
+### 🚀 One-Command Installation
 
 1. **Clone the repository:**
 ```bash
@@ -74,24 +75,53 @@ git clone https://github.com/JeffMolenaar/LXCloud_2025.git
 cd LXCloud_2025
 ```
 
-2. **Run the installation script:**
+2. **Run the complete installation script:**
 ```bash
-sudo ./scripts/install.sh
+./scripts/install-new.sh
 ```
 
-The installation script will automatically:
-- Install Node.js, MariaDB, Mosquitto MQTT, and Nginx
-- Configure all services and security settings
-- Create database schema and default admin user
-- Set up systemd services and firewall rules
-- Generate secure configuration files
+### ✨ What the installer does automatically:
 
-3. **Access the platform:**
-- Open your browser and navigate to `http://your-server-ip`
-- Login with default credentials:
+- **🧹 Cleans up** any previous LXCloud installations
+- **📦 Installs** Node.js 18.x, MariaDB, Mosquitto MQTT, and Nginx
+- **🔧 Configures** all services with optimal settings
+- **🗄️ Creates** database schema and default admin user
+- **🔐 Sets up** systemd services and firewall rules
+- **🔑 Generates** secure JWT secrets and passwords
+- **🌐 Configures** Nginx with local network optimizations
+- **✅ Verifies** all services are running correctly
+
+### 🌐 Access Your Installation
+
+After installation completes:
+
+- **Web Interface:** `http://your-server-ip`
+- **Default Credentials:**
   - Email: `admin@lxcloud.local`
   - Password: `admin123`
-- **Important**: Change the default password immediately!
+
+**⚠️ IMPORTANT:** Change the default password immediately after first login!
+
+### 🔧 Post-Installation Management
+
+The installer creates helpful management scripts:
+
+```bash
+# Check system status
+sudo /opt/lxcloud/status.sh
+
+# View live logs
+sudo journalctl -u lxcloud -f
+
+# Update LXCloud
+sudo /opt/lxcloud/update.sh
+
+# Create backup
+sudo /opt/lxcloud/backup.sh
+
+# Restart services
+sudo systemctl restart lxcloud
+```
 
 ### Post-Installation Setup
 
@@ -271,40 +301,217 @@ The platform uses a comprehensive database schema with the following key tables:
 
 ## Troubleshooting
 
-### Common Issues
+### Common Issues and Solutions
 
-**HTTPS redirect preventing local network login:**
-If you're getting HTTPS redirects that prevent login from your local network (192.168.x.x, 10.x.x.x), run the fix script:
+#### 🔌 "Unable to connect to server"
+
+**Symptoms:** Browser shows connection errors, timeouts, or "This site can't be reached"
+
+**Causes & Solutions:**
+
+1. **Services not running:**
+   ```bash
+   # Check service status
+   sudo /opt/lxcloud/status.sh
+   
+   # Restart all services
+   sudo systemctl restart lxcloud nginx mariadb mosquitto
+   ```
+
+2. **Firewall blocking connections:**
+   ```bash
+   # Check firewall status
+   sudo ufw status
+   
+   # Allow HTTP traffic
+   sudo ufw allow 'Nginx Full'
+   ```
+
+3. **Wrong IP address:**
+   ```bash
+   # Find your server's IP
+   hostname -I
+   
+   # Try accessing via localhost if on the same machine
+   curl http://localhost
+   ```
+
+4. **Service failed to start:**
+   ```bash
+   # Check detailed logs
+   sudo journalctl -u lxcloud -n 50
+   sudo journalctl -u nginx -n 50
+   ```
+
+#### 🗄️ Database Connection Issues
+
+**Symptoms:** Error messages about database connections in logs
+
+**Solutions:**
 ```bash
-sudo /opt/lxcloud/scripts/fix-https-redirect.sh
-```
-
-This commonly happens after running `certbot --nginx` which modifies the nginx configuration to force HTTPS redirects. The fix script restores HTTP access for local networks while maintaining SSL for external access.
-
-**Service won't start:**
-```bash
-sudo journalctl -u lxcloud -n 50
-```
-
-**Database connection issues:**
-```bash
+# Check MariaDB status
 sudo systemctl status mariadb
-sudo mysql -u lxadmin -p lxcloud
-# Or test the connection:
-npm run test-db
+
+# Test database connection
+mysql -u lxadmin -plxadmin123 lxcloud -e "SELECT 1"
+
+# Restart MariaDB
+sudo systemctl restart mariadb
+
+# Check if database exists
+mysql -u root -e "SHOW DATABASES"
 ```
 
-**MQTT connection problems:**
+#### 📡 MQTT Connection Problems
+
+**Symptoms:** MQTT connection errors in logs, controllers not appearing
+
+**Solutions:**
 ```bash
+# Check Mosquitto status
 sudo systemctl status mosquitto
-mosquitto_pub -h localhost -u lxcloud_mqtt -P your_password -t test -m "hello"
+
+# Test MQTT connection
+mosquitto_pub -h localhost -u lxcloud_mqtt -P [password] -t test -m "hello"
+
+# Check MQTT logs
+sudo tail -f /var/log/mosquitto/mosquitto.log
+
+# Restart Mosquitto
+sudo systemctl restart mosquitto
 ```
 
-**Permission issues:**
+#### 🔐 Permission Issues
+
+**Symptoms:** File permission errors, service start failures
+
+**Solutions:**
 ```bash
+# Fix file ownership
 sudo chown -R lxcloud:lxcloud /opt/lxcloud
-sudo chmod +x /opt/lxcloud/scripts/*.sh
+
+# Fix script permissions
+sudo chmod +x /opt/lxcloud/*.sh
+
+# Fix log directory permissions
+sudo mkdir -p /opt/lxcloud/logs
+sudo chown lxcloud:lxcloud /opt/lxcloud/logs
 ```
+
+#### 🌐 HTTPS Redirect Issues
+
+**Symptoms:** Getting redirected to HTTPS when trying to access via HTTP
+
+**Solutions:**
+
+The new installer prevents this issue, but if you still experience it:
+
+```bash
+# Check nginx configuration
+sudo nginx -t
+
+# Ensure no HTTPS redirects for local networks
+sudo grep -r "return.*https" /etc/nginx/sites-available/
+
+# Restart nginx
+sudo systemctl restart nginx
+```
+
+#### 🚨 Emergency Recovery
+
+If the system is completely broken:
+
+1. **Complete reinstall:**
+   ```bash
+   cd LXCloud_2025
+   ./scripts/install-new.sh
+   ```
+
+2. **Restore from backup:**
+   ```bash
+   # List available backups
+   ls -la /opt/lxcloud/backups/
+   
+   # Restore database
+   mysql -u lxadmin -plxadmin123 lxcloud < /opt/lxcloud/backups/database_YYYYMMDD_HHMMSS.sql
+   ```
+
+3. **Check system resources:**
+   ```bash
+   # Check disk space
+   df -h
+   
+   # Check memory usage
+   free -h
+   
+   # Check system load
+   top
+   ```
+
+#### 📋 Getting Help
+
+1. **Check system status:**
+   ```bash
+   sudo /opt/lxcloud/status.sh
+   ```
+
+2. **Collect diagnostic information:**
+   ```bash
+   # System info
+   uname -a
+   cat /etc/os-release
+   
+   # Service logs
+   sudo journalctl -u lxcloud --no-pager -n 50
+   sudo journalctl -u nginx --no-pager -n 50
+   sudo journalctl -u mariadb --no-pager -n 50
+   
+   # Network info
+   ss -tlnp | grep -E ':(80|443|3000|1883|3306)'
+   ```
+
+3. **Common commands for troubleshooting:**
+   ```bash
+   # Test web interface
+   curl -I http://localhost:3000/api/health
+   
+   # Test database
+   mysql -u lxadmin -plxadmin123 -e "SELECT 1"
+   
+   # Test MQTT
+   mosquitto_pub -h localhost -u lxcloud_mqtt -P [password] -t test -m hello
+   
+   # Check file permissions
+   ls -la /opt/lxcloud/
+   ```
+
+### Performance Optimization
+
+If you experience slow performance:
+
+1. **Monitor resource usage:**
+   ```bash
+   htop
+   iotop
+   nethogs
+   ```
+
+2. **Optimize database:**
+   ```bash
+   # From the admin panel, or manually:
+   mysql -u lxadmin -plxadmin123 lxcloud -e "OPTIMIZE TABLE users, controllers, controller_data"
+   ```
+
+3. **Clean up old data:**
+   ```bash
+   # Clean old logs
+   sudo journalctl --vacuum-time=7d
+   
+   # Clean old backups
+   find /opt/lxcloud/backups -name "*.sql" -mtime +30 -delete
+   ```
+
+For additional help, check the project's GitHub issues or create a new issue with your diagnostic information.
 
 ## Contributing
 

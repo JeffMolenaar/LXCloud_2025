@@ -1,0 +1,458 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <%- include('../partials/sidebar', { user: user }) %>
+        
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-cog me-2"></i>
+                    System Settings
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <a href="/admin" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Back to Admin
+                        </a>
+                        <button class="btn btn-sm btn-success" onclick="saveSettings()">
+                            <i class="fas fa-save me-1"></i>
+                            Save Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- General Settings -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-globe me-2"></i>
+                                General Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="systemName" class="form-label">System Name</label>
+                                <input type="text" class="form-control" id="systemName" value="LXCloud">
+                                <div class="form-text">Display name for the system</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="systemVersion" class="form-label">System Version</label>
+                                <input type="text" class="form-control" id="systemVersion" value="1.0.0" readonly>
+                                <div class="form-text">Current system version (read-only)</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="defaultTimezone" class="form-label">Default Timezone</label>
+                                <select class="form-control" id="defaultTimezone">
+                                    <option value="UTC" selected>UTC</option>
+                                    <option value="America/New_York">Eastern Time</option>
+                                    <option value="America/Chicago">Central Time</option>
+                                    <option value="America/Denver">Mountain Time</option>
+                                    <option value="America/Los_Angeles">Pacific Time</option>
+                                    <option value="Europe/London">London</option>
+                                    <option value="Europe/Paris">Paris</option>
+                                    <option value="Asia/Tokyo">Tokyo</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="maxUsers" class="form-label">Maximum Users</label>
+                                <input type="number" class="form-control" id="maxUsers" value="100" min="1">
+                                <div class="form-text">Maximum number of user accounts allowed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Settings -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                Security Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="sessionTimeout" class="form-label">Session Timeout (minutes)</label>
+                                <input type="number" class="form-control" id="sessionTimeout" value="1440" min="30">
+                                <div class="form-text">How long users stay logged in (1440 = 24 hours)</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="passwordMinLength" class="form-label">Minimum Password Length</label>
+                                <input type="number" class="form-control" id="passwordMinLength" value="8" min="6" max="50">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="requireTwoFA" checked>
+                                    <label class="form-check-label" for="requireTwoFA">
+                                        Require 2FA for Admin Accounts
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="allowRegistration">
+                                    <label class="form-check-label" for="allowRegistration">
+                                        Allow User Self-Registration
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="loginAttempts" class="form-label">Max Login Attempts</label>
+                                <input type="number" class="form-control" id="loginAttempts" value="5" min="3" max="20">
+                                <div class="form-text">Account lockout after failed attempts</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database Settings -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-database me-2"></i>
+                                Database Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="dbHost" class="form-label">Database Host</label>
+                                <input type="text" class="form-control" id="dbHost" value="localhost">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="dbPort" class="form-label">Database Port</label>
+                                <input type="number" class="form-control" id="dbPort" value="3306">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="dbName" class="form-label">Database Name</label>
+                                <input type="text" class="form-control" id="dbName" value="lxcloud">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="dataRetention" class="form-label">Data Retention (days)</label>
+                                <input type="number" class="form-control" id="dataRetention" value="365" min="1">
+                                <div class="form-text">How long to keep controller data</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <button class="btn btn-outline-info" onclick="testDatabaseConnection()">
+                                    <i class="fas fa-plug me-1"></i>
+                                    Test Connection
+                                </button>
+                                <button class="btn btn-outline-warning ms-2" onclick="optimizeDatabase()">
+                                    <i class="fas fa-tools me-1"></i>
+                                    Optimize Database
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MQTT Settings -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-broadcast-tower me-2"></i>
+                                MQTT Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="mqttHost" class="form-label">MQTT Broker Host</label>
+                                <input type="text" class="form-control" id="mqttHost" value="localhost">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="mqttPort" class="form-label">MQTT Port</label>
+                                <input type="number" class="form-control" id="mqttPort" value="1883">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="mqttUsername" class="form-label">MQTT Username</label>
+                                <input type="text" class="form-control" id="mqttUsername" value="lxcloud_mqtt">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="mqttTopicPrefix" class="form-label">Topic Prefix</label>
+                                <input type="text" class="form-control" id="mqttTopicPrefix" value="lxcloud">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="mqttSSL">
+                                    <label class="form-check-label" for="mqttSSL">
+                                        Use SSL/TLS
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <button class="btn btn-outline-info" onclick="testMQTTConnection()">
+                                    <i class="fas fa-broadcast-tower me-1"></i>
+                                    Test MQTT Connection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Settings -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-envelope me-2"></i>
+                                Email Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="smtpHost" class="form-label">SMTP Host</label>
+                                <input type="text" class="form-control" id="smtpHost" placeholder="smtp.gmail.com">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="smtpPort" class="form-label">SMTP Port</label>
+                                <input type="number" class="form-control" id="smtpPort" value="587">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="smtpUsername" class="form-label">SMTP Username</label>
+                                <input type="email" class="form-control" id="smtpUsername" placeholder="your-email@domain.com">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="fromEmail" class="form-label">From Email Address</label>
+                                <input type="email" class="form-control" id="fromEmail" placeholder="noreply@lxcloud.local">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="smtpSSL" checked>
+                                    <label class="form-check-label" for="smtpSSL">
+                                        Use SSL/TLS
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <button class="btn btn-outline-info" onclick="testEmailSettings()">
+                                    <i class="fas fa-paper-plane me-1"></i>
+                                    Send Test Email
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup Settings -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>
+                                Backup Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="autoBackup" checked>
+                                    <label class="form-check-label" for="autoBackup">
+                                        Enable Automatic Backups
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="backupFrequency" class="form-label">Backup Frequency</label>
+                                <select class="form-control" id="backupFrequency">
+                                    <option value="daily" selected>Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="backupRetention" class="form-label">Keep Backups (days)</label>
+                                <input type="number" class="form-control" id="backupRetention" value="30" min="1">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-success" onclick="createBackup()">
+                                        <i class="fas fa-save me-1"></i>
+                                        Create Backup Now
+                                    </button>
+                                    <button class="btn btn-outline-info" onclick="restoreBackup()">
+                                        <i class="fas fa-upload me-1"></i>
+                                        Restore Backup
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+function saveSettings() {
+    // Collect all settings
+    const settings = {
+        general: {
+            systemName: document.getElementById('systemName').value,
+            defaultTimezone: document.getElementById('defaultTimezone').value,
+            maxUsers: parseInt(document.getElementById('maxUsers').value)
+        },
+        security: {
+            sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
+            passwordMinLength: parseInt(document.getElementById('passwordMinLength').value),
+            requireTwoFA: document.getElementById('requireTwoFA').checked,
+            allowRegistration: document.getElementById('allowRegistration').checked,
+            loginAttempts: parseInt(document.getElementById('loginAttempts').value)
+        },
+        database: {
+            host: document.getElementById('dbHost').value,
+            port: parseInt(document.getElementById('dbPort').value),
+            name: document.getElementById('dbName').value,
+            dataRetention: parseInt(document.getElementById('dataRetention').value)
+        },
+        mqtt: {
+            host: document.getElementById('mqttHost').value,
+            port: parseInt(document.getElementById('mqttPort').value),
+            username: document.getElementById('mqttUsername').value,
+            topicPrefix: document.getElementById('mqttTopicPrefix').value,
+            ssl: document.getElementById('mqttSSL').checked
+        },
+        email: {
+            smtpHost: document.getElementById('smtpHost').value,
+            smtpPort: parseInt(document.getElementById('smtpPort').value),
+            smtpUsername: document.getElementById('smtpUsername').value,
+            fromEmail: document.getElementById('fromEmail').value,
+            ssl: document.getElementById('smtpSSL').checked
+        },
+        backup: {
+            autoBackup: document.getElementById('autoBackup').checked,
+            frequency: document.getElementById('backupFrequency').value,
+            retention: parseInt(document.getElementById('backupRetention').value)
+        }
+    };
+    
+    // In a real implementation, this would save to the database
+    alert('System settings saved successfully! Some changes may require a server restart to take effect.');
+}
+
+function testDatabaseConnection() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Testing...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        // In mock mode, this will always show success
+        alert('Database connection test successful!\n\nNote: Currently running in mock mode for demonstration.');
+    }, 2000);
+}
+
+function testMQTTConnection() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Testing...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        alert('MQTT connection test completed.\n\nResult: Unable to connect to MQTT broker. Please check broker settings and ensure Mosquitto is running.');
+    }, 2000);
+}
+
+function testEmailSettings() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Sending...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        alert('Test email functionality is not configured in demo mode.\n\nIn a production environment, this would send a test email to verify SMTP settings.');
+    }, 2000);
+}
+
+function optimizeDatabase() {
+    if (confirm('This will optimize database tables and may take several minutes. Continue?')) {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Optimizing...';
+        button.disabled = true;
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+            
+            alert('Database optimization completed successfully!');
+        }, 3000);
+    }
+}
+
+function createBackup() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        alert('Backup created successfully!\n\nBackup file: lxcloud_backup_' + new Date().toISOString().split('T')[0] + '.sql');
+    }, 3000);
+}
+
+function restoreBackup() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.sql,.zip';
+    input.onchange = function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            if (confirm(`Are you sure you want to restore from "${file.name}"? This will overwrite all current data.`)) {
+                alert('Backup restore functionality would be implemented here.\n\nThis would restore the system from the selected backup file.');
+            }
+        }
+    };
+    input.click();
+}
+</script>
+
+<%- include('../partials/footer') %>
