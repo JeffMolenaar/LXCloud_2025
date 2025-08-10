@@ -273,6 +273,14 @@ The platform uses a comprehensive database schema with the following key tables:
 
 ### Common Issues
 
+**HTTPS redirect preventing local network login:**
+If you're getting HTTPS redirects that prevent login from your local network (192.168.x.x, 10.x.x.x), run the fix script:
+```bash
+sudo /opt/lxcloud/scripts/fix-https-redirect.sh
+```
+
+This commonly happens after running `certbot --nginx` which modifies the nginx configuration to force HTTPS redirects. The fix script restores HTTP access for local networks while maintaining SSL for external access.
+
 **Service won't start:**
 ```bash
 sudo journalctl -u lxcloud -n 50

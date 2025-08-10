@@ -10,7 +10,9 @@
     "update": "./scripts/update.sh",
     "setup-db": "node scripts/setup-database.js",
     "test-db": "node scripts/test-database.js",
-    "test": "jest"
+    "test": "jest",
+    "fix-https": "sudo ./scripts/fix-https-redirect.sh",
+    "test-fix": "./scripts/test-fix.sh"
   },
   "keywords": [
     "cloud",

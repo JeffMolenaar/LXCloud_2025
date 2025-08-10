@@ -206,12 +206,18 @@ server {
     listen 80;
     server_name _;
     
-    # Security headers
+    # Explicitly allow HTTP for local network access - NO HTTPS redirects
+    # This ensures local network (192.168.x.x, 10.x.x.x, 172.16-31.x.x) can access via HTTP
+    
+    # Security headers (modified for local network HTTP access)
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "no-referrer-when-downgrade" always;
     add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+    
+    # Explicitly disable HSTS for local networks
+    add_header Strict-Transport-Security "" always;
 
     location / {
         proxy_pass http://localhost:3000;
