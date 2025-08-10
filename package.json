@@ -12,7 +12,9 @@
     "test-db": "node scripts/test-database.js",
     "test": "jest",
     "fix-https": "sudo ./scripts/fix-https-redirect.sh",
-    "test-fix": "./scripts/test-fix.sh"
+    "test-fix": "./scripts/test-fix.sh",
+    "start-lxcloud": "./scripts/start-lxcloud.sh",
+    "diagnose": "./scripts/diagnose-connection.sh"
   },
   "keywords": [
     "cloud",

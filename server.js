@@ -32,12 +32,22 @@ const io = new Server(server, {
   }
 });
 
-// Security middleware - disable HTTPS enforcement for local networks
+// Enhanced HTTPS redirect fix middleware - disable HTTPS enforcement for local networks
 app.use((req, res, next) => {
-  const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
-  const isLocalNetwork = /^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.|127\.|::1|localhost)/.test(clientIP);
+  const clientIP = req.headers['x-forwarded-for'] || 
+                   req.headers['x-real-ip'] || 
+                   req.connection.remoteAddress || 
+                   req.socket.remoteAddress ||
+                   req.ip || 
+                   '127.0.0.1';
   
-  // Configure helmet based on request source
+  // More comprehensive local network detection
+  const isLocalNetwork = /^(127\.|::1|localhost|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(clientIP) ||
+                         clientIP === '::1' ||
+                         clientIP.includes('localhost') ||
+                         clientIP === 'undefined';
+  
+  // Configure helmet based on request source - always disable HSTS
   const helmetConfig = {
     contentSecurityPolicy: {
       directives: {
@@ -49,7 +59,7 @@ app.use((req, res, next) => {
         fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
       },
     },
-    hsts: false, // Always disable HTTP Strict Transport Security
+    hsts: false, // Always disable HTTP Strict Transport Security globally
     forceHTTPS: false // Always ensure no HTTPS redirection
   };
   
@@ -86,19 +96,30 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Middleware to prevent HTTPS redirects for local network requests
+// Enhanced middleware to prevent HTTPS redirects for local network requests
 app.use((req, res, next) => {
-  const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
-  const isLocalNetwork = /^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.|127\.|::1|localhost)/.test(clientIP);
+  const clientIP = req.headers['x-forwarded-for'] || 
+                   req.headers['x-real-ip'] || 
+                   req.connection.remoteAddress || 
+                   req.socket.remoteAddress ||
+                   req.ip || 
+                   '127.0.0.1';
   
-  // For local network requests, ensure HTTP is allowed
-  if (isLocalNetwork) {
-    // Override any HTTPS redirect headers that might have been set
+  // More comprehensive local network detection
+  const isLocalNetwork = /^(127\.|::1|localhost|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(clientIP) ||
+                         clientIP === '::1' ||
+                         clientIP.includes('localhost') ||
+                         clientIP === 'undefined';
+  
+  // For all requests, ensure HTTP is allowed - especially important for local networks
+  if (isLocalNetwork || process.env.FORCE_HTTP === 'true') {
+    // Remove any HTTPS redirect headers that might have been set by reverse proxies
     res.removeHeader('Strict-Transport-Security');
     res.removeHeader('Location');
     
-    // Set headers to allow HTTP for local networks
+    // Set custom headers to indicate local network handling
     res.setHeader('X-Local-Network', 'true');
+    res.setHeader('X-HTTPS-Redirect', 'disabled');
   }
   
   next();
@@ -141,6 +162,16 @@ app.use('/controllers', controllerRoutes);
 app.use('/users', userRoutes);
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
+
+// Health check endpoint for connection testing
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    mockMode: require('./config/database').mockMode,
+    version: process.env.npm_package_version || '1.0.0'
+  });
+});
 
 // Root route
 app.get('/', (req, res) => {
