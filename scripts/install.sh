@@ -57,9 +57,16 @@ log "NPM version: $npm_version"
 log "Installing MariaDB..."
 sudo apt install -y mariadb-server mariadb-client
 
-# Secure MariaDB installation
+# Secure MariaDB installation automatically
 log "Securing MariaDB installation..."
-sudo mysql_secure_installation
+# Configure MariaDB for localhost-only access with proper security
+sudo mysql -e "
+DELETE FROM mysql.user WHERE User='';
+DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+DROP DATABASE IF EXISTS test;
+DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+FLUSH PRIVILEGES;
+" || warn "MariaDB security setup failed, continuing anyway..."
 
 # Install Mosquitto MQTT Broker
 log "Installing Mosquitto MQTT Broker..."
@@ -95,7 +102,7 @@ sudo -u lxcloud cp .env.example .env
 # Generate random secrets
 JWT_SECRET=$(openssl rand -base64 32)
 SESSION_SECRET=$(openssl rand -base64 32)
-DB_PASSWORD=$(openssl rand -base64 16)
+DB_PASSWORD="lxcloud"  # Use consistent password for localhost
 MQTT_PASSWORD=$(openssl rand -base64 16)
 
 # Escape secrets for sed
@@ -104,20 +111,20 @@ ESCAPED_SESSION_SECRET=$(printf '%s\n' "$SESSION_SECRET" | sed 's/[\/&]/\\&/g')
 ESCAPED_DB_PASSWORD=$(printf '%s\n' "$DB_PASSWORD" | sed 's/[\/&]/\\&/g')
 ESCAPED_MQTT_PASSWORD=$(printf '%s\n' "$MQTT_PASSWORD" | sed 's/[\/&]/\\&/g')
 
-# Update environment file
+# Update environment file with consistent credentials
 sudo -u lxcloud sed -i "s|your_jwt_secret_key_change_this|$ESCAPED_JWT_SECRET|" /opt/lxcloud/.env
 sudo -u lxcloud sed -i "s|your_session_secret_change_this|$ESCAPED_SESSION_SECRET|" /opt/lxcloud/.env
-sudo -u lxcloud sed -i "s|lxadmin|lxcloud|g" /opt/lxcloud/.env
+sudo -u lxcloud sed -i "s|DB_PASSWORD=lxcloud|DB_PASSWORD=$ESCAPED_DB_PASSWORD|" /opt/lxcloud/.env
 sudo -u lxcloud sed -i "s|change_this_mqtt_password|$ESCAPED_MQTT_PASSWORD|" /opt/lxcloud/.env
 
-# Create MariaDB database and user
+# Create MariaDB database and user - automated for localhost
 log "Setting up MariaDB database..."
-mysql -u root -p <<EOF
+sudo mysql -e "
 CREATE DATABASE IF NOT EXISTS lxcloud;
 CREATE USER IF NOT EXISTS 'lxcloud'@'localhost' IDENTIFIED BY 'lxcloud';
 GRANT ALL PRIVILEGES ON lxcloud.* TO 'lxcloud'@'localhost';
 FLUSH PRIVILEGES;
-EOF
+" || error "Failed to create database. Please run: sudo mysql -e \"CREATE DATABASE IF NOT EXISTS lxcloud; CREATE USER IF NOT EXISTS 'lxcloud'@'localhost' IDENTIFIED BY 'lxcloud'; GRANT ALL PRIVILEGES ON lxcloud.* TO 'lxcloud'@'localhost'; FLUSH PRIVILEGES;\""
 
 # Configure Mosquitto MQTT
 log "Configuring Mosquitto MQTT..."

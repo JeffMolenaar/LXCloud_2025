@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-// Simple test script to verify database connection with lxadmin user
+// Simple test script to verify database connection with lxcloud user
 const database = require('../config/database');
 
-console.log('Testing database connection with lxadmin user...');
+console.log('Testing database connection with lxcloud user...');
 console.log('Database configuration:');
 console.log(`  Host: ${process.env.DB_HOST || 'localhost'}`);
 console.log(`  Port: ${process.env.DB_PORT || 3306}`);
-console.log(`  User: ${process.env.DB_USER || 'lxadmin'}`);
+console.log(`  User: ${process.env.DB_USER || 'lxcloud'}`);
 console.log(`  Database: ${process.env.DB_NAME || 'lxcloud'}`);
 console.log('');
 
@@ -35,11 +35,13 @@ async function testConnection() {
     } else if (error.code === 'ER_ACCESS_DENIED_ERROR' || error.errno === 1698) {
       console.log('');
       console.log('Access denied - please run the database setup script:');
-      console.log('node scripts/setup-database.js');
+      console.log('npm run setup-db');
+      console.log('Or manually create database with:');
+      console.log('sudo mysql -e "CREATE DATABASE IF NOT EXISTS lxcloud; CREATE USER IF NOT EXISTS \'lxcloud\'@\'localhost\' IDENTIFIED BY \'lxcloud\'; GRANT ALL PRIVILEGES ON lxcloud.* TO \'lxcloud\'@\'localhost\'; FLUSH PRIVILEGES;"');
     } else if (error.code === 'ER_BAD_DB_ERROR') {
       console.log('');
       console.log('Database "lxcloud" does not exist - please run the database setup script:');
-      console.log('node scripts/setup-database.js');
+      console.log('npm run setup-db');
     }
     
     process.exit(1);
