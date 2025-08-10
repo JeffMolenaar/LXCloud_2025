@@ -114,22 +114,22 @@ The installer creates helpful management scripts:
 
 ```bash
 # Check system status and health
-sudo /opt/lxcloud/status.sh
+sudo /opt/LXCloud_2025/status.sh
 
 # Run comprehensive diagnostics
-sudo /opt/lxcloud/diagnose.sh
+sudo /opt/LXCloud_2025/diagnose.sh
 
 # Test installation completely
-sudo /opt/lxcloud/../scripts/test-installation.sh
+sudo /opt/LXCloud_2025/../scripts/test-installation.sh
 
 # View live logs
 sudo journalctl -u lxcloud -f
 
 # Update LXCloud
-sudo /opt/lxcloud/update.sh
+sudo /opt/LXCloud_2025/update.sh
 
 # Create backup
-sudo /opt/lxcloud/backup.sh
+sudo /opt/LXCloud_2025/backup.sh
 
 # Restart services
 sudo systemctl restart lxcloud
@@ -241,7 +241,7 @@ npm run dev
 To update LXCloud to the latest version:
 
 ```bash
-sudo /opt/lxcloud/update.sh
+sudo /opt/LXCloud_2025/update.sh
 ```
 
 The update script will:
@@ -323,13 +323,13 @@ The platform uses a comprehensive database schema with the following key tables:
 **Quick Fix (Most Common):**
 ```bash
 # Run the comprehensive test script first
-sudo /opt/lxcloud/../scripts/test-installation.sh
+sudo /opt/LXCloud_2025/../scripts/test-installation.sh
 
 # If tests fail, restart all services
 sudo systemctl restart lxcloud nginx mariadb mosquitto
 
 # Check status
-sudo /opt/lxcloud/status.sh
+sudo /opt/LXCloud_2025/status.sh
 ```
 
 **Detailed Troubleshooting:**
@@ -337,7 +337,7 @@ sudo /opt/lxcloud/status.sh
 1. **Services not running:**
    ```bash
    # Check service status
-   sudo /opt/lxcloud/status.sh
+   sudo /opt/LXCloud_2025/status.sh
    
    # Check individual services
    sudo systemctl status lxcloud nginx mariadb mosquitto
@@ -421,7 +421,7 @@ sudo /opt/lxcloud/status.sh
 8. **Run comprehensive diagnostics:**
    ```bash
    # This will check everything
-   sudo /opt/lxcloud/diagnose.sh
+   sudo /opt/LXCloud_2025/diagnose.sh
    ```
 
 #### 🗄️ Database Connection Issues
@@ -469,14 +469,14 @@ sudo systemctl restart mosquitto
 **Solutions:**
 ```bash
 # Fix file ownership
-sudo chown -R lxcloud:lxcloud /opt/lxcloud
+sudo chown -R lxcloud:lxcloud /opt/LXCloud_2025
 
 # Fix script permissions
-sudo chmod +x /opt/lxcloud/*.sh
+sudo chmod +x /opt/LXCloud_2025/*.sh
 
 # Fix log directory permissions
-sudo mkdir -p /opt/lxcloud/logs
-sudo chown lxcloud:lxcloud /opt/lxcloud/logs
+sudo mkdir -p /opt/LXCloud_2025/logs
+sudo chown lxcloud:lxcloud /opt/LXCloud_2025/logs
 ```
 
 #### 🌐 HTTPS Redirect Issues
@@ -511,10 +511,10 @@ If the system is completely broken:
 2. **Restore from backup:**
    ```bash
    # List available backups
-   ls -la /opt/lxcloud/backups/
+   ls -la /opt/LXCloud_2025/backups/
    
    # Restore database
-   mysql -u lxcloud -plxcloud lxcloud < /opt/lxcloud/backups/database_YYYYMMDD_HHMMSS.sql
+   mysql -u lxcloud -plxcloud lxcloud < /opt/LXCloud_2025/backups/database_YYYYMMDD_HHMMSS.sql
    ```
 
 3. **Check system resources:**
@@ -533,7 +533,7 @@ If the system is completely broken:
 
 1. **Check system status:**
    ```bash
-   sudo /opt/lxcloud/status.sh
+   sudo /opt/LXCloud_2025/status.sh
    ```
 
 2. **Collect diagnostic information:**
@@ -563,7 +563,7 @@ If the system is completely broken:
    mosquitto_pub -h localhost -u lxcloud_mqtt -P [password] -t test -m hello
    
    # Check file permissions
-   ls -la /opt/lxcloud/
+   ls -la /opt/LXCloud_2025/
    ```
 
 ### Performance Optimization
@@ -589,7 +589,7 @@ If you experience slow performance:
    sudo journalctl --vacuum-time=7d
    
    # Clean old backups
-   find /opt/lxcloud/backups -name "*.sql" -mtime +30 -delete
+   find /opt/LXCloud_2025/backups -name "*.sql" -mtime +30 -delete
    ```
 
 For additional help, check the project's GitHub issues or create a new issue with your diagnostic information.

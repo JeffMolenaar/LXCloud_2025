@@ -16,7 +16,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
-INSTALL_DIR="/opt/lxcloud"
+INSTALL_DIR="/opt/LXCloud_2025"
 SERVICE_USER="lxcloud"
 DATABASE_NAME="lxcloud"
 DATABASE_USER="lxcloud"
@@ -551,7 +551,7 @@ warn() {
     echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] WARNING: $1${NC}"
 }
 
-INSTALL_DIR="/opt/lxcloud"
+INSTALL_DIR="/opt/LXCloud_2025"
 SERVICE_USER="lxcloud"
 
 log "Starting LXCloud update..."
@@ -566,7 +566,7 @@ log "Stopping LXCloud service..."
 sudo systemctl stop lxcloud
 
 # Backup current installation
-BACKUP_DIR="/opt/lxcloud.backup.$(date +%Y%m%d_%H%M%S)"
+BACKUP_DIR="/opt/LXCloud_2025.backup.$(date +%Y%m%d_%H%M%S)"
 log "Creating backup at $BACKUP_DIR..."
 sudo cp -r "$INSTALL_DIR" "$BACKUP_DIR"
 
@@ -612,7 +612,7 @@ fi
 
 # Clean up old backups (keep only last 5)
 log "Cleaning up old backups..."
-sudo find /opt -name "lxcloud.backup.*" -type d | sort | head -n -5 | xargs sudo rm -rf 2>/dev/null || true
+sudo find /opt -name "LXCloud_2025.backup.*" -type d | sort | head -n -5 | xargs sudo rm -rf 2>/dev/null || true
 
 log "Update completed successfully!"
 EOF
@@ -623,7 +623,7 @@ EOF
 
 set -e
 
-INSTALL_DIR="/opt/lxcloud"
+INSTALL_DIR="/opt/LXCloud_2025"
 BACKUP_DIR="$INSTALL_DIR/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
 
@@ -648,7 +648,7 @@ mysqldump -u "$DATABASE_USER" -p"$DATABASE_PASSWORD" "$DATABASE_NAME" > "$BACKUP
 # Backup application files (excluding node_modules and logs)
 log "Backing up application files..."
 tar --exclude='node_modules' --exclude='logs/*' --exclude='backups/*' \
-    -czf "$BACKUP_DIR/application_$DATE.tar.gz" -C /opt lxcloud
+    -czf "$BACKUP_DIR/application_$DATE.tar.gz" -C /opt LXCloud_2025
 
 # Backup configuration files
 log "Backing up configuration files..."

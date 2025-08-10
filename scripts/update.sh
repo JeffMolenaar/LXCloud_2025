@@ -32,7 +32,7 @@ if [[ $EUID -eq 0 ]]; then
 fi
 
 # Check if LXCloud is installed
-if [ ! -d "/opt/lxcloud" ]; then
+if [ ! -d "/opt/LXCloud_2025" ]; then
     error "LXCloud is not installed. Please run the installation script first."
 fi
 
@@ -40,15 +40,15 @@ log "Starting LXCloud update process..."
 
 # Get current version
 CURRENT_VERSION=""
-if [ -f "/opt/lxcloud/package.json" ]; then
-    CURRENT_VERSION=$(grep '"version"' /opt/lxcloud/package.json | cut -d'"' -f4)
+if [ -f "/opt/LXCloud_2025/package.json" ]; then
+    CURRENT_VERSION=$(grep '"version"' /opt/LXCloud_2025/package.json | cut -d'"' -f4)
     log "Current version: $CURRENT_VERSION"
 fi
 
 # Create backup
-BACKUP_DIR="/opt/lxcloud.backup.$(date +%Y%m%d_%H%M%S)"
+BACKUP_DIR="/opt/LXCloud_2025.backup.$(date +%Y%m%d_%H%M%S)"
 log "Creating backup at: $BACKUP_DIR"
-sudo cp -r /opt/lxcloud "$BACKUP_DIR"
+sudo cp -r /opt/LXCloud_2025 "$BACKUP_DIR"
 
 # Stop LXCloud service
 log "Stopping LXCloud service..."
@@ -56,14 +56,14 @@ sudo systemctl stop lxcloud
 
 # Pull latest changes from repository
 log "Pulling latest changes..."
-cd /opt/lxcloud
+cd /opt/LXCloud_2025
 sudo -u lxcloud git fetch origin
 sudo -u lxcloud git reset --hard origin/main
 
 # Get new version
 NEW_VERSION=""
-if [ -f "/opt/lxcloud/package.json" ]; then
-    NEW_VERSION=$(grep '"version"' /opt/lxcloud/package.json | cut -d'"' -f4)
+if [ -f "/opt/LXCloud_2025/package.json" ]; then
+    NEW_VERSION=$(grep '"version"' /opt/LXCloud_2025/package.json | cut -d'"' -f4)
     log "New version: $NEW_VERSION"
 fi
 
@@ -86,8 +86,8 @@ database.initialize().then(() => {
 
 # Update file permissions
 log "Updating file permissions..."
-sudo chown -R lxcloud:lxcloud /opt/lxcloud
-sudo chmod +x /opt/lxcloud/scripts/*.sh
+sudo chown -R lxcloud:lxcloud /opt/LXCloud_2025
+sudo chmod +x /opt/LXCloud_2025/scripts/*.sh
 
 # Restart services
 log "Restarting LXCloud service..."
@@ -129,7 +129,7 @@ log "  - Application URL: http://$(hostname -I | awk '{print $1}')"
 log ""
 log "⚠️  If you experience any issues:"
 log "  1. Check logs: sudo journalctl -u lxcloud -f"
-log "  2. Restore backup: sudo systemctl stop lxcloud && sudo rm -rf /opt/lxcloud && sudo mv $BACKUP_DIR /opt/lxcloud && sudo systemctl start lxcloud"
+log "  2. Restore backup: sudo systemctl stop lxcloud && sudo rm -rf /opt/LXCloud_2025 && sudo mv $BACKUP_DIR /opt/LXCloud_2025 && sudo systemctl start lxcloud"
 log "  3. Contact support with error details"
 log ""
 

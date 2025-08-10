@@ -15,7 +15,7 @@ The fix is automatically included in new installations. Local network access wil
 If you're experiencing HTTPS redirect issues, run the fix script:
 
 ```bash
-sudo /opt/lxcloud/scripts/fix-https-redirect.sh
+sudo /opt/LXCloud_2025/scripts/fix-https-redirect.sh
 ```
 
 This script will:
@@ -62,7 +62,7 @@ curl -v http://192.168.1.xxx
 You can run the built-in test to verify the fix:
 
 ```bash
-cd /opt/lxcloud
+cd /opt/LXCloud_2025
 ./scripts/test-fix.sh
 ```
 

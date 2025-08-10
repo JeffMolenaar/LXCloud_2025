@@ -40,10 +40,10 @@ fi
 
 # Copy the fixed nginx configuration
 log "Installing fixed nginx configuration..."
-if [ -f /opt/lxcloud/config/nginx-local.conf ]; then
-    cp /opt/lxcloud/config/nginx-local.conf /etc/nginx/sites-available/lxcloud
+if [ -f /opt/LXCloud_2025/config/nginx-local.conf ]; then
+    cp /opt/LXCloud_2025/config/nginx-local.conf /etc/nginx/sites-available/lxcloud
 else
-    error "nginx-local.conf not found in /opt/lxcloud/config/"
+    error "nginx-local.conf not found in /opt/LXCloud_2025/config/"
 fi
 
 # Test nginx configuration

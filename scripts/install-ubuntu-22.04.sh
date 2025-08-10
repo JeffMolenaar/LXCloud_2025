@@ -16,7 +16,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
-INSTALL_DIR="/opt/lxcloud"
+INSTALL_DIR="/opt/LXCloud_2025"
 SERVICE_USER="lxcloud"
 DATABASE_NAME="lxcloud"
 DATABASE_USER="lxcloud"
@@ -752,7 +752,7 @@ else
 fi
 
 # MQTT connectivity
-if timeout 5 mosquitto_pub -h localhost -u lxcloud_mqtt -P "$(grep MQTT_PASSWORD /opt/lxcloud/.env | cut -d= -f2)" -t test -m hello 2>/dev/null; then
+if timeout 5 mosquitto_pub -h localhost -u lxcloud_mqtt -P "$(grep MQTT_PASSWORD /opt/LXCloud_2025/.env | cut -d= -f2)" -t test -m hello 2>/dev/null; then
     echo -e "  ${GREEN}✅ MQTT Broker: Accessible${NC}"
 else
     echo -e "  ${RED}❌ MQTT Broker: Not accessible${NC}"
@@ -768,7 +768,7 @@ echo ""
 
 # Disk space
 echo -e "${CYAN}Disk Usage:${NC}"
-df -h /opt/lxcloud | tail -1 | awk '{print "  Application: " $5 " used (" $3 "/" $2 ")"}'
+df -h /opt/LXCloud_2025 | tail -1 | awk '{print "  Application: " $5 " used (" $3 "/" $2 ")"}'
 df -h /var/log | tail -1 | awk '{print "  Logs: " $5 " used (" $3 "/" $2 ")"}'
 echo ""
 
@@ -812,7 +812,7 @@ EOF
 
 set -e
 
-INSTALL_DIR="/opt/lxcloud"
+INSTALL_DIR="/opt/LXCloud_2025"
 BACKUP_DIR="$INSTALL_DIR/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
 DATABASE_USER="lxcloud"
@@ -845,7 +845,7 @@ mysqldump -u "$DATABASE_USER" -p"$DATABASE_PASSWORD" "$DATABASE_NAME" > "$BACKUP
 # Backup application files (excluding node_modules and logs)
 log "Backing up application files..."
 tar --exclude='node_modules' --exclude='logs/*' --exclude='backups/*' \
-    -czf "$BACKUP_DIR/application_$DATE.tar.gz" -C /opt lxcloud
+    -czf "$BACKUP_DIR/application_$DATE.tar.gz" -C /opt LXCloud_2025
 
 # Backup configuration files
 log "Backing up configuration files..."
@@ -889,7 +889,7 @@ warn() {
     echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] WARNING: $1${NC}"
 }
 
-INSTALL_DIR="/opt/lxcloud"
+INSTALL_DIR="/opt/LXCloud_2025"
 SERVICE_USER="lxcloud"
 
 log "Starting LXCloud update..."
@@ -1033,14 +1033,14 @@ echo ""
 
 # File system checks
 echo -e "${CYAN}5. File System Checks:${NC}"
-if [ -d "/opt/lxcloud" ]; then
+if [ -d "/opt/LXCloud_2025" ]; then
     echo -e "${GREEN}✅ Application directory exists${NC}"
-    echo "   Permissions: $(ls -ld /opt/lxcloud | awk '{print $1 " " $3 ":" $4}')"
+    echo "   Permissions: $(ls -ld /opt/LXCloud_2025 | awk '{print $1 " " $3 ":" $4}')"
 else
     echo -e "${RED}❌ Application directory missing${NC}"
 fi
 
-if [ -f "/opt/lxcloud/.env" ]; then
+if [ -f "/opt/LXCloud_2025/.env" ]; then
     echo -e "${GREEN}✅ Environment file exists${NC}"
 else
     echo -e "${RED}❌ Environment file missing${NC}"
@@ -1076,7 +1076,7 @@ free -h | grep -E "Mem|Swap"
 echo ""
 
 echo "Disk usage:"
-df -h /opt/lxcloud 2>/dev/null || df -h /
+df -h /opt/LXCloud_2025 2>/dev/null || df -h /
 echo ""
 
 echo "Load average:"
