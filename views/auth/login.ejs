@@ -218,6 +218,23 @@
                         </div>
                     <% } %>
 
+                    <!-- Remember Me and Forgot Password -->
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
+                                <label class="form-check-label" for="rememberMe">
+                                    Remember me
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <a href="#" class="btn-register small" id="forgotPasswordLink">
+                                Forgot password?
+                            </a>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-login" id="loginButton">
                         <span class="button-text">
                             <i class="fas fa-sign-in-alt me-2"></i>
@@ -249,12 +266,65 @@
             const loginForm = document.getElementById('loginForm');
             const loginButton = document.getElementById('loginButton');
             const connectionStatus = document.getElementById('connection-status');
+            const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
             
             // Check if we can reach the server
             checkServerConnection();
             
+            // Enhanced form validation
+            function validateForm() {
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                
+                if (!email || !password) {
+                    showFormError('Please fill in all required fields');
+                    return false;
+                }
+                
+                if (!isValidEmail(email)) {
+                    showFormError('Please enter a valid email address');
+                    emailInput.focus();
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+            
+            function showFormError(message) {
+                // Create or update error alert
+                let errorAlert = document.querySelector('.form-error-alert');
+                if (!errorAlert) {
+                    errorAlert = document.createElement('div');
+                    errorAlert.className = 'alert alert-danger form-error-alert';
+                    errorAlert.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><span class="error-text"></span>';
+                    loginForm.insertBefore(errorAlert, loginForm.firstChild);
+                }
+                
+                errorAlert.querySelector('.error-text').textContent = message;
+                errorAlert.style.display = 'block';
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    if (errorAlert) {
+                        errorAlert.style.display = 'none';
+                    }
+                }, 5000);
+            }
+            
             // Handle form submission
             loginForm.addEventListener('submit', function(e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                    return;
+                }
+                
                 showLoading(true);
                 
                 // Let the form submit normally, but provide visual feedback
@@ -264,6 +334,46 @@
                     }
                 }, 10000); // Reset after 10 seconds if no response
             });
+            
+            // Real-time email validation
+            emailInput.addEventListener('blur', function() {
+                const email = this.value.trim();
+                if (email && !isValidEmail(email)) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+            
+            // Clear validation on input
+            emailInput.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                hideFormError();
+            });
+            
+            passwordInput.addEventListener('input', function() {
+                hideFormError();
+            });
+            
+            function hideFormError() {
+                const errorAlert = document.querySelector('.form-error-alert');
+                if (errorAlert) {
+                    errorAlert.style.display = 'none';
+                }
+            }
+            
+            // Handle forgot password
+            if (forgotPasswordLink) {
+                forgotPasswordLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showForgotPasswordModal();
+                });
+            }
+            
+            function showForgotPasswordModal() {
+                // For now, show an alert - in production this would open a modal
+                alert('Password reset functionality will be available soon. Please contact your administrator for assistance.');
+            }
             
             function showLoading(show) {
                 if (!loginButton) return;
@@ -289,19 +399,26 @@
                 })
                 .then(response => {
                     if (response.ok) {
-                        hideConnectionWarning();
+                        return response.json();
                     } else {
-                        showConnectionWarning('Server responding but may have issues');
+                        throw new Error('Server responding but may have issues');
+                    }
+                })
+                .then(data => {
+                    hideConnectionWarning();
+                    if (data.mockMode) {
+                        showConnectionWarning('Running in development mode', 'info');
                     }
                 })
                 .catch(error => {
-                    showConnectionWarning('Unable to connect to server');
+                    showConnectionWarning('Unable to connect to server', 'warning');
                     console.warn('Connection check failed:', error);
                 });
             }
             
-            function showConnectionWarning(message) {
+            function showConnectionWarning(message, type = 'warning') {
                 if (connectionStatus) {
+                    connectionStatus.className = `alert alert-${type}`;
                     document.getElementById('connection-message').textContent = message;
                     connectionStatus.classList.remove('d-none');
                 }
@@ -311,6 +428,19 @@
                 if (connectionStatus) {
                     connectionStatus.classList.add('d-none');
                 }
+            }
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Submit form on Ctrl+Enter
+                if (e.ctrlKey && e.key === 'Enter') {
+                    loginForm.requestSubmit();
+                }
+            });
+            
+            // Auto-focus email field
+            if (emailInput && !emailInput.value) {
+                emailInput.focus();
             }
         });
     </script>

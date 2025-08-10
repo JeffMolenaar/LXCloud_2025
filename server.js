@@ -10,10 +10,11 @@ require('dotenv').config();
 
 const logger = require('./config/logger');
 const database = require('./config/database');
+const container = require('./config/container');
 const mqttService = require('./controllers/mqttController');
 
 // Import routes
-const authRoutes = require('./routes/auth');
+const authRoutes = require('./routes/auth-new');
 const dashboardRoutes = require('./routes/dashboard');
 const controllerRoutes = require('./routes/controllers');
 const userRoutes = require('./routes/users');
@@ -32,7 +33,7 @@ const io = new Server(server, {
   }
 });
 
-// Enhanced HTTPS redirect fix middleware - disable HTTPS enforcement for local networks
+// Enhanced security middleware with better local network detection
 app.use((req, res, next) => {
   const clientIP = req.headers['x-forwarded-for'] || 
                    req.headers['x-real-ip'] || 
@@ -41,13 +42,11 @@ app.use((req, res, next) => {
                    req.ip || 
                    '127.0.0.1';
   
-  // More comprehensive local network detection
   const isLocalNetwork = /^(127\.|::1|localhost|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(clientIP) ||
                          clientIP === '::1' ||
                          clientIP.includes('localhost') ||
                          clientIP === 'undefined';
   
-  // Configure helmet based on request source - always disable HSTS
   const helmetConfig = {
     contentSecurityPolicy: {
       directives: {
@@ -59,20 +58,18 @@ app.use((req, res, next) => {
         fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
       },
     },
-    hsts: false, // Always disable HTTP Strict Transport Security globally
-    forceHTTPS: false // Always ensure no HTTPS redirection
+    hsts: false,
+    forceHTTPS: false
   };
   
-  // Apply helmet with local network friendly settings
   helmet(helmetConfig)(req, res, next);
 });
 
+// CORS configuration
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     
-    // Allow localhost and 192.168.x.x network
     const allowedOrigins = [
       'http://localhost:3000',
       'http://127.0.0.1:3000',
@@ -83,20 +80,20 @@ app.use(cors({
       return callback(null, true);
     }
     
-    return callback(null, true); // Allow all in development
+    return callback(null, true);
   },
   credentials: true
 }));
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
 
-// Enhanced middleware to prevent HTTPS redirects for local network requests
+// HTTP enforcement disabling for local networks
 app.use((req, res, next) => {
   const clientIP = req.headers['x-forwarded-for'] || 
                    req.headers['x-real-ip'] || 
@@ -105,19 +102,14 @@ app.use((req, res, next) => {
                    req.ip || 
                    '127.0.0.1';
   
-  // More comprehensive local network detection
   const isLocalNetwork = /^(127\.|::1|localhost|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(clientIP) ||
                          clientIP === '::1' ||
                          clientIP.includes('localhost') ||
                          clientIP === 'undefined';
   
-  // For all requests, ensure HTTP is allowed - especially important for local networks
   if (isLocalNetwork || process.env.FORCE_HTTP === 'true') {
-    // Remove any HTTPS redirect headers that might have been set by reverse proxies
     res.removeHeader('Strict-Transport-Security');
     res.removeHeader('Location');
-    
-    // Set custom headers to indicate local network handling
     res.setHeader('X-Local-Network', 'true');
     res.setHeader('X-HTTPS-Redirect', 'disabled');
   }
@@ -129,16 +121,20 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Session configuration
+// Enhanced session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // Always use HTTP, never force HTTPS
+    secure: false,
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
+    maxAge: 24 * 60 * 60 * 1000
+  },
+  // Add session store configuration for production
+  ...(process.env.NODE_ENV === 'production' && {
+    store: new (require('express-session').MemoryStore)()
+  })
 }));
 
 // Static files
@@ -149,13 +145,14 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-// Make socket.io available to routes
+// Make socket.io and container available to routes
 app.use((req, res, next) => {
   req.io = io;
+  req.container = container;
   next();
 });
 
-// Routes
+// Routes with improved error handling
 app.use('/auth', authRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/controllers', controllerRoutes);
@@ -163,13 +160,19 @@ app.use('/users', userRoutes);
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
 
-// Health check endpoint for connection testing
+// Enhanced health check endpoint
 app.get('/api/health', (req, res) => {
+  const sessionService = container.get('sessionService');
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    mockMode: require('./config/database').mockMode,
-    version: process.env.npm_package_version || '1.0.0'
+    mockMode: database.mockMode,
+    version: process.env.npm_package_version || '1.0.0',
+    services: {
+      database: database.mockMode ? 'mock' : 'connected',
+      session: 'available',
+      auth: 'available'
+    }
   });
 });
 
@@ -182,8 +185,9 @@ app.get('/', (req, res) => {
   }
 });
 
-// 404 handler
+// Enhanced 404 handler
 app.use((req, res) => {
+  logger.warn(`404 - Page not found: ${req.url} from IP: ${req.ip}`);
   res.status(404).render('error', { 
     title: 'Page Not Found',
     message: 'The page you are looking for does not exist.',
@@ -191,50 +195,72 @@ app.use((req, res) => {
   });
 });
 
-// Error handler
+// Enhanced error handler
 app.use((err, req, res, next) => {
-  logger.error(err.stack);
+  logger.error(`Error on ${req.method} ${req.url}:`, err);
   
-  res.status(err.status || 500).render('error', {
-    title: 'Error',
-    message: err.message,
-    error: process.env.NODE_ENV === 'development' ? err : {}
-  });
+  const status = err.status || 500;
+  const message = process.env.NODE_ENV === 'development' ? err.message : 'Internal server error';
+  
+  if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+    res.status(status).json({ error: message });
+  } else {
+    res.status(status).render('error', {
+      title: 'Error',
+      message: message,
+      error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+  }
 });
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  logger.info('New client connected');
+  logger.info(`New client connected: ${socket.id}`);
   
   socket.on('disconnect', () => {
-    logger.info('Client disconnected');
+    logger.info(`Client disconnected: ${socket.id}`);
   });
 
-  // Join room based on user ID for targeted updates
   socket.on('join-user-room', (userId) => {
     socket.join(`user-${userId}`);
+    logger.info(`User ${userId} joined room`);
   });
 });
 
-// Initialize database and start server
+// Enhanced server initialization with proper service setup
 async function startServer() {
   try {
     // Initialize database
     await database.initialize();
     logger.info('Database connected successfully');
     
+    // Initialize session service tables
+    const sessionService = container.get('sessionService');
+    await sessionService.initializeTables();
+    logger.info('Session service initialized');
+    
     // Initialize MQTT service
     mqttService.initialize(io);
     logger.info('MQTT service initialized');
     
+    // Start periodic session cleanup
+    setInterval(async () => {
+      try {
+        await sessionService.cleanupExpiredSessions();
+      } catch (error) {
+        logger.error('Session cleanup error:', error);
+      }
+    }, 60 * 60 * 1000); // Every hour
+    
     // Start server
     const PORT = process.env.PORT || 3000;
-    const HOST = process.env.HOST || '0.0.0.0'; // Listen on all interfaces
+    const HOST = process.env.HOST || '0.0.0.0';
     
     server.listen(PORT, HOST, () => {
       logger.info(`LXCloud server running on ${HOST}:${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info(`Server accessible via: http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
+      logger.info('Services initialized: Database, Auth, Session, MQTT');
     });
     
   } catch (error) {
