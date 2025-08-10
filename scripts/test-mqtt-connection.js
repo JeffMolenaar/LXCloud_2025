@@ -105,7 +105,7 @@ function testMQTTConnection(brokerUrl, username, password, timeout = 5000) {
 async function main() {
   try {
     // Determine the application directory
-    const appDir = process.env.INSTALL_DIR || '/opt/lxcloud';
+    const appDir = process.env.INSTALL_DIR || '/opt/LXCloud_2025';
     const currentDir = process.cwd();
     
     // Try to find .env file in multiple locations

@@ -78,21 +78,21 @@ sudo apt install -y git nginx certbot python3-certbot-nginx
 
 # Create LXCloud user
 log "Creating LXCloud system user..."
-sudo useradd -r -s /bin/false -d /opt/lxcloud lxcloud || true
+sudo useradd -r -s /bin/false -d /opt/LXCloud_2025 lxcloud || true
 
 # Create application directory
 log "Creating application directory..."
-sudo mkdir -p /opt/lxcloud
-sudo chown lxcloud:lxcloud /opt/lxcloud
+sudo mkdir -p /opt/LXCloud_2025
+sudo chown lxcloud:lxcloud /opt/LXCloud_2025
 
 # Copy application files
 log "Copying application files..."
-sudo cp -r . /opt/lxcloud/
-sudo chown -R lxcloud:lxcloud /opt/lxcloud
+sudo cp -r . /opt/LXCloud_2025/
+sudo chown -R lxcloud:lxcloud /opt/LXCloud_2025
 
 # Install Node.js dependencies
 log "Installing Node.js dependencies..."
-cd /opt/lxcloud
+cd /opt/LXCloud_2025
 sudo -u lxcloud npm install --omit=dev
 
 # Create environment file
@@ -112,10 +112,10 @@ ESCAPED_DB_PASSWORD=$(printf '%s\n' "$DB_PASSWORD" | sed 's/[\/&]/\\&/g')
 ESCAPED_MQTT_PASSWORD=$(printf '%s\n' "$MQTT_PASSWORD" | sed 's/[\/&]/\\&/g')
 
 # Update environment file with consistent credentials
-sudo -u lxcloud sed -i "s|your_jwt_secret_key_change_this|$ESCAPED_JWT_SECRET|" /opt/lxcloud/.env
-sudo -u lxcloud sed -i "s|your_session_secret_change_this|$ESCAPED_SESSION_SECRET|" /opt/lxcloud/.env
-sudo -u lxcloud sed -i "s|DB_PASSWORD=lxcloud|DB_PASSWORD=$ESCAPED_DB_PASSWORD|" /opt/lxcloud/.env
-sudo -u lxcloud sed -i "s|change_this_mqtt_password|$ESCAPED_MQTT_PASSWORD|" /opt/lxcloud/.env
+sudo -u lxcloud sed -i "s|your_jwt_secret_key_change_this|$ESCAPED_JWT_SECRET|" /opt/LXCloud_2025/.env
+sudo -u lxcloud sed -i "s|your_session_secret_change_this|$ESCAPED_SESSION_SECRET|" /opt/LXCloud_2025/.env
+sudo -u lxcloud sed -i "s|DB_PASSWORD=lxcloud|DB_PASSWORD=$ESCAPED_DB_PASSWORD|" /opt/LXCloud_2025/.env
+sudo -u lxcloud sed -i "s|change_this_mqtt_password|$ESCAPED_MQTT_PASSWORD|" /opt/LXCloud_2025/.env
 
 # Create MariaDB database and user - automated for localhost
 log "Setting up MariaDB database..."
@@ -170,7 +170,7 @@ Requires=mariadb.service
 Type=simple
 User=lxcloud
 Group=lxcloud
-WorkingDirectory=/opt/lxcloud
+WorkingDirectory=/opt/LXCloud_2025
 ExecStart=/usr/bin/node server.js
 Restart=always
 RestartSec=5
@@ -181,19 +181,19 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/lxcloud/logs /opt/lxcloud/uploads
+ReadWritePaths=/opt/LXCloud_2025/logs /opt/LXCloud_2025/uploads
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
 # Create log directories
-sudo mkdir -p /opt/lxcloud/logs /opt/lxcloud/uploads
-sudo chown -R lxcloud:lxcloud /opt/lxcloud/logs /opt/lxcloud/uploads
+sudo mkdir -p /opt/LXCloud_2025/logs /opt/LXCloud_2025/uploads
+sudo chown -R lxcloud:lxcloud /opt/LXCloud_2025/logs /opt/LXCloud_2025/uploads
 
 # Setup database schema
 log "Setting up database schema..."
-cd /opt/lxcloud
+cd /opt/LXCloud_2025
 sudo -u lxcloud NODE_ENV=production node -e "
 const database = require('./config/database');
 database.initialize().then(() => {
@@ -275,7 +275,7 @@ sudo ufw --force enable
 
 # Create update script
 log "Creating update script..."
-sudo tee /opt/lxcloud/update.sh > /dev/null <<'EOF'
+sudo tee /opt/LXCloud_2025/update.sh > /dev/null <<'EOF'
 #!/bin/bash
 
 set -e
@@ -295,10 +295,10 @@ log "Starting LXCloud update..."
 sudo systemctl stop lxcloud
 
 # Backup current installation
-sudo cp -r /opt/lxcloud /opt/lxcloud.backup.$(date +%Y%m%d_%H%M%S)
+sudo cp -r /opt/LXCloud_2025 /opt/LXCloud_2025.backup.$(date +%Y%m%d_%H%M%S)
 
 # Pull latest changes
-cd /opt/lxcloud
+cd /opt/LXCloud_2025
 sudo -u lxcloud git pull origin main
 
 # Install/update dependencies
@@ -322,7 +322,7 @@ sudo systemctl start lxcloud
 log "LXCloud updated successfully!"
 EOF
 
-sudo chmod +x /opt/lxcloud/update.sh
+sudo chmod +x /opt/LXCloud_2025/update.sh
 
 # Final status check
 log "Checking service status..."
@@ -358,9 +358,9 @@ log "📋 Installation Summary:"
 log "  - Application URL: http://$(hostname -I | awk '{print $1}')"
 log "  - Default Admin Email: admin@lxcloud.local"
 log "  - Default Admin Password: admin123"
-log "  - Application Directory: /opt/lxcloud"
+log "  - Application Directory: /opt/LXCloud_2025"
 log "  - Logs: sudo journalctl -u lxcloud -f"
-log "  - Update Command: sudo /opt/lxcloud/update.sh"
+log "  - Update Command: sudo /opt/LXCloud_2025/update.sh"
 log ""
 log "⚠️  Important:"
 log "  1. Change the default admin password immediately"

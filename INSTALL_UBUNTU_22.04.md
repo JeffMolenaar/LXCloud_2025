@@ -73,10 +73,10 @@ The installation script will:
 ### Step 3: Verify Installation
 ```bash
 # Run comprehensive test suite
-sudo /opt/lxcloud/../scripts/test-installation.sh
+sudo /opt/LXCloud_2025/../scripts/test-installation.sh
 
 # Check system status
-sudo /opt/lxcloud/status.sh
+sudo /opt/LXCloud_2025/status.sh
 
 # View logs
 sudo journalctl -u lxcloud -f
@@ -126,7 +126,7 @@ sudo journalctl -u lxcloud -f
 ### Service Management
 ```bash
 # Check status of all services
-sudo /opt/lxcloud/status.sh
+sudo /opt/LXCloud_2025/status.sh
 
 # Restart LXCloud
 sudo systemctl restart lxcloud
@@ -143,13 +143,13 @@ sudo journalctl -u mariadb -f
 ### Maintenance
 ```bash
 # Create backup
-sudo /opt/lxcloud/backup.sh
+sudo /opt/LXCloud_2025/backup.sh
 
 # Update LXCloud
-sudo /opt/lxcloud/update.sh
+sudo /opt/LXCloud_2025/update.sh
 
 # Run diagnostics
-sudo /opt/lxcloud/diagnose.sh
+sudo /opt/LXCloud_2025/diagnose.sh
 ```
 
 ## Troubleshooting
@@ -161,13 +161,13 @@ sudo /opt/lxcloud/diagnose.sh
 **Quick Fix**:
 ```bash
 # Run diagnostics first
-sudo /opt/lxcloud/diagnose.sh
+sudo /opt/LXCloud_2025/diagnose.sh
 
 # Restart all services
 sudo systemctl restart lxcloud nginx mariadb mosquitto
 
 # Check status
-sudo /opt/lxcloud/status.sh
+sudo /opt/LXCloud_2025/status.sh
 ```
 
 **Detailed Troubleshooting**:
@@ -236,7 +236,7 @@ sudo ufw allow from 192.168.0.0/16 to any port 3000
 
 1. **Run Full Diagnostics**:
    ```bash
-   sudo /opt/lxcloud/diagnose.sh
+   sudo /opt/LXCloud_2025/diagnose.sh
    ```
 
 2. **Check System Resources**:
@@ -270,7 +270,7 @@ sudo certbot renew --dry-run
 
 ### Custom Configuration
 
-- **Application config**: `/opt/lxcloud/.env`
+- **Application config**: `/opt/LXCloud_2025/.env`
 - **Nginx config**: `/etc/nginx/sites-available/lxcloud`
 - **Systemd service**: `/etc/systemd/system/lxcloud.service`
 - **MQTT config**: `/etc/mosquitto/conf.d/lxcloud.conf`
@@ -302,7 +302,7 @@ sudo certbot renew --dry-run
 
 ```bash
 # Create full backup
-sudo /opt/lxcloud/backup.sh
+sudo /opt/LXCloud_2025/backup.sh
 
 # Manual database backup
 mysqldump -u lxcloud -plxcloud lxcloud > backup.sql
@@ -324,10 +324,10 @@ tar -xzf application_backup.tar.gz -C /opt/
 
 ```bash
 # Automatic update
-sudo /opt/lxcloud/update.sh
+sudo /opt/LXCloud_2025/update.sh
 
 # Manual update
-cd /opt/lxcloud
+cd /opt/LXCloud_2025
 sudo -u lxcloud git pull origin main
 sudo -u lxcloud npm install --omit=dev
 sudo systemctl restart lxcloud
@@ -349,7 +349,7 @@ For additional support:
 
 1. Check the main README.md file
 2. Review troubleshooting documentation
-3. Run diagnostics: `sudo /opt/lxcloud/diagnose.sh`
+3. Run diagnostics: `sudo /opt/LXCloud_2025/diagnose.sh`
 4. Check GitHub issues: https://github.com/JeffMolenaar/LXCloud_2025/issues
 
 ## Version Information

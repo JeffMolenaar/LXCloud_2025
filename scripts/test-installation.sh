@@ -14,7 +14,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Test configuration
-INSTALL_DIR="/opt/lxcloud"
+INSTALL_DIR="/opt/LXCloud_2025"
 DATABASE_USER="lxcloud"
 DATABASE_PASSWORD="lxcloud"
 DATABASE_NAME="lxcloud"
@@ -239,7 +239,7 @@ run_test "Service runs as non-root" "! systemctl show lxcloud | grep -q 'User=ro
 # Test 19: Memory and Disk Usage
 log "Testing resource usage..."
 memory_usage=$(free | grep Mem | awk '{print ($3/$2) * 100.0}')
-disk_usage=$(df /opt/lxcloud | tail -1 | awk '{print $5}' | sed 's/%//')
+disk_usage=$(df /opt/LXCloud_2025 | tail -1 | awk '{print $5}' | sed 's/%//')
 
 if [ "${memory_usage%.*}" -lt 80 ]; then
     success "✅ Memory usage: ${memory_usage%.*}% (acceptable)"
