@@ -1,11 +1,12 @@
 {
   "name": "lxcloud",
   "version": "1.0.0",
-  "description": "LXCloud - Cloud dashboard platform for controller management and analytics",
+  "description": "LXCloud Simple - Simplified cloud dashboard with file-based auth, HTTP-only, local network access",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node server-simple.js",
+    "start-original": "node server.js",
+    "dev": "nodemon server-simple.js",
     "install-system": "sudo ./scripts/install.sh",
     "install-ubuntu-22": "sudo ./scripts/install-ubuntu-22.04.sh",
     "update": "./scripts/update.sh",
