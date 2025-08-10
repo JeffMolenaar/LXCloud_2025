@@ -200,11 +200,20 @@ router.put('/controllers/:id/location', authenticateToken, async (req, res) => {
 
 // Get system health
 router.get('/health', (req, res) => {
+  const database = require('../config/database');
+  const container = require('../config/container');
+  
   res.json({
     status: 'ok',
-    timestamp: new Date(),
-    version: process.env.APP_VERSION || '1.0.0',
-    uptime: process.uptime()
+    timestamp: new Date().toISOString(),
+    mockMode: database.mockMode,
+    version: process.env.npm_package_version || '1.0.0',
+    uptime: process.uptime(),
+    services: {
+      database: database.mockMode ? 'mock' : 'connected',
+      session: 'available',
+      auth: 'available'
+    }
   });
 });
 
