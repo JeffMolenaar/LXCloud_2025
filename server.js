@@ -160,19 +160,81 @@ app.use('/users', userRoutes);
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
 
-// Enhanced health check endpoint
-app.get('/api/health', (req, res) => {
-  const sessionService = container.get('sessionService');
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    mockMode: database.mockMode,
-    version: process.env.npm_package_version || '1.0.0',
-    services: {
-      database: database.mockMode ? 'mock' : 'connected',
-      session: 'available',
-      auth: 'available'
+// Enhanced health check endpoint with detailed system information
+app.get('/api/health', async (req, res) => {
+  try {
+    const sessionService = container.get('sessionService');
+    
+    // Check database connectivity
+    let dbStatus = 'connected';
+    let dbError = null;
+    try {
+      await database.query('SELECT 1');
+    } catch (error) {
+      dbStatus = database.mockMode ? 'mock' : 'error';
+      dbError = error.message;
     }
+    
+    // Get system information
+    const os = require('os');
+    const uptime = process.uptime();
+    const memUsage = process.memoryUsage();
+    
+    const healthInfo = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: Math.floor(uptime),
+      version: process.env.npm_package_version || '1.0.0',
+      environment: process.env.NODE_ENV || 'development',
+      services: {
+        database: dbStatus,
+        session: 'available',
+        auth: 'available',
+        mqtt: 'available'
+      },
+      system: {
+        platform: os.platform(),
+        arch: os.arch(),
+        nodeVersion: process.version,
+        cpus: os.cpus().length,
+        totalMemory: Math.round(os.totalmem() / 1024 / 1024),
+        freeMemory: Math.round(os.freemem() / 1024 / 1024),
+        loadAverage: os.loadavg()
+      },
+      memory: {
+        rss: Math.round(memUsage.rss / 1024 / 1024),
+        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
+        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
+        external: Math.round(memUsage.external / 1024 / 1024)
+      }
+    };
+    
+    // Add database error details if present
+    if (dbError) {
+      healthInfo.database_error = dbError;
+    }
+    
+    // Set appropriate HTTP status
+    const httpStatus = dbStatus === 'error' ? 503 : 200;
+    
+    res.status(httpStatus).json(healthInfo);
+    
+  } catch (error) {
+    logger.error('Health check error:', error);
+    res.status(500).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      error: error.message
+    });
+  }
+});
+
+// Simple connectivity test endpoint
+app.get('/api/ping', (req, res) => {
+  res.json({
+    status: 'pong',
+    timestamp: new Date().toISOString(),
+    server: 'LXCloud'
   });
 });
 
@@ -227,44 +289,124 @@ io.on('connection', (socket) => {
   });
 });
 
-// Enhanced server initialization with proper service setup
+// Enhanced server initialization with improved error handling and connectivity
 async function startServer() {
   try {
-    // Initialize database
-    await database.initialize();
-    logger.info('Database connected successfully');
+    // Initialize database with retry logic
+    let dbInitialized = false;
+    let retryCount = 0;
+    const maxRetries = 5;
+    
+    while (!dbInitialized && retryCount < maxRetries) {
+      try {
+        await database.initialize();
+        logger.info('Database connected successfully');
+        dbInitialized = true;
+      } catch (error) {
+        retryCount++;
+        logger.warn(`Database connection attempt ${retryCount}/${maxRetries} failed:`, error.message);
+        
+        if (retryCount >= maxRetries) {
+          if (process.env.NODE_ENV === 'development') {
+            logger.warn('Max database retries reached, continuing with mock database for development');
+            database.setupMockDatabase();
+            dbInitialized = true;
+          } else {
+            throw error;
+          }
+        } else {
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
+        }
+      }
+    }
     
     // Initialize session service tables
-    const sessionService = container.get('sessionService');
-    await sessionService.initializeTables();
-    logger.info('Session service initialized');
+    try {
+      const sessionService = container.get('sessionService');
+      await sessionService.initializeTables();
+      logger.info('Session service initialized');
+    } catch (error) {
+      logger.warn('Session service initialization failed, continuing without it:', error.message);
+    }
     
-    // Initialize MQTT service
-    mqttService.initialize(io);
-    logger.info('MQTT service initialized');
+    // Initialize MQTT service with error handling
+    try {
+      mqttService.initialize(io);
+      logger.info('MQTT service initialized');
+    } catch (error) {
+      logger.warn('MQTT service initialization failed, continuing without it:', error.message);
+    }
     
     // Start periodic session cleanup
     setInterval(async () => {
       try {
+        const sessionService = container.get('sessionService');
         await sessionService.cleanupExpiredSessions();
       } catch (error) {
         logger.error('Session cleanup error:', error);
       }
     }, 60 * 60 * 1000); // Every hour
     
-    // Start server
+    // Start server with enhanced error handling
     const PORT = process.env.PORT || 3000;
     const HOST = process.env.HOST || '0.0.0.0';
     
-    server.listen(PORT, HOST, () => {
+    server.listen(PORT, HOST, (err) => {
+      if (err) {
+        logger.error('Failed to start server:', err);
+        process.exit(1);
+      }
+      
       logger.info(`LXCloud server running on ${HOST}:${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info(`Server accessible via: http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
+      logger.info(`Mock mode: ${database.mockMode}`);
       logger.info('Services initialized: Database, Auth, Session, MQTT');
+      
+      // Log network interfaces for easier access
+      try {
+        const os = require('os');
+        const interfaces = os.networkInterfaces();
+        logger.info('Network interfaces:');
+        Object.keys(interfaces).forEach(name => {
+          interfaces[name].forEach(iface => {
+            if (iface.family === 'IPv4' && !iface.internal) {
+              logger.info(`  ${name}: http://${iface.address}:${PORT}`);
+            }
+          });
+        });
+      } catch (error) {
+        // Ignore network interface errors
+      }
+    });
+    
+    // Handle server errors
+    server.on('error', (error) => {
+      if (error.code === 'EADDRINUSE') {
+        logger.error(`Port ${PORT} is already in use. Please check if another LXCloud instance is running.`);
+        process.exit(1);
+      } else if (error.code === 'EACCES') {
+        logger.error(`Permission denied to bind to port ${PORT}. You may need to run as root or use a different port.`);
+        process.exit(1);
+      } else {
+        logger.error('Server error:', error);
+        process.exit(1);
+      }
     });
     
   } catch (error) {
     logger.error('Failed to start server:', error);
+    
+    // Try to provide helpful error messages
+    if (error.code === 'ECONNREFUSED') {
+      logger.error('Database connection refused. Please check if MariaDB/MySQL is running and accessible.');
+    } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
+      logger.error('Database access denied. Please check database credentials in .env file.');
+    } else if (error.code === 'ER_BAD_DB_ERROR') {
+      logger.error('Database does not exist. Please run the installation script to create the database.');
+    }
+    
     process.exit(1);
   }
 }

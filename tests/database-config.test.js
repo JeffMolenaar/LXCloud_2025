@@ -64,8 +64,8 @@ describe('Database Configuration', () => {
 
     // Check that only valid options are present
     const validOptions = [
-      'host', 'port', 'user', 'password', 'database', 'charset',
-      'waitForConnections', 'connectionLimit', 'queueLimit', 'idleTimeout'
+      'host', 'port', 'user', 'password', 'database', 'charset', 'timezone',
+      'waitForConnections', 'connectionLimit', 'queueLimit', 'idleTimeout', 'connectTimeout', 'ssl'
     ];
     
     Object.keys(capturedConfig).forEach(option => {

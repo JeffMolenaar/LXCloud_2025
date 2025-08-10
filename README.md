@@ -62,7 +62,7 @@ LXCloud is a comprehensive cloud-based dashboard platform for managing IoT contr
 ## Quick Start
 
 ### Prerequisites
-- Ubuntu Server LTS 24.04 (other versions may work)
+- Ubuntu Server LTS 22.04 (recommended and tested)
 - Regular user account with sudo privileges
 - Internet connection
 - At least 2GB RAM and 10GB disk space
@@ -75,7 +75,12 @@ git clone https://github.com/JeffMolenaar/LXCloud_2025.git
 cd LXCloud_2025
 ```
 
-2. **Run the complete installation script:**
+2. **Run the Ubuntu 22.04 LTS installation script:**
+```bash
+./scripts/install-ubuntu-22.04.sh
+```
+
+**Alternative:** For other Ubuntu versions, try:
 ```bash
 ./scripts/install-new.sh
 ```
@@ -83,13 +88,14 @@ cd LXCloud_2025
 ### ✨ What the installer does automatically:
 
 - **🧹 Cleans up** any previous LXCloud installations
-- **📦 Installs** Node.js 18.x, MariaDB, Mosquitto MQTT, and Nginx
-- **🔧 Configures** all services with optimal settings
+- **📦 Installs** Node.js 18.x, MariaDB, Mosquitto MQTT, and Nginx (optimized for Ubuntu 22.04)
+- **🔧 Configures** all services with optimal settings for Ubuntu 22.04 LTS
 - **🗄️ Creates** database schema and default admin user
 - **🔐 Sets up** systemd services and firewall rules
 - **🔑 Generates** secure JWT secrets and passwords
-- **🌐 Configures** Nginx with local network optimizations
+- **🌐 Configures** Nginx with local network optimizations (no HTTPS redirect)
 - **✅ Verifies** all services are running correctly
+- **🔧 Creates** maintenance and diagnostic scripts
 
 ### 🌐 Access Your Installation
 
@@ -107,8 +113,14 @@ After installation completes:
 The installer creates helpful management scripts:
 
 ```bash
-# Check system status
+# Check system status and health
 sudo /opt/lxcloud/status.sh
+
+# Run comprehensive diagnostics
+sudo /opt/lxcloud/diagnose.sh
+
+# Test installation completely
+sudo /opt/lxcloud/../scripts/test-installation.sh
 
 # View live logs
 sudo journalctl -u lxcloud -f
@@ -308,40 +320,108 @@ The platform uses a comprehensive database schema with the following key tables:
 
 **Symptoms:** Browser shows connection errors, timeouts, or "This site can't be reached"
 
-**Causes & Solutions:**
+**Quick Fix (Most Common):**
+```bash
+# Run the comprehensive test script first
+sudo /opt/lxcloud/../scripts/test-installation.sh
+
+# If tests fail, restart all services
+sudo systemctl restart lxcloud nginx mariadb mosquitto
+
+# Check status
+sudo /opt/lxcloud/status.sh
+```
+
+**Detailed Troubleshooting:**
 
 1. **Services not running:**
    ```bash
    # Check service status
    sudo /opt/lxcloud/status.sh
    
-   # Restart all services
+   # Check individual services
+   sudo systemctl status lxcloud nginx mariadb mosquitto
+   
+   # Restart failed services
    sudo systemctl restart lxcloud nginx mariadb mosquitto
    ```
 
-2. **Firewall blocking connections:**
+2. **Database connection issues:**
+   ```bash
+   # Test database connection
+   mysql -u lxcloud -plxcloud lxcloud -e "SELECT 1"
+   
+   # If connection fails, check MariaDB
+   sudo systemctl status mariadb
+   sudo journalctl -u mariadb -n 20
+   
+   # Restart MariaDB
+   sudo systemctl restart mariadb
+   ```
+
+3. **Application startup issues:**
+   ```bash
+   # Check application logs
+   sudo journalctl -u lxcloud -n 50
+   
+   # Check if port 3000 is in use
+   sudo ss -tlnp | grep :3000
+   
+   # Restart LXCloud service
+   sudo systemctl restart lxcloud
+   ```
+
+4. **Firewall blocking connections:**
    ```bash
    # Check firewall status
    sudo ufw status
    
    # Allow HTTP traffic
    sudo ufw allow 'Nginx Full'
+   
+   # Allow application port for local networks
+   sudo ufw allow from 192.168.0.0/16 to any port 3000
    ```
 
-3. **Wrong IP address:**
+5. **Nginx configuration issues:**
+   ```bash
+   # Test nginx configuration
+   sudo nginx -t
+   
+   # Check nginx status
+   sudo systemctl status nginx
+   
+   # Restart nginx
+   sudo systemctl restart nginx
+   ```
+
+6. **Wrong IP address:**
    ```bash
    # Find your server's IP
    hostname -I
    
-   # Try accessing via localhost if on the same machine
+   # Try accessing via localhost first
    curl http://localhost
+   
+   # Test API endpoint
+   curl http://localhost:3000/api/health
    ```
 
-4. **Service failed to start:**
+7. **Node.js/NPM issues:**
    ```bash
-   # Check detailed logs
-   sudo journalctl -u lxcloud -n 50
-   sudo journalctl -u nginx -n 50
+   # Check Node.js version
+   node --version
+   
+   # Should be v18.x or higher
+   # If not, reinstall Node.js 18
+   curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+   sudo apt-get install -y nodejs
+   ```
+
+8. **Run comprehensive diagnostics:**
+   ```bash
+   # This will check everything
+   sudo /opt/lxcloud/diagnose.sh
    ```
 
 #### 🗄️ Database Connection Issues
