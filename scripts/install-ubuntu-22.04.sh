@@ -52,7 +52,7 @@ if [[ $EUID -eq 0 ]]; then
 fi
 
 # Check sudo privileges
-if ! sudo -n true 2>/dev/null; then
+if ! sudo -v 2>/dev/null; then
     error "This script requires sudo privileges. Please ensure you can run sudo commands."
 fi
 
