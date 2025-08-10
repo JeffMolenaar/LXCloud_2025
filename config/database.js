@@ -16,8 +16,8 @@ class Database {
       const poolConfig = {
         host: process.env.DB_HOST || 'localhost',
         port: parseInt(process.env.DB_PORT || '3306'),
-        user: process.env.DB_USER || 'lxadmin',
-        password: process.env.DB_PASSWORD || 'lxadmin',
+        user: process.env.DB_USER || 'lxcloud',
+        password: process.env.DB_PASSWORD || 'lxcloud',
         database: process.env.DB_NAME || 'lxcloud',
         waitForConnections: true,
         connectionLimit: 10,

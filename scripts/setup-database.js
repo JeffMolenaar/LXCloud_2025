@@ -63,8 +63,8 @@ async function setupDatabase() {
       console.log('');
       console.log('# Then execute these SQL commands:');
       console.log('CREATE DATABASE IF NOT EXISTS lxcloud;');
-      console.log('CREATE USER IF NOT EXISTS \'lxadmin\'@\'localhost\' IDENTIFIED BY \'lxadmin\';');
-      console.log('GRANT ALL PRIVILEGES ON lxcloud.* TO \'lxadmin\'@\'localhost\';');
+      console.log('CREATE USER IF NOT EXISTS \'lxcloud\'@\'localhost\' IDENTIFIED BY \'lxcloud\';');
+      console.log('GRANT ALL PRIVILEGES ON lxcloud.* TO \'lxcloud\'@\'localhost\';');
       console.log('FLUSH PRIVILEGES;');
       console.log('EXIT;');
       console.log('');
@@ -80,12 +80,12 @@ async function setupDatabase() {
       console.log('✅ Database "lxcloud" created or already exists');
       
       // Create user
-      await connection.execute('CREATE USER IF NOT EXISTS \'lxadmin\'@\'localhost\' IDENTIFIED BY \'lxadmin\'');
-      console.log('✅ User "lxadmin" created or already exists');
+      await connection.execute('CREATE USER IF NOT EXISTS \'lxcloud\'@\'localhost\' IDENTIFIED BY \'lxcloud\'');
+      console.log('✅ User "lxcloud" created or already exists');
       
       // Grant privileges
-      await connection.execute('GRANT ALL PRIVILEGES ON lxcloud.* TO \'lxadmin\'@\'localhost\'');
-      console.log('✅ Privileges granted to lxadmin user');
+      await connection.execute('GRANT ALL PRIVILEGES ON lxcloud.* TO \'lxcloud\'@\'localhost\'');
+      console.log('✅ Privileges granted to lxcloud user');
       
       // Flush privileges
       await connection.execute('FLUSH PRIVILEGES');
@@ -94,8 +94,8 @@ async function setupDatabase() {
       await connection.end();
       console.log('\n🎉 Database setup completed successfully!');
       console.log('The application can now connect using:');
-      console.log('  - Username: lxadmin');
-      console.log('  - Password: lxadmin');
+      console.log('  - Username: lxcloud');
+      console.log('  - Password: lxcloud');
       console.log('  - Database: lxcloud\n');
       return true;
     }
