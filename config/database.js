@@ -209,6 +209,69 @@ class Database {
         )
       `);
 
+      // Create enhanced sessions table for better session management
+      await connection.execute(`
+        CREATE TABLE IF NOT EXISTS sessions (
+          session_id VARCHAR(64) PRIMARY KEY,
+          user_id INT NOT NULL,
+          data TEXT,
+          expires_at TIMESTAMP NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_user_id (user_id),
+          INDEX idx_expires_at (expires_at),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+
+      // Create refresh_tokens table for JWT refresh token management
+      await connection.execute(`
+        CREATE TABLE IF NOT EXISTS refresh_tokens (
+          id INT PRIMARY KEY AUTO_INCREMENT,
+          user_id INT NOT NULL,
+          token_hash VARCHAR(64) NOT NULL,
+          expires_at TIMESTAMP NOT NULL,
+          is_revoked BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_user_id (user_id),
+          INDEX idx_token_hash (token_hash),
+          INDEX idx_expires_at (expires_at),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+
+      // Create failed_login_attempts table for account security
+      await connection.execute(`
+        CREATE TABLE IF NOT EXISTS failed_login_attempts (
+          id INT PRIMARY KEY AUTO_INCREMENT,
+          user_id INT,
+          ip_address VARCHAR(45),
+          user_agent TEXT,
+          attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_user_id (user_id),
+          INDEX idx_ip_address (ip_address),
+          INDEX idx_attempted_at (attempted_at),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
+
+      // Create security_audit_log table for tracking security events
+      await connection.execute(`
+        CREATE TABLE IF NOT EXISTS security_audit_log (
+          id INT PRIMARY KEY AUTO_INCREMENT,
+          user_id INT,
+          event_type VARCHAR(50) NOT NULL,
+          event_description TEXT,
+          ip_address VARCHAR(45),
+          user_agent TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_user_id (user_id),
+          INDEX idx_event_type (event_type),
+          INDEX idx_created_at (created_at),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+        )
+      `);
+
       connection.release();
       logger.info('Database migrations completed successfully');
       
