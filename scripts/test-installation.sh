@@ -100,7 +100,12 @@ run_test "Node.js installed" "command -v node"
 run_test "NPM installed" "command -v npm"
 run_test "MySQL/MariaDB client installed" "command -v mysql"
 run_test "Nginx installed" "command -v nginx"
-run_test "Mosquitto client installed" "command -v mosquitto_pub"
+# Note: mosquitto_pub is not required since the app uses Node.js MQTT client
+if command -v mosquitto_pub >/dev/null 2>&1; then
+    success "✅ Mosquitto client installed: AVAILABLE (optional)"
+else
+    info "Mosquitto client not installed (this is okay - app uses Node.js MQTT client)"
+fi
 
 # Test 3: Node.js version check
 log "Checking Node.js version..."
@@ -139,11 +144,12 @@ run_test "Database tables exist" "mysql -u '$DATABASE_USER' -p'$DATABASE_PASSWOR
 
 # Test 8: MQTT Connectivity
 log "Testing MQTT connectivity..."
-# Get MQTT password from environment file
+# Use Node.js-based MQTT test for better reliability
 if [ -f "$INSTALL_DIR/.env" ]; then
     MQTT_PASSWORD=$(grep "MQTT_PASSWORD=" "$INSTALL_DIR/.env" | cut -d= -f2)
     if [ -n "$MQTT_PASSWORD" ]; then
-        run_test "MQTT broker connectivity" "timeout 5 mosquitto_pub -h localhost -u lxcloud_mqtt -P '$MQTT_PASSWORD' -t test -m hello"
+        # Use the Node.js MQTT test script
+        run_test "MQTT broker connectivity" "cd '$INSTALL_DIR' && node scripts/test-mqtt-connection.js"
     else
         warn "⚠️  MQTT password not found in environment file"
     fi
