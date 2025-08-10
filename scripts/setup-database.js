@@ -3,30 +3,65 @@ const logger = require('../config/logger');
 
 async function setupDatabase() {
   try {
-    console.log('Setting up database and lxadmin user...');
+    console.log('[2025-08-10 12:14:36] Setting up database schema...');
     
     // Connect as root to create database and user
     let connection;
     
-    try {
-      // Try to connect as root without password (common in dev environments)
-      connection = await mysql.createConnection({
-        host: 'localhost',
-        user: 'root',
-        password: ''
-      });
-      console.log('Connected to MySQL as root');
-    } catch (error) {
-      console.log('Failed to connect as root without password, trying with password prompt...');
-      
-      // If no password worked, prompt for manual setup
+    // Try multiple root authentication methods
+    const rootAuthMethods = [
+      { user: 'root', password: '' }, // No password (common in Docker/dev)
+      { user: 'root', password: 'root' }, // Common default
+      { user: 'root', password: 'password' }, // Another common default
+      { user: 'root', auth_plugin: 'mysql_native_password', password: '' } // MySQL 8.0+ native auth
+    ];
+    
+    let connectionSuccess = false;
+    
+    for (const authMethod of rootAuthMethods) {
+      try {
+        console.log(`Attempting to connect as root with auth method: ${JSON.stringify({user: authMethod.user, hasPassword: !!authMethod.password, auth_plugin: authMethod.auth_plugin})}`);
+        
+        // Use only valid MySQL2 connection options
+        const connectionConfig = {
+          host: 'localhost',
+          user: authMethod.user,
+          password: authMethod.password
+        };
+        
+        // Add auth_plugin if specified
+        if (authMethod.auth_plugin) {
+          connectionConfig.authPlugins = {
+            mysql_native_password: () => authMethod.auth_plugin
+          };
+        }
+        
+        connection = await mysql.createConnection(connectionConfig);
+        console.log('✅ Connected to MySQL as root');
+        connectionSuccess = true;
+        break;
+      } catch (error) {
+        console.log(`❌ Failed: ${error.message}`);
+        continue;
+      }
+    }
+    
+    if (!connectionSuccess) {
       console.log('\n🔧 Manual Database Setup Required');
       console.log('==========================================');
+      console.log('All automatic connection attempts failed. Common reasons:');
+      console.log('1. MySQL root user requires a password');
+      console.log('2. MySQL root user is configured for socket authentication only');
+      console.log('3. MySQL service is not running');
+      console.log('');
       console.log('Please run the following SQL commands as MySQL root user:');
       console.log('');
+      console.log('# Connect to MySQL as root:');
+      console.log('sudo mysql -u root');
+      console.log('# OR if password required:');
       console.log('mysql -u root -p');
       console.log('');
-      console.log('Then execute:');
+      console.log('# Then execute these SQL commands:');
       console.log('CREATE DATABASE IF NOT EXISTS lxcloud;');
       console.log('CREATE USER IF NOT EXISTS \'lxadmin\'@\'localhost\' IDENTIFIED BY \'lxadmin\';');
       console.log('GRANT ALL PRIVILEGES ON lxcloud.* TO \'lxadmin\'@\'localhost\';');
