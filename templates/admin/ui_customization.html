@@ -99,6 +99,38 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="logo_left_padding_{{ page }}" class="form-label">Logo Left Padding</label>
+                                                    <input type="text" class="form-control" 
+                                                           id="logo_left_padding_{{ page }}" name="logo_left_padding" 
+                                                           value="{{ customization.get_header_config().get('logo_left_padding', '15px') }}"
+                                                           placeholder="15px">
+                                                    <div class="form-text">Distance from left edge of header</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="logo_menu_spacing_{{ page }}" class="form-label">Logo to Menu Spacing</label>
+                                                    <input type="text" class="form-control" 
+                                                           id="logo_menu_spacing_{{ page }}" name="logo_menu_spacing" 
+                                                           value="{{ customization.get_header_config().get('logo_menu_spacing', '30px') }}"
+                                                           placeholder="30px">
+                                                    <div class="form-text">Space between logo and menu items</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="user_button_right_padding_{{ page }}" class="form-label">User Button Right Padding</label>
+                                            <input type="text" class="form-control" 
+                                                   id="user_button_right_padding_{{ page }}" name="user_button_right_padding" 
+                                                   value="{{ customization.get_header_config().get('user_button_right_padding', '15px') }}"
+                                                   placeholder="15px">
+                                            <div class="form-text">Distance from right edge of header</div>
+                                        </div>
                                     </div>
                                     
                                     <!-- Footer Configuration -->

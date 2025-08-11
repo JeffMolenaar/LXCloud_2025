@@ -136,6 +136,9 @@ def save_ui_customization(page_name):
         'logo_text': request.form.get('header_logo_text', 'LXCloud'),
         'background_color': request.form.get('header_bg_color', '#2c3e50'),
         'text_color': request.form.get('header_text_color', '#ffffff'),
+        'logo_left_padding': request.form.get('logo_left_padding', '15px'),
+        'logo_menu_spacing': request.form.get('logo_menu_spacing', '30px'),
+        'user_button_right_padding': request.form.get('user_button_right_padding', '15px'),
         'use_custom_logo': customization.logo_filename is not None
     }
     customization.set_header_config(header_config)
