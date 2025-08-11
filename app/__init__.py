@@ -52,9 +52,49 @@ def create_app():
     if os.path.exists(template_folder):
         auth_template = os.path.join(template_folder, 'auth', 'login.html')
         print(f"Auth login template exists: {os.path.exists(auth_template)}")
+        # Additional check: verify the template is readable
+        try:
+            with open(auth_template, 'r') as f:
+                f.read(1)  # Read first character to test readability
+            print(f"Auth login template is readable")
+        except Exception as e:
+            print(f"Auth login template exists but is not readable: {e}")
     
     if not os.path.exists(template_folder):
+        print(f"ERROR: Template folder not found. Debugging info:")
+        print(f"  - Current working directory: {os.getcwd()}")
+        print(f"  - __file__: {__file__}")
+        print(f"  - Absolute __file__: {os.path.abspath(__file__)}")
+        print(f"  - Directory contents at project_root:")
+        try:
+            project_contents = os.listdir(project_root)
+            print(f"    {project_contents}")
+        except Exception as e:
+            print(f"    Could not list directory: {e}")
         raise RuntimeError(f"Template folder not found. Tried: {template_folder}")
+    
+    # Validate critical templates exist
+    critical_templates = [
+        'auth/login.html',
+        'auth/register.html',
+        'base.html'
+    ]
+    
+    missing_templates = []
+    for template in critical_templates:
+        template_path = os.path.join(template_folder, template)
+        if not os.path.exists(template_path):
+            missing_templates.append(template)
+    
+    if missing_templates:
+        print(f"WARNING: Critical templates are missing:")
+        for template in missing_templates:
+            print(f"  - {template}")
+        print(f"This may cause template loading errors. Please check installation.")
+    
+    # Ensure template_folder is absolute path for Flask
+    template_folder = os.path.abspath(template_folder)
+    static_folder = os.path.abspath(static_folder)
     
     app = Flask(__name__, 
                 template_folder=template_folder,
@@ -131,6 +171,26 @@ def create_app():
     app.register_blueprint(users_bp, url_prefix='/users')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(api_bp, url_prefix='/api')
+    
+    # Add custom error handler for template not found
+    @app.errorhandler(500)
+    def internal_error(error):
+        # Check if this is a TemplateNotFound error
+        if hasattr(error, 'original_exception'):
+            from jinja2.exceptions import TemplateNotFound
+            if isinstance(error.original_exception, TemplateNotFound):
+                template_name = error.original_exception.name
+                print(f"Template not found: {template_name}")
+                print(f"Template loader search paths:")
+                for loader in app.jinja_env.list_templates():
+                    print(f"  Available template: {loader}")
+                print(f"Template folder configured as: {app.template_folder}")
+                print(f"Template folder exists: {os.path.exists(app.template_folder)}")
+                # Check specific template
+                template_path = os.path.join(app.template_folder, template_name)
+                print(f"Looking for template at: {template_path}")
+                print(f"Template file exists: {os.path.exists(template_path)}")
+        return str(error), 500
     
     # Create tables
     with app.app_context():
