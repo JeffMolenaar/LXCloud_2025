@@ -100,7 +100,6 @@ cat > /etc/mosquitto/conf.d/lxcloud.conf << EOF
 listener 1883 0.0.0.0
 allow_anonymous true
 log_type all
-log_dest file /var/log/mosquitto/mosquitto.log
 EOF
 
 systemctl restart mosquitto
