@@ -11,7 +11,14 @@ from config.config import Config
 from app.models import db, User
 
 def create_app():
-    app = Flask(__name__)
+    # Get the project root directory (parent of app directory)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    template_folder = os.path.join(project_root, 'templates')
+    static_folder = os.path.join(project_root, 'static')
+    
+    app = Flask(__name__, 
+                template_folder=template_folder,
+                static_folder=static_folder)
     
     # Try to detect if MySQL is available and fallback to SQLite if not
     original_config = Config()
@@ -60,6 +67,11 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
+    
+    # Add context processor for version
+    @app.context_processor
+    def inject_config():
+        return dict(version=Config.get_version())
     
     # Register blueprints
     try:

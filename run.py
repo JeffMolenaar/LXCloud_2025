@@ -18,9 +18,14 @@ from app.mqtt_service import mqtt_service
 app = create_app()
 
 def init_mqtt():
-    """Initialize MQTT service"""
-    mqtt_service.init_app(app)
-    mqtt_service.start()
+    """Initialize MQTT service with error handling"""
+    try:
+        mqtt_service.init_app(app)
+        mqtt_service.start()
+        print("MQTT service initialization completed")
+    except Exception as e:
+        print(f"MQTT service initialization failed: {e}")
+        print("Application will continue without MQTT functionality")
 
 def main():
     """Main function for development server"""
