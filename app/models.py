@@ -106,6 +106,7 @@ class UICustomization(db.Model):
     custom_css = db.Column(db.Text, nullable=True)
     header_config = db.Column(db.Text, nullable=True)  # JSON
     footer_config = db.Column(db.Text, nullable=True)  # JSON
+    logo_filename = db.Column(db.String(255), nullable=True)  # Store uploaded logo filename
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def get_header_config(self):

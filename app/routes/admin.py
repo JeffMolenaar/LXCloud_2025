@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from functools import wraps
+from werkzeug.utils import secure_filename
+import os
 from app.models import db, User, Controller, UICustomization, Addon
 
 admin_bp = Blueprint('admin', __name__)
@@ -106,12 +108,35 @@ def save_ui_customization(page_name):
     
     customization.custom_css = request.form.get('custom_css', '')
     
+    # Handle logo upload
+    if 'logo_file' in request.files:
+        logo_file = request.files['logo_file']
+        if logo_file and logo_file.filename:
+            # Ensure uploads directory exists
+            upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'static', 'uploads')
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            # Secure the filename and save
+            filename = secure_filename(logo_file.filename)
+            # Add timestamp to avoid conflicts
+            name, ext = os.path.splitext(filename)
+            filename = f"logo_{page_name}_{name}{ext}"
+            file_path = os.path.join(upload_dir, filename)
+            
+            try:
+                logo_file.save(file_path)
+                customization.logo_filename = filename
+                flash(f'Logo uploaded successfully for {page_name}', 'success')
+            except Exception as e:
+                flash(f'Error uploading logo: {str(e)}', 'error')
+    
     # Header configuration
     header_config = {
         'height': request.form.get('header_height', '60px'),
         'logo_text': request.form.get('header_logo_text', 'LXCloud'),
         'background_color': request.form.get('header_bg_color', '#2c3e50'),
-        'text_color': request.form.get('header_text_color', '#ffffff')
+        'text_color': request.form.get('header_text_color', '#ffffff'),
+        'use_custom_logo': customization.logo_filename is not None
     }
     customization.set_header_config(header_config)
     

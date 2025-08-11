@@ -189,6 +189,8 @@ code {
     backdrop-filter: blur(8px);
     height: var(--navbar-height);
     box-shadow: var(--shadow-sm);
+    position: relative;
+    z-index: var(--z-fixed);
 }
 
 .navbar-brand {
@@ -249,6 +251,8 @@ code {
     box-shadow: var(--shadow-lg);
     padding: var(--space-2);
     margin-top: var(--space-1);
+    z-index: var(--z-dropdown);
+    position: absolute;
 }
 
 .dropdown-item {

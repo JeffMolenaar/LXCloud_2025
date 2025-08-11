@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config.config import Config
-from app.models import db, User
+from app.models import db, User, UICustomization
 
 def create_app():
     # Get the project root directory with robust path resolution
@@ -148,10 +148,28 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
     
-    # Add context processor for version
+    # Add context processor for version and UI customizations
     @app.context_processor
     def inject_config():
-        return dict(version=Config.get_version())
+        # Get UI customizations for the current page
+        ui_customizations = {}
+        try:
+            customizations = UICustomization.query.all()
+            for customization in customizations:
+                ui_customizations[customization.page_name] = {
+                    'header_config': customization.get_header_config(),
+                    'footer_config': customization.get_footer_config(),
+                    'logo_filename': getattr(customization, 'logo_filename', None),
+                    'custom_css': customization.custom_css
+                }
+        except Exception as e:
+            print(f"Warning: Could not load UI customizations: {e}")
+            # Continue without UI customizations
+        
+        return dict(
+            version=Config.get_version(),
+            ui_customizations=ui_customizations
+        )
     
     # Register blueprints
     try:
@@ -197,6 +215,23 @@ def create_app():
         try:
             print("Initializing database...")
             db.create_all()
+            
+            # Add migration for logo_filename column if it doesn't exist
+            try:
+                # Try to add the column if it doesn't exist
+                with db.engine.connect() as conn:
+                    # Check if column exists first
+                    result = conn.execute(db.text("PRAGMA table_info(ui_customization)"))
+                    columns = [row[1] for row in result.fetchall()]
+                    
+                    if 'logo_filename' not in columns:
+                        print("Adding logo_filename column to ui_customization table...")
+                        conn.execute(db.text("ALTER TABLE ui_customization ADD COLUMN logo_filename VARCHAR(255)"))
+                        conn.commit()
+                        print("Logo filename column added successfully")
+            except Exception as e:
+                print(f"Could not add logo_filename column (might already exist): {e}")
+            
             print("Database initialized successfully")
             
             # Create default admin user if it doesn't exist
