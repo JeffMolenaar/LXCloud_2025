@@ -11,6 +11,9 @@ class Config:
                              f'mysql+pymysql://{os.environ.get("DB_USER", "lxcloud")}:{os.environ.get("DB_PASSWORD", "lxcloud123")}@{os.environ.get("DB_HOST", "localhost")}/{os.environ.get("DB_NAME", "lxcloud")}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
+    # SQLite fallback database path
+    SQLITE_FALLBACK_URI = os.environ.get('SQLITE_FALLBACK_URI') or 'sqlite:///lxcloud_fallback.db'
+    
     # MQTT
     MQTT_BROKER_HOST = os.environ.get('MQTT_BROKER_HOST') or 'localhost'
     MQTT_BROKER_PORT = int(os.environ.get('MQTT_BROKER_PORT') or 1883)
