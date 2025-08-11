@@ -11,10 +11,50 @@ from config.config import Config
 from app.models import db, User
 
 def create_app():
-    # Get the project root directory (parent of app directory)
+    # Get the project root directory with robust path resolution
+    # Try multiple approaches to find the correct project root
+    
+    # Method 1: Standard approach - parent of app directory
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     template_folder = os.path.join(project_root, 'templates')
     static_folder = os.path.join(project_root, 'static')
+    
+    # Method 2: Fallback - check current working directory
+    if not os.path.exists(template_folder):
+        cwd_project_root = os.getcwd()
+        cwd_template_folder = os.path.join(cwd_project_root, 'templates')
+        cwd_static_folder = os.path.join(cwd_project_root, 'static')
+        
+        if os.path.exists(cwd_template_folder):
+            print(f"Template folder not found at {template_folder}, using fallback: {cwd_template_folder}")
+            project_root = cwd_project_root
+            template_folder = cwd_template_folder
+            static_folder = cwd_static_folder
+    
+    # Method 3: Last resort - check common deployment paths
+    if not os.path.exists(template_folder):
+        deployment_paths = ['/opt/LXCloud', '/app', os.path.expanduser('~/LXCloud')]
+        for deployment_root in deployment_paths:
+            deployment_template_folder = os.path.join(deployment_root, 'templates')
+            deployment_static_folder = os.path.join(deployment_root, 'static')
+            
+            if os.path.exists(deployment_template_folder):
+                print(f"Template folder not found at {template_folder}, using deployment path: {deployment_template_folder}")
+                project_root = deployment_root
+                template_folder = deployment_template_folder
+                static_folder = deployment_static_folder
+                break
+    
+    # Final validation and debugging info
+    print(f"Project root: {project_root}")
+    print(f"Template folder: {template_folder}")
+    print(f"Template folder exists: {os.path.exists(template_folder)}")
+    if os.path.exists(template_folder):
+        auth_template = os.path.join(template_folder, 'auth', 'login.html')
+        print(f"Auth login template exists: {os.path.exists(auth_template)}")
+    
+    if not os.path.exists(template_folder):
+        raise RuntimeError(f"Template folder not found. Tried: {template_folder}")
     
     app = Flask(__name__, 
                 template_folder=template_folder,
