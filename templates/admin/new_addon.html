@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}New Addon - LXCloud{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-plus text-primary"></i> 
+                Create New Addon
+            </h1>
+            <p class="text-muted">Add a new controller type addon to the system</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('admin.addons') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Addons
+            </a>
+        </div>
+    </div>
+
+    <!-- New Addon Form -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-puzzle-piece"></i> 
+                        Addon Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Addon Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="name" name="name" required
+                                           placeholder="Enter addon name">
+                                    <div class="form-text">A descriptive name for your addon</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="controller_type" class="form-label">Controller Type <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="controller_type" name="controller_type" required>
+                                        <option value="">Select controller type</option>
+                                        {% for type in controller_types %}
+                                        <option value="{{ type }}">{{ type.title() }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">The type of controller this addon supports</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                      placeholder="Enter a description of what this addon does"></textarea>
+                            <div class="form-text">Describe the functionality and purpose of this addon</div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6 class="mb-3">Configuration</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="data_fields" class="form-label">Data Fields</label>
+                                    <input type="text" class="form-control" id="data_fields" name="data_fields"
+                                           placeholder="field1,field2,field3">
+                                    <div class="form-text">Comma-separated list of data fields this addon handles</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="display_format" class="form-label">Display Format</label>
+                                    <select class="form-select" id="display_format" name="display_format">
+                                        <option value="table">Table</option>
+                                        <option value="chart">Chart</option>
+                                        <option value="graph">Graph</option>
+                                        <option value="map">Map</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                    <div class="form-text">How the data should be displayed</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="update_interval" class="form-label">Update Interval (seconds)</label>
+                            <input type="number" class="form-control" id="update_interval" name="update_interval" 
+                                   value="30" min="1" max="3600">
+                            <div class="form-text">How often the addon should refresh data (1-3600 seconds)</div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <a href="{{ url_for('admin.addons') }}" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Create Addon
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle text-info"></i> 
+                        Addon Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <small>Choose a descriptive name for your addon</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <small>Select the appropriate controller type</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <small>Provide a clear description of functionality</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <small>Configure data fields that the addon will process</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <small>Set appropriate update intervals for performance</small>
+                        </li>
+                    </ul>
+                    
+                    <div class="alert alert-warning small" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Note:</strong> Addons with very short update intervals may impact system performance.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-text {
+    font-size: 0.875em;
+}
+
+.card-title {
+    font-weight: 600;
+}
+
+.alert {
+    border: none;
+}
+</style>
+{% endblock %}
