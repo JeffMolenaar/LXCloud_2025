@@ -1,13 +1,39 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const QRCode = require('qrcode');
 const { body, validationResult } = require('express-validator');
-const User = require('../models/User');
+const container = require('../config/container');
 const { loginLimiter, passwordLimiter } = require('../middleware/auth');
 const logger = require('../config/logger');
 
 const router = express.Router();
+
+// Get services from container
+const authService = container.get('authService');
+const userService = container.get('userService');
+const UserService = require('../services/UserService');
+
+// Enhanced error handler for auth routes
+const handleAuthError = (error, res, renderPage, formData = {}) => {
+  logger.error('Auth route error:', error);
+  
+  const errorMessage = error.message || 'An unexpected error occurred';
+  
+  if (res.headersSent) {
+    return;
+  }
+
+  // Check if it's an API request
+  if (res.req.xhr || res.req.headers.accept?.indexOf('json') > -1) {
+    return res.status(400).json({ error: errorMessage });
+  }
+
+  // Render error on the page
+  res.render(renderPage, {
+    title: renderPage.includes('login') ? 'Login - LXCloud' : 'Register - LXCloud',
+    error: errorMessage,
+    ...formData
+  });
+};
 
 // Login page
 router.get('/login', (req, res) => {
@@ -20,82 +46,53 @@ router.get('/login', (req, res) => {
   });
 });
 
-// Login handling
+// Enhanced login handling with better error handling
 router.post('/login', 
   loginLimiter,
   [
-    body('email').isEmail().normalizeEmail(),
-    body('password').isLength({ min: 1 })
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('password').isLength({ min: 1 }).withMessage('Password is required')
   ],
   async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.render('auth/login', {
-          title: 'Login - LXCloud',
-          error: 'Please provide valid email and password'
-        });
+        return handleAuthError(
+          new Error(errors.array()[0].msg),
+          res,
+          'auth/login'
+        );
       }
 
-      const { email, password, twoFactorToken } = req.body;
+      const { email, password, twoFactorToken, rememberMe } = req.body;
       
-      // Find user
-      const user = await User.findByEmail(email);
-      if (!user) {
-        return res.render('auth/login', {
-          title: 'Login - LXCloud',
-          error: 'Invalid email or password'
-        });
-      }
-
-      // Validate password
-      const isValidPassword = await user.validatePassword(password);
-      if (!isValidPassword) {
-        return res.render('auth/login', {
-          title: 'Login - LXCloud',
-          error: 'Invalid email or password'
-        });
-      }
-
-      // Check 2FA if enabled
-      if (user.twoFaEnabled) {
-        if (!twoFactorToken) {
-          return res.render('auth/login', {
-            title: 'Login - LXCloud',
-            error: 'Two-factor authentication code required',
-            requireTwoFA: true,
-            email: email
-          });
-        }
-
-        const isValidTwoFA = await user.verifyTwoFA(twoFactorToken);
-        if (!isValidTwoFA) {
-          return res.render('auth/login', {
-            title: 'Login - LXCloud',
-            error: 'Invalid two-factor authentication code',
-            requireTwoFA: true,
-            email: email
-          });
-        }
-
+      // Authenticate user
+      const user = await authService.authenticateUser(email, password, twoFactorToken);
+      
+      // Set session with enhanced data
+      req.session.user = userService.sanitizeUser(user);
+      req.session.loginTime = new Date();
+      req.session.ipAddress = req.ip;
+      
+      // Handle 2FA verification flag
+      if (user.twoFaEnabled && twoFactorToken) {
         req.session.twoFactorVerified = true;
       }
 
-      // Update last login
-      await user.updateLastLogin();
+      // Extend session if remember me is checked
+      if (rememberMe) {
+        req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+      }
 
-      // Set session
-      req.session.user = user.toJSON();
-      
-      logger.info(`User logged in: ${user.email}`);
+      logger.info(`Successful login for: ${user.email} from IP: ${req.ip}`);
       res.redirect('/dashboard');
 
     } catch (error) {
-      logger.error('Login error:', error);
-      res.render('auth/login', {
-        title: 'Login - LXCloud',
-        error: 'An error occurred during login'
-      });
+      const formData = {
+        email: req.body.email,
+        requireTwoFA: error.message.includes('Two-factor authentication code required'),
+      };
+      handleAuthError(error, res, 'auth/login', formData);
     }
   }
 );
@@ -111,60 +108,34 @@ router.get('/register', (req, res) => {
   });
 });
 
-// Register handling
+// Enhanced register handling
 router.post('/register',
-  [
-    body('email').isEmail().normalizeEmail(),
-    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
-    body('name').isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
-    body('confirmPassword').custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error('Passwords do not match');
-      }
-      return true;
-    })
-  ],
+  UserService.getCreateValidationRules(),
   async (req, res) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.render('auth/register', {
-          title: 'Register - LXCloud',
-          error: errors.array()[0].msg
-        });
-      }
+      UserService.validateRequest(req);
 
       const { email, password, name, address } = req.body;
 
-      // Check if user already exists
-      const existingUser = await User.findByEmail(email);
-      if (existingUser) {
-        return res.render('auth/register', {
-          title: 'Register - LXCloud',
-          error: 'Email already registered'
-        });
-      }
-
       // Create user
-      const user = await User.create({
+      const user = await userService.createUser({
         email,
         password,
         name,
         address: address || null
       });
 
-      logger.info(`New user registered: ${user.email}`);
+      logger.info(`New user registered: ${user.email} from IP: ${req.ip}`);
       
       // Auto-login after registration
-      req.session.user = user.toJSON();
+      req.session.user = userService.sanitizeUser(user);
+      req.session.loginTime = new Date();
+      req.session.ipAddress = req.ip;
+      
       res.redirect('/dashboard');
 
     } catch (error) {
-      logger.error('Registration error:', error);
-      res.render('auth/register', {
-        title: 'Register - LXCloud',
-        error: 'An error occurred during registration'
-      });
+      handleAuthError(error, res, 'auth/register');
     }
   }
 );
@@ -176,18 +147,18 @@ router.get('/two-factor-setup', async (req, res) => {
   }
 
   try {
-    const user = await User.findById(req.session.user.id);
+    const user = await userService.getUserById(req.session.user.id);
     if (user.twoFaEnabled) {
       return res.redirect('/dashboard');
     }
 
-    const secret = await user.enableTwoFA();
-    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url);
+    const twoFAData = await authService.enableTwoFA(user.id);
 
     res.render('auth/two-factor-setup', {
       title: 'Two-Factor Authentication Setup - LXCloud',
-      qrCode: qrCodeUrl,
-      secret: secret.base32
+      qrCode: twoFAData.qrCode,
+      secret: twoFAData.secret,
+      backupCodes: twoFAData.backupCodes
     });
 
   } catch (error) {
@@ -198,20 +169,27 @@ router.get('/two-factor-setup', async (req, res) => {
 
 // Two-factor setup confirmation
 router.post('/two-factor-setup',
-  [body('token').isLength({ min: 6, max: 6 }).isNumeric()],
+  [body('token').isLength({ min: 6, max: 6 }).isNumeric().withMessage('Valid 6-digit code required')],
   async (req, res) => {
     if (!req.session.user) {
       return res.redirect('/auth/login');
     }
 
     try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.render('auth/two-factor-setup', {
+          title: 'Two-Factor Authentication Setup - LXCloud',
+          error: errors.array()[0].msg
+        });
+      }
+
       const { token } = req.body;
-      const user = await User.findById(req.session.user.id);
+      const isValid = await authService.confirmTwoFA(req.session.user.id, token);
       
-      const isValid = await user.confirmTwoFA(token);
       if (isValid) {
         req.session.twoFactorVerified = true;
-        logger.info(`Two-factor authentication enabled for: ${user.email}`);
+        logger.info(`Two-factor authentication enabled for: ${req.session.user.email}`);
         res.redirect('/dashboard?twofa=enabled');
       } else {
         res.render('auth/two-factor-setup', {
@@ -227,66 +205,92 @@ router.post('/two-factor-setup',
   }
 );
 
-// Logout
-router.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      logger.error('Logout error:', err);
+// Enhanced logout with session cleanup
+router.post('/logout', async (req, res) => {
+  try {
+    if (req.session.user) {
+      const userId = req.session.user.id;
+      const sessionId = req.sessionID;
+      
+      // Logout through auth service for proper cleanup
+      await authService.logout(userId, sessionId);
+      
+      logger.info(`User logged out: ${req.session.user.email} from IP: ${req.ip}`);
     }
+
+    req.session.destroy((err) => {
+      if (err) {
+        logger.error('Session destruction error:', err);
+      }
+      res.redirect('/auth/login');
+    });
+  } catch (error) {
+    logger.error('Logout error:', error);
     res.redirect('/auth/login');
-  });
+  }
 });
 
-// API endpoint for JWT token generation
+// Enhanced API endpoint for JWT token generation
 router.post('/api/token',
   loginLimiter,
   [
-    body('email').isEmail().normalizeEmail(),
-    body('password').isLength({ min: 1 })
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('password').isLength({ min: 1 }).withMessage('Password is required')
   ],
   async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({ error: 'Invalid email or password' });
+        return res.status(400).json({ error: errors.array()[0].msg });
       }
 
       const { email, password, twoFactorToken } = req.body;
       
-      const user = await User.findByEmail(email);
-      if (!user || !await user.validatePassword(password)) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
+      // Authenticate user
+      const user = await authService.authenticateUser(email, password, twoFactorToken);
+      
+      // Generate tokens
+      const tokens = await authService.generateTokens(user);
 
-      if (user.twoFaEnabled) {
-        if (!twoFactorToken || !await user.verifyTwoFA(twoFactorToken)) {
-          return res.status(401).json({ error: 'Invalid two-factor authentication code' });
-        }
-      }
-
-      const token = jwt.sign(
-        { userId: user.id, email: user.email, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
-      );
-
-      const refreshToken = jwt.sign(
-        { userId: user.id },
-        process.env.JWT_REFRESH_SECRET,
-        { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
-      );
-
-      await user.updateLastLogin();
+      logger.info(`API token generated for: ${user.email} from IP: ${req.ip}`);
 
       res.json({
-        token,
-        refreshToken,
-        user: user.toJSON()
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: userService.sanitizeUser(user)
       });
 
     } catch (error) {
       logger.error('Token generation error:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      const statusCode = error.message.includes('Invalid') ? 401 : 500;
+      res.status(statusCode).json({ error: error.message });
+    }
+  }
+);
+
+// Token refresh endpoint
+router.post('/api/refresh',
+  [body('refreshToken').isLength({ min: 1 }).withMessage('Refresh token is required')],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ error: errors.array()[0].msg });
+      }
+
+      const { refreshToken } = req.body;
+      
+      // Refresh tokens
+      const tokens = await authService.refreshTokens(refreshToken);
+
+      res.json({
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken
+      });
+
+    } catch (error) {
+      logger.error('Token refresh error:', error);
+      res.status(401).json({ error: 'Invalid refresh token' });
     }
   }
 );

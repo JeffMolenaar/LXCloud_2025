@@ -1,23 +1,14 @@
 {
   "name": "lxcloud",
-  "version": "1.0.0",
-  "description": "LXCloud - Cloud dashboard platform for controller management and analytics",
+  "version": "2.0.0",
+  "description": "LXCloud Complete IoT Platform - MariaDB + MQTT + Enhanced Admin Interface",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "install-system": "sudo ./scripts/install.sh",
-    "install-ubuntu-22": "sudo ./scripts/install-ubuntu-22.04.sh",
-    "update": "./scripts/update.sh",
-    "setup-db": "node scripts/setup-database.js",
-    "init-db": "./scripts/init-database.sh",
-    "test-db": "node scripts/test-database.js",
-    "test": "jest",
-    "test-install": "sudo ./scripts/test-installation.sh",
-    "fix-https": "sudo ./scripts/fix-https-redirect.sh",
-    "test-fix": "./scripts/test-fix.sh",
-    "start-lxcloud": "./scripts/start-lxcloud.sh",
-    "diagnose": "./scripts/diagnose-connection.sh"
+    "setup": "./setup.sh",
+    "update": "./update.sh",
+    "test": "node test.js"
   },
   "keywords": [
     "cloud",

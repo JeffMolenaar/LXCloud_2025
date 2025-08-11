@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            max-width: 400px;
+            width: 100%;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .login-header h3 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.8rem;
+        }
+        
+        .cloud-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        
+        .login-body {
+            padding: 40px 30px;
+        }
+        
+        .form-floating {
+            margin-bottom: 20px;
+        }
+        
+        .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 12px 15px;
+            height: 58px;
+        }
+        
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            color: white;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+            color: white;
+        }
+        
+        .alert {
+            border-radius: 12px;
+            border: none;
+            margin-bottom: 25px;
+        }
+        
+        .alert-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, #28a745, #218838);
+            color: white;
+        }
+        
+        .footer-text {
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+        
+        .version-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="version-badge">Simple v2.0</div>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="cloud-icon">
+                    <i class="fas fa-cloud"></i>
+                </div>
+                <h3>LXCloud Simple</h3>
+                <p class="mb-0 mt-2" style="opacity: 0.9;">Local Network Only • HTTP Only</p>
+            </div>
+            <div class="login-body">
+                <% if (error) { %>
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <%= error %>
+                    </div>
+                <% } %>
+                
+                <div class="alert alert-success" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Default Login:</strong><br>
+                    Email: admin@lxcloud.local<br>
+                    Password: admin123
+                </div>
+
+                <form method="POST" action="/login" id="loginForm">
+                    <div class="form-floating">
+                        <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required 
+                               value="<%= typeof email !== 'undefined' ? email : 'admin@lxcloud.local' %>">
+                        <label for="email">
+                            <i class="fas fa-envelope me-2"></i>Email Address
+                        </label>
+                    </div>
+
+                    <div class="form-floating">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                        <label for="password">
+                            <i class="fas fa-lock me-2"></i>Password
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-login">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="footer-text">
+                    <p class="mb-0">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Secure local network access only
+                    </p>
+                    <small class="text-muted">
+                        File-based authentication • No database required
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('password');
+            const emailInput = document.getElementById('email');
+            
+            // Auto-fill password for demo
+            if (emailInput.value === 'admin@lxcloud.local') {
+                passwordInput.value = 'admin123';
+            }
+            
+            // Check server connection
+            fetch('/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Server health:', data);
+                })
+                .catch(error => {
+                    console.warn('Could not reach server:', error);
+                });
+        });
+    </script>
+</body>
+</html>

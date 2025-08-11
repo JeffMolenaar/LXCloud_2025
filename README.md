@@ -1,623 +1,170 @@
-# LXCloud - IoT Controller Management Platform
+# LXCloud Complete IoT Platform
 
-LXCloud is a comprehensive cloud-based dashboard platform for managing IoT controllers and visualizing their data. The platform supports real-time data collection via MQTT, user management with 2FA, and an extensible architecture for future enhancements.
+A comprehensive IoT cloud management platform with MariaDB database integration, real-time MQTT communication, and enhanced super admin interface.
 
-## Features
+## 🚀 Quick Start
 
-### Core Platform Features
-- **Real-time Dashboard** with live controller status monitoring
-- **Interactive Map View** showing controller locations and status
-- **User Authentication** with JWT and optional 2FA (TOTP)
-- **Role-based Access Control** (regular users vs administrators)
-- **MQTT Integration** for real-time controller data collection
-- **WebSocket Support** for live UI updates
-- **Responsive Web Interface** built with Bootstrap 5
-
-### Supported Controller Types
-- **Speed Radar** - Vehicle speed and traffic monitoring
-- **Beaufort Meter** - Wind speed and direction measurement
-- **Weather Station** - Comprehensive weather data collection
-- **AI Camera** - Intelligent video monitoring and analysis
-- **Extensible Architecture** for future controller types
-
-### User Features
-- **Controller Management**: Bind, configure, and monitor controllers
-- **Dashboard**: Real-time status overview with mini-map
-- **Map View**: Interactive map showing all controller locations
-- **Profile Management**: Update personal information and security settings
-- **Two-Factor Authentication**: Enhanced security with TOTP support
-
-### Administrator Features
-- **System-wide Controller Management**: View and manage all controllers
-- **User Administration**: Manage user accounts, reset passwords, disable 2FA
-- **UI Customization**: Customize interface appearance (planned)
-- **Addon Management**: Extensible plugin system (planned)
-- **System Monitoring**: Comprehensive platform oversight
-
-## Technology Stack
-
-### Backend
-- **Node.js** with Express.js framework
-- **MariaDB** database with connection pooling
-- **MQTT.js** for IoT device communication
-- **Socket.IO** for real-time web updates
-- **JWT** authentication with refresh tokens
-- **Speakeasy** for 2FA implementation
-- **Winston** for comprehensive logging
-
-### Frontend
-- **EJS** templating engine
-- **Bootstrap 5** for responsive UI
-- **FontAwesome** for icons
-- **Leaflet.js** for interactive maps
-- **Socket.IO Client** for real-time updates
-
-### Security & Infrastructure
-- **Helmet.js** for security headers
-- **Rate Limiting** for API protection
-- **Input Validation** with express-validator
-- **Nginx** reverse proxy configuration
-- **Systemd** service management
-
-## Quick Start
-
-### Prerequisites
-- Ubuntu Server LTS 22.04 (recommended and tested)
-- Regular user account with sudo privileges
-- Internet connection
-- At least 2GB RAM and 10GB disk space
-
-### 🚀 One-Command Installation
-
-1. **Clone the repository:**
+### One-Command Setup
 ```bash
-git clone https://github.com/JeffMolenaar/LXCloud_2025.git
-cd LXCloud_2025
+./setup.sh
 ```
 
-2. **Run the Ubuntu 22.04 LTS installation script:**
+This single command installs and configures:
+- ✅ MariaDB Database Server
+- ✅ MQTT Broker (Mosquitto) 
+- ✅ Node.js Dependencies
+- ✅ Complete Admin Interface
+- ✅ Real-time Socket.IO Communication
+- ✅ Security Configuration
+
+### Start the Platform
 ```bash
-./scripts/install-ubuntu-22.04.sh
+npm start
 ```
 
-**Alternative:** For other Ubuntu versions, try:
+### Access the System
+- **Web Interface:** http://localhost:3000
+- **Admin Panel:** http://localhost:3000/admin
+
+### Default Login
+- **Email:** admin@lxcloud.local
+- **Password:** admin123
+
+## 📋 System Requirements
+
+- Ubuntu/Debian Linux
+- Node.js 18+
+- Root/sudo access for initial setup
+
+## 🔧 Features
+
+### 📊 Database Integration
+- Full MariaDB relational database
+- Automatic schema creation and migrations
+- Secure connection with prepared statements
+- Data backup and recovery tools
+
+### 📡 MQTT Communication
+- Real-time device communication
+- Automatic device discovery and registration
+- Live data collection and monitoring
+- Status tracking and diagnostics
+
+### 🎨 Enhanced Admin Interface
+- **User Management:** Create, edit, delete users with role-based access
+- **UI Customization:** Live CSS editor with color pickers and themes
+- **Device Management:** Controller binding and real-time monitoring
+- **System Tools:** Database management and MQTT diagnostics
+
+### 🔒 Security Features
+- Local network access restriction
+- Session management and rate limiting
+- Password hashing with bcrypt
+- Input validation and CSRF protection
+
+## 📊 MQTT Topics
+
+The platform uses these MQTT topic patterns:
+
+- **Device Registration:** `lxcloud/controllers/{serial}/register`
+- **Live Data Collection:** `lxcloud/controllers/{serial}/data`
+- **Status Updates:** `lxcloud/controllers/{serial}/status`
+
+## 🛠️ Maintenance
+
+### Update System
 ```bash
-./scripts/install-new.sh
+./update.sh
 ```
 
-### ✨ What the installer does automatically:
-
-- **🧹 Cleans up** any previous LXCloud installations
-- **📦 Installs** Node.js 18.x, MariaDB, Mosquitto MQTT, and Nginx (optimized for Ubuntu 22.04)
-- **🔧 Configures** all services with optimal settings for Ubuntu 22.04 LTS
-- **🗄️ Creates** database schema and default admin user
-- **🔐 Sets up** systemd services and firewall rules
-- **🔑 Generates** secure JWT secrets and passwords
-- **🌐 Configures** Nginx with local network optimizations (no HTTPS redirect)
-- **✅ Verifies** all services are running correctly
-- **🔧 Creates** maintenance and diagnostic scripts
-
-### 🌐 Access Your Installation
-
-After installation completes:
-
-- **Web Interface:** `http://your-server-ip`
-- **Default Credentials:**
-  - Email: `admin@lxcloud.local`
-  - Password: `admin123`
-
-**⚠️ IMPORTANT:** Change the default password immediately after first login!
-
-### 🔧 Post-Installation Management
-
-The installer creates helpful management scripts:
-
+### Manual Database Setup
 ```bash
-# Check system status and health
-sudo /opt/LXCloud_2025/status.sh
-
-# Run comprehensive diagnostics
-sudo /opt/LXCloud_2025/diagnose.sh
-
-# Test installation completely
-sudo /opt/LXCloud_2025/../scripts/test-installation.sh
-
-# View live logs
-sudo journalctl -u lxcloud -f
-
-# Update LXCloud
-sudo /opt/LXCloud_2025/update.sh
-
-# Create backup
-sudo /opt/LXCloud_2025/backup.sh
-
-# Restart services
-sudo systemctl restart lxcloud
+node scripts/setup-database.js
 ```
 
-### Post-Installation Setup
-
-1. **Configure SSL/TLS (recommended):**
+### Test Components
 ```bash
-sudo certbot --nginx
+npm test                              # Run full test suite
+node scripts/test-database.js        # Test database connection
+node scripts/test-mqtt-connection.js # Test MQTT broker
 ```
 
-2. **Update admin credentials:**
-- Login to the web interface
-- Go to Profile Settings
-- Change password and email address
-- Enable 2FA for enhanced security
-
-## Controller Integration
-
-### MQTT Topics
-Controllers communicate using the following MQTT topic structure:
+## 🏗️ Architecture
 
 ```
-lxcloud/controllers/{serial_number}/register  - Controller registration
-lxcloud/controllers/{serial_number}/data      - Data transmission
-lxcloud/controllers/{serial_number}/status    - Status updates
+LXCloud Platform
+├── server.js                 # Main application server
+├── setup.sh                  # Complete installation script
+├── update.sh                 # System update script
+├── config/                   # Configuration modules
+├── routes/                   # API and web routes
+├── models/                   # Database models
+├── controllers/              # Business logic
+├── middleware/               # Express middleware
+├── services/                 # External service integrations
+├── views/                    # EJS templates
+├── public/                   # Static assets
+└── scripts/                  # Utility scripts
 ```
 
-### Registration Message Format
-```json
-{
-  "type": "weatherstation",
-  "latitude": 52.5200,
-  "longitude": 13.4050,
-  "name": "Weather Station 001"
-}
-```
+## 🔄 API Endpoints
 
-### Data Message Format
-```json
-{
-  "data": {
-    "temperature": 23.5,
-    "humidity": 65,
-    "pressure": 1013.25
-  },
-  "timestamp": "2025-01-01T12:00:00Z"
-}
-```
+### Authentication
+- `POST /auth/login` - User login
+- `POST /auth/logout` - User logout
+- `GET /auth/status` - Check authentication status
 
-### Status Message Format
-```json
-{
-  "status": "online",
-  "timestamp": "2025-01-01T12:00:00Z"
-}
-```
+### Admin Panel
+- `GET /admin` - Admin dashboard
+- `POST /admin/users` - Create user
+- `PUT /admin/users/:id` - Update user
+- `DELETE /admin/users/:id` - Delete user
+- `GET /admin/system` - System status
 
-## Development
+### Controllers
+- `GET /controllers` - List all controllers
+- `POST /controllers` - Register new controller
+- `GET /controllers/:id` - Get controller details
+- `PUT /controllers/:id` - Update controller
 
-### Local Development Setup
+### Real-time Communication
+- Socket.IO events for live updates
+- MQTT message broadcasting
+- System status notifications
 
-1. **Install dependencies:**
+## 🐛 Troubleshooting
+
+### Service Status Check
 ```bash
-npm install
+sudo systemctl status mariadb    # Check database
+sudo systemctl status mosquitto  # Check MQTT broker
 ```
 
-2. **Configure environment:**
+### Reset Database
 ```bash
-cp .env.example .env
-# Edit .env with your local settings
+sudo mysql -e "DROP DATABASE lxcloud;"
+node scripts/setup-database.js
 ```
 
-3. **Set up database:**
+### View Logs
 ```bash
-# Run the database setup script to create lxcloud user
-npm run setup-db
-
-# Or manually create the database user:
-mysql -u root -p
-CREATE DATABASE IF NOT EXISTS lxcloud;
-CREATE USER IF NOT EXISTS 'lxcloud'@'localhost' IDENTIFIED BY 'lxcloud';
-GRANT ALL PRIVILEGES ON lxcloud.* TO 'lxcloud'@'localhost';
-FLUSH PRIVILEGES;
-EXIT;
+tail -f logs/lxcloud.log        # Application logs
+sudo tail -f /var/log/mysql/error.log  # Database logs
+sudo tail -f /var/log/mosquitto/mosquitto.log  # MQTT logs
 ```
 
-4. **Test database connection:**
-```bash
-npm run test-db
-```
+## 📝 License
 
-5. **Start development server:**
-```bash
-npm run dev
-```
+MIT License - see LICENSE file for details.
 
-### Available Scripts
-- `npm start` - Start production server
-- `npm run dev` - Start development server with nodemon
-- `npm test` - Run test suite
-- `npm run setup-db` - Initialize database schema and create lxcloud user
-- `npm run init-db` - Automated database setup for localhost (bash script)
-- `npm run test-db` - Test database connection
+## 🤝 Support
 
-## Updating
+For issues and support:
+1. Check the troubleshooting section above
+2. Review log files for error details
+3. Ensure all system requirements are met
+4. Verify service status and connectivity
 
-To update LXCloud to the latest version:
+---
 
-```bash
-sudo /opt/LXCloud_2025/update.sh
-```
-
-The update script will:
-- Create a backup of the current installation
-- Pull latest changes from Git
-- Update dependencies
-- Run database migrations
-- Restart services
-- Clean up old backups
-
-## Configuration
-
-### Environment Variables
-Key configuration options in `.env`:
-
-```env
-# Database
-DB_HOST=localhost
-DB_NAME=lxcloud
-DB_USER=lxcloud
-DB_PASSWORD=lxcloud
-
-# MQTT
-MQTT_BROKER_URL=mqtt://localhost:1883
-MQTT_USERNAME=lxcloud_mqtt
-MQTT_PASSWORD=your_mqtt_password
-
-# Security
-JWT_SECRET=your_jwt_secret
-SESSION_SECRET=your_session_secret
-```
-
-### Service Management
-```bash
-# View logs
-sudo journalctl -u lxcloud -f
-
-# Restart service
-sudo systemctl restart lxcloud
-
-# Check status
-sudo systemctl status lxcloud
-```
-
-## Architecture
-
-### Database Schema
-The platform uses a comprehensive database schema with the following key tables:
-- `users` - User accounts and authentication
-- `controllers` - IoT device registry
-- `controller_data` - Time-series data from devices
-- `sessions` - User session management
-- `ui_customizations` - Interface customization settings
-- `addons` - Extensible plugin system
-
-### Security Features
-- **Password Hashing** with bcrypt (configurable rounds)
-- **JWT Authentication** with refresh tokens
-- **Rate Limiting** on sensitive endpoints
-- **Input Validation** on all user inputs
-- **CSRF Protection** via session tokens
-- **Security Headers** via Helmet.js
-
-### Real-time Architecture
-- **MQTT Broker** receives data from IoT controllers
-- **Node.js Service** processes MQTT messages
-- **Database** stores controller data and state
-- **WebSocket** pushes updates to connected clients
-- **Frontend** updates UI in real-time
-
-## Troubleshooting
-
-### Common Issues and Solutions
-
-#### 🔌 "Unable to connect to server"
-
-**Symptoms:** Browser shows connection errors, timeouts, or "This site can't be reached"
-
-**Quick Fix (Most Common):**
-```bash
-# Run the comprehensive test script first
-sudo /opt/LXCloud_2025/../scripts/test-installation.sh
-
-# If tests fail, restart all services
-sudo systemctl restart lxcloud nginx mariadb mosquitto
-
-# Check status
-sudo /opt/LXCloud_2025/status.sh
-```
-
-**Detailed Troubleshooting:**
-
-1. **Services not running:**
-   ```bash
-   # Check service status
-   sudo /opt/LXCloud_2025/status.sh
-   
-   # Check individual services
-   sudo systemctl status lxcloud nginx mariadb mosquitto
-   
-   # Restart failed services
-   sudo systemctl restart lxcloud nginx mariadb mosquitto
-   ```
-
-2. **Database connection issues:**
-   ```bash
-   # Test database connection
-   mysql -u lxcloud -plxcloud lxcloud -e "SELECT 1"
-   
-   # If connection fails, check MariaDB
-   sudo systemctl status mariadb
-   sudo journalctl -u mariadb -n 20
-   
-   # Restart MariaDB
-   sudo systemctl restart mariadb
-   ```
-
-3. **Application startup issues:**
-   ```bash
-   # Check application logs
-   sudo journalctl -u lxcloud -n 50
-   
-   # Check if port 3000 is in use
-   sudo ss -tlnp | grep :3000
-   
-   # Restart LXCloud service
-   sudo systemctl restart lxcloud
-   ```
-
-4. **Firewall blocking connections:**
-   ```bash
-   # Check firewall status
-   sudo ufw status
-   
-   # Allow HTTP traffic
-   sudo ufw allow 'Nginx Full'
-   
-   # Allow application port for local networks
-   sudo ufw allow from 192.168.0.0/16 to any port 3000
-   ```
-
-5. **Nginx configuration issues:**
-   ```bash
-   # Test nginx configuration
-   sudo nginx -t
-   
-   # Check nginx status
-   sudo systemctl status nginx
-   
-   # Restart nginx
-   sudo systemctl restart nginx
-   ```
-
-6. **Wrong IP address:**
-   ```bash
-   # Find your server's IP
-   hostname -I
-   
-   # Try accessing via localhost first
-   curl http://localhost
-   
-   # Test API endpoint
-   curl http://localhost:3000/api/health
-   ```
-
-7. **Node.js/NPM issues:**
-   ```bash
-   # Check Node.js version
-   node --version
-   
-   # Should be v18.x or higher
-   # If not, reinstall Node.js 18
-   curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-   sudo apt-get install -y nodejs
-   ```
-
-8. **Run comprehensive diagnostics:**
-   ```bash
-   # This will check everything
-   sudo /opt/LXCloud_2025/diagnose.sh
-   ```
-
-#### 🗄️ Database Connection Issues
-
-**Symptoms:** Error messages about database connections in logs
-
-**Solutions:**
-```bash
-# Check MariaDB status
-sudo systemctl status mariadb
-
-# Test database connection
-mysql -u lxcloud -plxcloud lxcloud -e "SELECT 1"
-
-# Restart MariaDB
-sudo systemctl restart mariadb
-
-# Check if database exists
-mysql -u root -e "SHOW DATABASES"
-```
-
-#### 📡 MQTT Connection Problems
-
-**Symptoms:** MQTT connection errors in logs, controllers not appearing
-
-**Solutions:**
-```bash
-# Check Mosquitto status
-sudo systemctl status mosquitto
-
-# Test MQTT connection
-mosquitto_pub -h localhost -u lxcloud_mqtt -P [password] -t test -m "hello"
-
-# Check MQTT logs
-sudo tail -f /var/log/mosquitto/mosquitto.log
-
-# Restart Mosquitto
-sudo systemctl restart mosquitto
-```
-
-#### 🔐 Permission Issues
-
-**Symptoms:** File permission errors, service start failures
-
-**Solutions:**
-```bash
-# Fix file ownership
-sudo chown -R lxcloud:lxcloud /opt/LXCloud_2025
-
-# Fix script permissions
-sudo chmod +x /opt/LXCloud_2025/*.sh
-
-# Fix log directory permissions
-sudo mkdir -p /opt/LXCloud_2025/logs
-sudo chown lxcloud:lxcloud /opt/LXCloud_2025/logs
-```
-
-#### 🌐 HTTPS Redirect Issues
-
-**Symptoms:** Getting redirected to HTTPS when trying to access via HTTP
-
-**Solutions:**
-
-The new installer prevents this issue, but if you still experience it:
-
-```bash
-# Check nginx configuration
-sudo nginx -t
-
-# Ensure no HTTPS redirects for local networks
-sudo grep -r "return.*https" /etc/nginx/sites-available/
-
-# Restart nginx
-sudo systemctl restart nginx
-```
-
-#### 🚨 Emergency Recovery
-
-If the system is completely broken:
-
-1. **Complete reinstall:**
-   ```bash
-   cd LXCloud_2025
-   ./scripts/install-new.sh
-   ```
-
-2. **Restore from backup:**
-   ```bash
-   # List available backups
-   ls -la /opt/LXCloud_2025/backups/
-   
-   # Restore database
-   mysql -u lxcloud -plxcloud lxcloud < /opt/LXCloud_2025/backups/database_YYYYMMDD_HHMMSS.sql
-   ```
-
-3. **Check system resources:**
-   ```bash
-   # Check disk space
-   df -h
-   
-   # Check memory usage
-   free -h
-   
-   # Check system load
-   top
-   ```
-
-#### 📋 Getting Help
-
-1. **Check system status:**
-   ```bash
-   sudo /opt/LXCloud_2025/status.sh
-   ```
-
-2. **Collect diagnostic information:**
-   ```bash
-   # System info
-   uname -a
-   cat /etc/os-release
-   
-   # Service logs
-   sudo journalctl -u lxcloud --no-pager -n 50
-   sudo journalctl -u nginx --no-pager -n 50
-   sudo journalctl -u mariadb --no-pager -n 50
-   
-   # Network info
-   ss -tlnp | grep -E ':(80|443|3000|1883|3306)'
-   ```
-
-3. **Common commands for troubleshooting:**
-   ```bash
-   # Test web interface
-   curl -I http://localhost:3000/api/health
-   
-   # Test database
-   mysql -u lxcloud -plxcloud -e "SELECT 1"
-   
-   # Test MQTT
-   mosquitto_pub -h localhost -u lxcloud_mqtt -P [password] -t test -m hello
-   
-   # Check file permissions
-   ls -la /opt/LXCloud_2025/
-   ```
-
-### Performance Optimization
-
-If you experience slow performance:
-
-1. **Monitor resource usage:**
-   ```bash
-   htop
-   iotop
-   nethogs
-   ```
-
-2. **Optimize database:**
-   ```bash
-   # From the admin panel, or manually:
-   mysql -u lxcloud -plxcloud lxcloud -e "OPTIMIZE TABLE users, controllers, controller_data"
-   ```
-
-3. **Clean up old data:**
-   ```bash
-   # Clean old logs
-   sudo journalctl --vacuum-time=7d
-   
-   # Clean old backups
-   find /opt/LXCloud_2025/backups -name "*.sql" -mtime +30 -delete
-   ```
-
-For additional help, check the project's GitHub issues or create a new issue with your diagnostic information.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-## Support
-
-For support and documentation:
-- Check the troubleshooting section above
-- Review the logs: `sudo journalctl -u lxcloud -f`
-- Open an issue on GitHub
-
-## Version History
-
-- **v1.0.0** - Initial release with core functionality
-  - User authentication and management
-  - Controller binding and monitoring
-  - Real-time dashboard and map view
-  - MQTT integration
-  - Admin panel basics
+**LXCloud v2.0** - Complete IoT Cloud Management Platform

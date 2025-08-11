@@ -1,0 +1,478 @@
+<%- include('../partials/header', { user: user, title: title }) %>
+
+<div class="container-fluid">
+    <div class="row">
+        <%- include('../partials/sidebar', { user: user }) %>
+        
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Super Admin Panel
+                    <span class="badge bg-success ms-2">Integrated v2.0</span>
+                </h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button class="btn btn-sm btn-success" onclick="testMQTT()">
+                            <i class="fas fa-satellite-dish me-1"></i>
+                            Test MQTT
+                        </button>
+                        <button class="btn btn-sm btn-info" onclick="testDatabase()">
+                            <i class="fas fa-database me-1"></i>
+                            Test Database
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status Cards -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <div class="text-primary">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                            <div class="mt-3">
+                                <h6 class="card-title text-muted text-uppercase mb-2">Total Users</h6>
+                                <h3 class="text-primary" id="totalUsers"><%= stats.totalUsers || 0 %></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <div class="text-success">
+                                <i class="fas fa-microchip fa-2x"></i>
+                            </div>
+                            <div class="mt-3">
+                                <h6 class="card-title text-muted text-uppercase mb-2">Total Controllers</h6>
+                                <h3 class="text-success" id="totalControllers"><%= stats.total || 0 %></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card border-warning">
+                        <div class="card-body text-center">
+                            <div class="text-warning">
+                                <i class="fas fa-wifi fa-2x"></i>
+                            </div>
+                            <div class="mt-3">
+                                <h6 class="card-title text-muted text-uppercase mb-2">Online Controllers</h6>
+                                <h3 class="text-warning" id="onlineControllers"><%= stats.online || 0 %></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <div class="text-info">
+                                <i class="fas fa-satellite-dish fa-2x"></i>
+                            </div>
+                            <div class="mt-3">
+                                <h6 class="card-title text-muted text-uppercase mb-2">MQTT Status</h6>
+                                <h5 class="text-info" id="mqttStatus">
+                                    <span class="badge bg-success">Connected</span>
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Services Status -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-server me-2"></i>
+                                System Services Status
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-database text-success me-2"></i>
+                                        <span>MariaDB</span>
+                                        <span class="badge bg-success ms-auto" id="dbStatus">Connected</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-satellite-dish text-success me-2"></i>
+                                        <span>MQTT Broker</span>
+                                        <span class="badge bg-success ms-auto" id="mqttBrokerStatus">Connected</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-shield-alt text-success me-2"></i>
+                                        <span>Auth System</span>
+                                        <span class="badge bg-success ms-auto">Active</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-network-wired text-success me-2"></i>
+                                        <span>Socket.IO</span>
+                                        <span class="badge bg-success ms-auto">Active</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Super Admin Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-tools me-2"></i>
+                                Super Admin Tools
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <a href="/admin/users" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-users me-2"></i>
+                                        User Management
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <a href="/admin/controllers" class="btn btn-outline-success w-100">
+                                        <i class="fas fa-microchip me-2"></i>
+                                        Controller Management
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <a href="/admin/ui-customization" class="btn btn-outline-warning w-100">
+                                        <i class="fas fa-palette me-2"></i>
+                                        UI Customization
+                                    </a>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <a href="/admin/settings" class="btn btn-outline-info w-100">
+                                        <i class="fas fa-cog me-2"></i>
+                                        System Settings
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <button class="btn btn-outline-secondary w-100" onclick="showDatabaseManagement()">
+                                        <i class="fas fa-database me-2"></i>
+                                        Database Tools
+                                    </button>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <button class="btn btn-outline-success w-100" onclick="showMQTTTools()">
+                                        <i class="fas fa-satellite-dish me-2"></i>
+                                        MQTT Tools
+                                    </button>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <button class="btn btn-outline-danger w-100" onclick="viewSystemLogs()">
+                                        <i class="fas fa-file-alt me-2"></i>
+                                        System Logs
+                                    </button>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <button class="btn btn-outline-dark w-100" onclick="exportSystemData()">
+                                        <i class="fas fa-download me-2"></i>
+                                        Export Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time System Monitoring -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Real-time Activity
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="realtimeActivity" style="height: 300px; overflow-y: auto;">
+                                <div class="text-muted text-center py-4">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Monitoring system activity...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-broadcast-tower me-2"></i>
+                                MQTT Messages
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="mqttMessages" style="height: 300px; overflow-y: auto;">
+                                <div class="text-muted text-center py-4">
+                                    <i class="fas fa-satellite-dish me-2"></i>
+                                    Waiting for MQTT messages...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- Modals for Admin Tools -->
+<div class="modal fade" id="databaseToolsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-database me-2"></i>
+                    Database Management Tools
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <button class="btn btn-outline-primary w-100" onclick="testDatabaseConnection()">
+                            <i class="fas fa-plug me-2"></i>
+                            Test Connection
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="btn btn-outline-success w-100" onclick="runMigrations()">
+                            <i class="fas fa-sync me-2"></i>
+                            Run Migrations
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="btn btn-outline-warning w-100" onclick="backupDatabase()">
+                            <i class="fas fa-save me-2"></i>
+                            Backup Database
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="btn btn-outline-info w-100" onclick="viewDatabaseStats()">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Database Stats
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="mqttToolsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-satellite-dish me-2"></i>
+                    MQTT Management Tools
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <button class="btn btn-outline-primary w-100" onclick="testMQTTConnection()">
+                            <i class="fas fa-plug me-2"></i>
+                            Test MQTT Connection
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="btn btn-outline-success w-100" onclick="publishTestMessage()">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            Publish Test Message
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="btn btn-outline-warning w-100" onclick="viewMQTTSubscriptions()">
+                            <i class="fas fa-list me-2"></i>
+                            View Subscriptions
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="btn btn-outline-info w-100" onclick="mqttDiagnostics()">
+                            <i class="fas fa-stethoscope me-2"></i>
+                            MQTT Diagnostics
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Socket.IO connection for real-time updates
+const socket = io();
+
+socket.on('connect', function() {
+    console.log('Connected to server');
+    addActivityLog('Socket.IO connected', 'success');
+});
+
+socket.on('controller-updated', function(controller) {
+    addActivityLog(`Controller ${controller.serialNumber} updated`, 'info');
+    updateControllerStats();
+});
+
+socket.on('controller-data', function(data) {
+    addMQTTMessage(`Data from ${data.serialNumber}`, JSON.stringify(data.data));
+});
+
+function addActivityLog(message, type = 'info') {
+    const activityDiv = document.getElementById('realtimeActivity');
+    const timestamp = new Date().toLocaleTimeString();
+    const iconClass = type === 'success' ? 'fa-check-circle text-success' : 
+                     type === 'error' ? 'fa-exclamation-circle text-danger' : 
+                     'fa-info-circle text-info';
+    
+    const logEntry = document.createElement('div');
+    logEntry.className = 'border-bottom pb-2 mb-2';
+    logEntry.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas ${iconClass} me-2"></i>
+                ${message}
+            </div>
+            <small class="text-muted">${timestamp}</small>
+        </div>
+    `;
+    
+    activityDiv.insertBefore(logEntry, activityDiv.firstChild);
+    
+    // Keep only last 10 entries
+    while (activityDiv.children.length > 10) {
+        activityDiv.removeChild(activityDiv.lastChild);
+    }
+}
+
+function addMQTTMessage(topic, payload) {
+    const mqttDiv = document.getElementById('mqttMessages');
+    const timestamp = new Date().toLocaleTimeString();
+    
+    const messageEntry = document.createElement('div');
+    messageEntry.className = 'border-bottom pb-2 mb-2';
+    messageEntry.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-broadcast-tower text-success me-2"></i>
+                <strong>${topic}</strong>
+                <br>
+                <small class="text-muted">${payload}</small>
+            </div>
+            <small class="text-muted">${timestamp}</small>
+        </div>
+    `;
+    
+    mqttDiv.insertBefore(messageEntry, mqttDiv.firstChild);
+    
+    // Keep only last 10 messages
+    while (mqttDiv.children.length > 10) {
+        mqttDiv.removeChild(mqttDiv.lastChild);
+    }
+}
+
+// Admin tool functions
+function testMQTT() {
+    fetch('/api/admin/test-mqtt', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addActivityLog('MQTT test successful', 'success');
+            } else {
+                addActivityLog('MQTT test failed: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            addActivityLog('MQTT test error: ' + error.message, 'error');
+        });
+}
+
+function testDatabase() {
+    fetch('/api/admin/test-database', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                addActivityLog('Database test successful', 'success');
+                document.getElementById('dbStatus').className = 'badge bg-success ms-auto';
+                document.getElementById('dbStatus').textContent = 'Connected';
+            } else {
+                addActivityLog('Database test failed: ' + data.error, 'error');
+                document.getElementById('dbStatus').className = 'badge bg-danger ms-auto';
+                document.getElementById('dbStatus').textContent = 'Error';
+            }
+        })
+        .catch(error => {
+            addActivityLog('Database test error: ' + error.message, 'error');
+        });
+}
+
+function showDatabaseManagement() {
+    new bootstrap.Modal(document.getElementById('databaseToolsModal')).show();
+}
+
+function showMQTTTools() {
+    new bootstrap.Modal(document.getElementById('mqttToolsModal')).show();
+}
+
+function viewSystemLogs() {
+    addActivityLog('System logs viewer would open here', 'info');
+}
+
+function exportSystemData() {
+    addActivityLog('System data export initiated', 'info');
+}
+
+function updateControllerStats() {
+    fetch('/api/admin/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('totalControllers').textContent = data.total || 0;
+            document.getElementById('onlineControllers').textContent = data.online || 0;
+        })
+        .catch(error => console.error('Error updating stats:', error));
+}
+
+// Initialize real-time monitoring
+document.addEventListener('DOMContentLoaded', function() {
+    addActivityLog('Super Admin panel loaded', 'success');
+    
+    // Test connections on load
+    setTimeout(testDatabase, 1000);
+    setTimeout(testMQTT, 2000);
+    
+    // Periodic stats update
+    setInterval(updateControllerStats, 30000);
+});
+</script>
+
+<%- include('../partials/footer') %>
