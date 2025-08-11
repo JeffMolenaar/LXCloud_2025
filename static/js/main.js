@@ -80,15 +80,26 @@ function refreshDashboardData() {
 }
 
 function updateControllerStatus() {
+    // Only update if user is authenticated
+    if (!document.querySelector('.navbar')) {
+        console.log('User not authenticated, skipping controller status update');
+        return;
+    }
+    
     fetch('/api/controllers/status')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Not authenticated or API unavailable');
+            }
+            return response.json();
+        })
         .then(data => {
             data.forEach(controller => {
                 updateControllerStatusIndicator(controller);
             });
         })
         .catch(error => {
-            console.error('Error updating controller status:', error);
+            console.log('Controller status update skipped:', error.message);
         });
 }
 
@@ -113,8 +124,19 @@ function updateControllerStatusIndicator(controller) {
 }
 
 function updateDashboardStats() {
+    // Only update if user is authenticated
+    if (!document.querySelector('.navbar')) {
+        console.log('User not authenticated, skipping dashboard stats update');
+        return;
+    }
+    
     fetch('/api/stats/overview')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Not authenticated or API unavailable');
+            }
+            return response.json();
+        })
         .then(data => {
             // Update statistics cards
             updateStatCard('total-controllers', data.total_controllers);
@@ -130,7 +152,7 @@ function updateDashboardStats() {
             }
         })
         .catch(error => {
-            console.error('Error updating dashboard stats:', error);
+            console.log('Dashboard stats update skipped:', error.message);
         });
 }
 
