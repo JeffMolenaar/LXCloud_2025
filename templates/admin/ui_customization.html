@@ -37,7 +37,7 @@
                         <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
                              id="{{ page }}-pane" role="tabpanel" tabindex="0">
                             
-                            <form method="POST" action="{{ url_for('admin.save_ui_customization', page_name=page) }}">
+                            <form method="POST" action="{{ url_for('admin.save_ui_customization', page_name=page) }}" enctype="multipart/form-data">>
                                 <div class="row">
                                     <!-- Header Configuration -->
                                     <div class="col-lg-6">
@@ -50,6 +50,27 @@
                                             <input type="text" class="form-control" 
                                                    id="header_logo_text_{{ page }}" name="header_logo_text" 
                                                    value="{{ customization.get_header_config().get('logo_text', 'LXCloud') }}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="logo_file_{{ page }}" class="form-label">Custom Logo</label>
+                                            <input type="file" class="form-control" 
+                                                   id="logo_file_{{ page }}" name="logo_file" 
+                                                   accept="image/*">
+                                            <div class="form-text">
+                                                Upload a custom logo image (PNG, JPG, SVG recommended). Will replace the logo text when uploaded.
+                                            </div>
+                                            {% if customization.logo_filename %}
+                                            <div class="mt-2">
+                                                <small class="text-success">
+                                                    <i class="fas fa-check"></i> Current logo: {{ customization.logo_filename }}
+                                                </small>
+                                                <div class="mt-1">
+                                                    <img src="{{ url_for('static', filename='uploads/' + customization.logo_filename) }}" 
+                                                         alt="Current logo" class="img-thumbnail" style="max-height: 50px;">
+                                                </div>
+                                            </div>
+                                            {% endif %}
                                         </div>
                                         
                                         <div class="mb-3">
