@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}{{ controller.name }} Data - LXCloud{% endblock %}
+
+{% block extra_css %}
+<style>
+.data-table {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.json-data {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    white-space: pre-wrap;
+}
+
+.refresh-indicator {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1000;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex align-items-center">
+                <div class="controller-icon {{ controller.controller_type }} me-3">
+                    {% if controller.controller_type == 'speedradar' %}
+                        <i class="fas fa-tachometer-alt"></i>
+                    {% elif controller.controller_type == 'beaufortmeter' %}
+                        <i class="fas fa-wind"></i>
+                    {% elif controller.controller_type == 'weatherstation' %}
+                        <i class="fas fa-cloud-sun"></i>
+                    {% elif controller.controller_type == 'aicamera' %}
+                        <i class="fas fa-camera"></i>
+                    {% else %}
+                        <i class="fas fa-microchip"></i>
+                    {% endif %}
+                </div>
+                <div>
+                    <h1 class="h3 mb-0">{{ controller.name }}</h1>
+                    <p class="text-muted mb-0">
+                        {{ controller.controller_type.title() }} • {{ controller.serial_number }}
+                        {% if controller.is_online %}
+                            <span class="badge bg-success ms-2">Online</span>
+                        {% else %}
+                            <span class="badge bg-danger ms-2">Offline</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <a href="{{ url_for('controllers.edit_controller', controller_id=controller.id) }}" 
+                   class="btn btn-outline-secondary">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <button class="btn btn-primary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt" id="refresh-icon"></i> Refresh
+                </button>
+                <a href="{{ url_for('controllers.index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Visualization Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-primary">Total Records</h5>
+                    <h2 class="mb-0" id="total-records">{{ data_points|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-success">Last Update</h5>
+                    <p class="mb-0" id="last-update">
+                        {% if data_points %}
+                            {{ data_points[0].timestamp.strftime('%H:%M:%S') }}
+                        {% else %}
+                            No data
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-info">Data Rate</h5>
+                    <p class="mb-0" id="data-rate">-</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-warning">Avg Interval</h5>
+                    <p class="mb-0" id="avg-interval">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table"></i> 
+                        Recent Data Points
+                    </h5>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                        <label class="form-check-label" for="autoRefresh">Auto Refresh</label>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if data_points %}
+                        <div class="data-table">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Data</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="data-table-body">
+                                    {% for data_point in data_points %}
+                                    <tr>
+                                        <td>
+                                            <span class="text-muted">{{ data_point.timestamp.strftime('%Y-%m-%d') }}</span><br>
+                                            <strong>{{ data_point.timestamp.strftime('%H:%M:%S') }}</strong>
+                                        </td>
+                                        <td>
+                                            <div class="json-data">{{ data_point.get_data_dict() | tojson(indent=2) }}</div>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" 
+                                                    onclick="viewDataDetails({{ data_point.get_data_dict() | tojson | safe }}, '{{ data_point.timestamp.isoformat() }}')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Data Available</h5>
+                            <p class="text-muted">This controller hasn't sent any data yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Details Modal -->
+<div class="modal fade" id="dataDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Data Point Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Timestamp:</label>
+                    <div id="modal-timestamp" class="form-control-plaintext"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Raw Data:</label>
+                    <pre id="modal-data" class="json-data"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Refresh Indicator -->
+<div class="refresh-indicator" id="refresh-indicator" style="display: none;">
+    <div class="alert alert-info alert-dismissible">
+        <i class="fas fa-sync-alt fa-spin"></i> Refreshing data...
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let autoRefreshInterval;
+let lastRefreshTime = new Date();
+
+// Initialize auto-refresh
+document.addEventListener('DOMContentLoaded', function() {
+    startAutoRefresh();
+    calculateDataStats();
+});
+
+function startAutoRefresh() {
+    if (document.getElementById('autoRefresh').checked) {
+        autoRefreshInterval = setInterval(refreshData, 30000); // 30 seconds
+    }
+}
+
+function toggleAutoRefresh() {
+    if (document.getElementById('autoRefresh').checked) {
+        startAutoRefresh();
+    } else {
+        clearInterval(autoRefreshInterval);
+    }
+}
+
+document.getElementById('autoRefresh').addEventListener('change', toggleAutoRefresh);
+
+function refreshData() {
+    const refreshIcon = document.getElementById('refresh-icon');
+    const indicator = document.getElementById('refresh-indicator');
+    
+    refreshIcon.classList.add('fa-spin');
+    indicator.style.display = 'block';
+    
+    fetch(`/controllers/{{ controller.id }}/data/api?limit=100`)
+        .then(response => response.json())
+        .then(data => {
+            updateDataTable(data);
+            updateDataStats(data);
+            lastRefreshTime = new Date();
+        })
+        .catch(error => {
+            console.error('Error refreshing data:', error);
+            LXCloud.showAlert('Error refreshing data', 'danger');
+        })
+        .finally(() => {
+            refreshIcon.classList.remove('fa-spin');
+            indicator.style.display = 'none';
+        });
+}
+
+function updateDataTable(dataPoints) {
+    const tbody = document.getElementById('data-table-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (dataPoints.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center py-4">
+                    <i class="fas fa-chart-line fa-2x text-muted mb-2"></i><br>
+                    <span class="text-muted">No data available</span>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    dataPoints.forEach(dataPoint => {
+        const timestamp = new Date(dataPoint.timestamp);
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+            <td>
+                <span class="text-muted">${timestamp.toLocaleDateString()}</span><br>
+                <strong>${timestamp.toLocaleTimeString()}</strong>
+            </td>
+            <td>
+                <div class="json-data">${JSON.stringify(dataPoint.data, null, 2)}</div>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" 
+                        onclick="viewDataDetails(${JSON.stringify(dataPoint.data).replace(/"/g, '&quot;')}, '${dataPoint.timestamp}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function updateDataStats(dataPoints) {
+    document.getElementById('total-records').textContent = dataPoints.length;
+    
+    if (dataPoints.length > 0) {
+        const lastUpdate = new Date(dataPoints[0].timestamp);
+        document.getElementById('last-update').textContent = lastUpdate.toLocaleTimeString();
+        
+        // Calculate data rate (points per hour)
+        if (dataPoints.length > 1) {
+            const firstTime = new Date(dataPoints[dataPoints.length - 1].timestamp);
+            const lastTime = new Date(dataPoints[0].timestamp);
+            const hoursDiff = (lastTime - firstTime) / (1000 * 60 * 60);
+            const rate = hoursDiff > 0 ? Math.round(dataPoints.length / hoursDiff) : 0;
+            document.getElementById('data-rate').textContent = `${rate}/hour`;
+            
+            // Calculate average interval
+            const totalIntervals = dataPoints.length - 1;
+            const avgInterval = hoursDiff > 0 ? Math.round((hoursDiff * 60) / totalIntervals) : 0;
+            document.getElementById('avg-interval').textContent = `${avgInterval}min`;
+        }
+    }
+}
+
+function calculateDataStats() {
+    const rows = document.querySelectorAll('#data-table-body tr');
+    if (rows.length > 1) {
+        // Calculate stats from existing table data
+        const timestamps = [];
+        rows.forEach(row => {
+            const timeCell = row.querySelector('td:first-child strong');
+            if (timeCell) {
+                const timeText = timeCell.textContent;
+                const dateText = row.querySelector('td:first-child .text-muted').textContent;
+                timestamps.push(new Date(`${dateText} ${timeText}`));
+            }
+        });
+        
+        if (timestamps.length > 1) {
+            const totalTime = timestamps[0] - timestamps[timestamps.length - 1];
+            const hours = totalTime / (1000 * 60 * 60);
+            const rate = hours > 0 ? Math.round(timestamps.length / hours) : 0;
+            const avgInterval = hours > 0 ? Math.round((hours * 60) / (timestamps.length - 1)) : 0;
+            
+            document.getElementById('data-rate').textContent = `${rate}/hour`;
+            document.getElementById('avg-interval').textContent = `${avgInterval}min`;
+        }
+    }
+}
+
+function viewDataDetails(data, timestamp) {
+    const modal = new bootstrap.Modal(document.getElementById('dataDetailsModal'));
+    
+    document.getElementById('modal-timestamp').textContent = new Date(timestamp).toLocaleString();
+    document.getElementById('modal-data').textContent = JSON.stringify(data, null, 2);
+    
+    modal.show();
+}
+</script>
+{% endblock %}
