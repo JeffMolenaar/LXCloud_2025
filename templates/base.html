@@ -69,9 +69,11 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
-                {% set dashboard_ui = ui_customizations.get('dashboard', {}) %}
-                {% set header_config = dashboard_ui.get('header_config', {}) %}
+            <!-- Logo on the left -->
+            {% set dashboard_ui = ui_customizations.get('dashboard', {}) %}
+            {% set header_config = dashboard_ui.get('header_config', {}) %}
+            <a class="navbar-brand" href="{{ url_for('dashboard.index') }}" 
+               style="color: inherit; text-decoration: none; padding-left: {{ header_config.get('logo_left_padding', '15px') }};">
                 {% if dashboard_ui.get('logo_filename') %}
                     <img src="{{ url_for('static', filename='uploads/' + dashboard_ui.logo_filename) }}" 
                          alt="{{ header_config.get('logo_text', 'LXCloud') }}" 
@@ -82,12 +84,55 @@
                 {{ header_config.get('logo_text', 'LXCloud') }}
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <!-- Menu items horizontally aligned in center-left -->
+            <ul class="navbar-nav d-none d-lg-flex" style="margin-left: {{ header_config.get('logo_menu_spacing', '30px') }};">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('dashboard.index') }}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('controllers.index') }}">
+                        <i class="fas fa-microchip"></i> Controllers
+                    </a>
+                </li>
+                {% if current_user.is_admin %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-cog"></i> Admin
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('admin.index') }}">Overview</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('admin.users') }}">Users</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('admin.ui_customization') }}">UI Customization</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('admin.addons') }}">Addons</a></li>
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
+            
+            <!-- User dropdown on the right -->
+            <ul class="navbar-nav ms-auto" style="padding-right: {{ header_config.get('user_button_right_padding', '15px') }};">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user"></i> {{ current_user.username }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('users.profile') }}">Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <!-- Mobile toggle button -->
+            <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+            <!-- Mobile menu (only visible on small screens) -->
+            <div class="collapse navbar-collapse d-lg-none" id="navbarNav">
+                <ul class="navbar-nav">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('dashboard.index') }}">
                             <i class="fas fa-tachometer-alt"></i> Dashboard
@@ -100,7 +145,7 @@
                     </li>
                     {% if current_user.is_admin %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="adminDropdownMobile" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-cog"></i> Admin
                         </a>
                         <ul class="dropdown-menu">
@@ -111,19 +156,6 @@
                         </ul>
                     </li>
                     {% endif %}
-                </ul>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> {{ current_user.username }}
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('users.profile') }}">Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
-                        </ul>
-                    </li>
                 </ul>
             </div>
         </div>
