@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Overview - LXCloud{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-cog text-primary"></i> 
+                Admin Overview
+            </h1>
+            <p class="text-muted">System administration dashboard</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title mb-0 text-primary">{{ user_count }}</h4>
+                            <p class="card-text text-muted">Total Users</p>
+                        </div>
+                        <div class="text-primary opacity-75">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title mb-0 text-success">{{ controller_count }}</h4>
+                            <p class="card-text text-muted">Total Controllers</p>
+                        </div>
+                        <div class="text-success opacity-75">
+                            <i class="fas fa-microchip fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title mb-0 text-info">{{ online_controllers }}</h4>
+                            <p class="card-text text-muted">Online Controllers</p>
+                        </div>
+                        <div class="text-info opacity-75">
+                            <i class="fas fa-wifi fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title mb-0 text-warning">{{ unbound_controllers }}</h4>
+                            <p class="card-text text-muted">Unbound Controllers</p>
+                        </div>
+                        <div class="text-warning opacity-75">
+                            <i class="fas fa-unlink fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tasks text-primary"></i> 
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('admin.users') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-users"></i> Manage Users
+                        </a>
+                        <a href="{{ url_for('admin.ui_customization') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-palette"></i> UI Customization
+                        </a>
+                        <a href="{{ url_for('admin.addons') }}" class="btn btn-outline-info">
+                            <i class="fas fa-puzzle-piece"></i> Manage Addons
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle text-info"></i> 
+                        System Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless table-sm">
+                        <tr>
+                            <td><strong>Version:</strong></td>
+                            <td>V1.0.0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Database:</strong></td>
+                            <td>SQLite (Development)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>MQTT Status:</strong></td>
+                            <td><span class="badge bg-warning">Connecting</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Uptime:</strong></td>
+                            <td>Running</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

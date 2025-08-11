@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}UI Customization - LXCloud{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-palette text-primary"></i> 
+                UI Customization
+            </h1>
+            <p class="text-muted">Customize the appearance and branding of your LXCloud instance</p>
+        </div>
+    </div>
+
+    <!-- Customization Tabs -->
+    <div class="row">
+        <div class="col">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <ul class="nav nav-tabs card-header-tabs" id="customizationTabs" role="tablist">
+                        {% for page, customization in customizations.items() %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if loop.first %}active{% endif %}" 
+                                    id="{{ page }}-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#{{ page }}-pane" type="button" role="tab">
+                                {{ page.title() }}
+                            </button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="customizationTabsContent">
+                        {% for page, customization in customizations.items() %}
+                        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                             id="{{ page }}-pane" role="tabpanel" tabindex="0">
+                            
+                            <form method="POST" action="{{ url_for('admin.save_ui_customization', page_name=page) }}">
+                                <div class="row">
+                                    <!-- Header Configuration -->
+                                    <div class="col-lg-6">
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-window-maximize text-primary"></i> Header Configuration
+                                        </h6>
+                                        
+                                        <div class="mb-3">
+                                            <label for="header_logo_text_{{ page }}" class="form-label">Logo Text</label>
+                                            <input type="text" class="form-control" 
+                                                   id="header_logo_text_{{ page }}" name="header_logo_text" 
+                                                   value="{{ customization.get_header_config().get('logo_text', 'LXCloud') }}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="header_height_{{ page }}" class="form-label">Header Height</label>
+                                            <input type="text" class="form-control" 
+                                                   id="header_height_{{ page }}" name="header_height" 
+                                                   value="{{ customization.get_header_config().get('height', '60px') }}"
+                                                   placeholder="60px">
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="header_bg_color_{{ page }}" class="form-label">Background Color</label>
+                                                    <input type="color" class="form-control form-control-color" 
+                                                           id="header_bg_color_{{ page }}" name="header_bg_color" 
+                                                           value="{{ customization.get_header_config().get('background_color', '#2c3e50') }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="header_text_color_{{ page }}" class="form-label">Text Color</label>
+                                                    <input type="color" class="form-control form-control-color" 
+                                                           id="header_text_color_{{ page }}" name="header_text_color" 
+                                                           value="{{ customization.get_header_config().get('text_color', '#ffffff') }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Footer Configuration -->
+                                    <div class="col-lg-6">
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-window-minimize text-secondary"></i> Footer Configuration
+                                        </h6>
+                                        
+                                        <div class="mb-3">
+                                            <label for="footer_text_{{ page }}" class="form-label">Footer Text</label>
+                                            <input type="text" class="form-control" 
+                                                   id="footer_text_{{ page }}" name="footer_text" 
+                                                   value="{{ customization.get_footer_config().get('text', '© 2025 LXCloud') }}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="footer_height_{{ page }}" class="form-label">Footer Height</label>
+                                            <input type="text" class="form-control" 
+                                                   id="footer_height_{{ page }}" name="footer_height" 
+                                                   value="{{ customization.get_footer_config().get('height', '40px') }}"
+                                                   placeholder="40px">
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="footer_bg_color_{{ page }}" class="form-label">Background Color</label>
+                                                    <input type="color" class="form-control form-control-color" 
+                                                           id="footer_bg_color_{{ page }}" name="footer_bg_color" 
+                                                           value="{{ customization.get_footer_config().get('background_color', '#34495e') }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="footer_text_color_{{ page }}" class="form-label">Text Color</label>
+                                                    <input type="color" class="form-control form-control-color" 
+                                                           id="footer_text_color_{{ page }}" name="footer_text_color" 
+                                                           value="{{ customization.get_footer_config().get('text_color', '#ffffff') }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Custom CSS -->
+                                <div class="mb-3">
+                                    <label for="custom_css_{{ page }}" class="form-label">
+                                        <i class="fas fa-code text-info"></i> Custom CSS
+                                    </label>
+                                    <textarea class="form-control font-monospace" 
+                                              id="custom_css_{{ page }}" name="custom_css" 
+                                              rows="8" 
+                                              placeholder="Enter custom CSS rules for this page...">{{ customization.custom_css or '' }}</textarea>
+                                    <div class="form-text">
+                                        Add custom CSS rules to further customize the appearance of this page.
+                                    </div>
+                                </div>
+                                
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: #6c757d;
+}
+
+.nav-tabs .nav-link.active {
+    border-bottom-color: #007bff;
+    color: #007bff;
+    background: none;
+}
+
+.form-control-color {
+    width: 3rem;
+    height: calc(2.25rem + 2px);
+}
+
+.font-monospace {
+    font-family: 'Courier New', Courier, monospace;
+}
+</style>
+{% endblock %}
