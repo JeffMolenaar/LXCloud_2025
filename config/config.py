@@ -15,6 +15,7 @@ class Config:
     SQLITE_FALLBACK_URI = os.environ.get('SQLITE_FALLBACK_URI') or 'sqlite:///lxcloud_fallback.db'
     
     # MQTT
+    MQTT_ENABLED = os.environ.get('MQTT_ENABLED', 'true').lower() == 'true'
     MQTT_BROKER_HOST = os.environ.get('MQTT_BROKER_HOST') or 'localhost'
     MQTT_BROKER_PORT = int(os.environ.get('MQTT_BROKER_PORT') or 1883)
     MQTT_USERNAME = os.environ.get('MQTT_USERNAME') or ''
