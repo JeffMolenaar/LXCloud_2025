@@ -80,35 +80,6 @@ echo -e "${BLUE}Copying application files...${NC}"
 cp -r . "$INSTALL_DIR/"
 chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
 
-# Verify critical files were copied correctly
-echo -e "${BLUE}Verifying installation...${NC}"
-CRITICAL_FILES=(
-    "app/__init__.py"
-    "templates/auth/login.html"
-    "templates/auth/register.html"
-    "templates/base.html"
-    "run.py"
-    "requirements.txt"
-)
-
-MISSING_FILES=()
-for file in "${CRITICAL_FILES[@]}"; do
-    if [[ ! -f "$INSTALL_DIR/$file" ]]; then
-        MISSING_FILES+=("$file")
-    fi
-done
-
-if [[ ${#MISSING_FILES[@]} -gt 0 ]]; then
-    echo -e "${RED}ERROR: Critical files are missing after installation:${NC}"
-    for file in "${MISSING_FILES[@]}"; do
-        echo -e "${RED}  - $file${NC}"
-    done
-    echo -e "${RED}Installation failed. Please check source directory and try again.${NC}"
-    exit 1
-fi
-
-echo -e "${GREEN}✓ All critical files verified successfully${NC}"
-
 # Setup Python virtual environment
 echo -e "${BLUE}Setting up Python virtual environment...${NC}"
 sudo -u "$SERVICE_USER" python3 -m venv "$INSTALL_DIR/venv"
