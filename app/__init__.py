@@ -12,9 +12,57 @@ from app.models import db, User
 
 def create_app():
     # Get the project root directory (parent of app directory)
+    # Make this more robust for different deployment scenarios
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
+    # Ensure we're in the correct directory structure
+    # Check for common deployment paths and fallback accordingly
     template_folder = os.path.join(project_root, 'templates')
     static_folder = os.path.join(project_root, 'static')
+    
+    # Verify template folder exists, if not try alternative paths
+    if not os.path.exists(template_folder):
+        print(f"Warning: Template folder not found at {template_folder}")
+        # Try relative to current working directory
+        alt_template_folder = os.path.join(os.getcwd(), 'templates')
+        if os.path.exists(alt_template_folder):
+            print(f"Found templates at current working directory: {alt_template_folder}")
+            template_folder = alt_template_folder
+            static_folder = os.path.join(os.getcwd(), 'static')
+        else:
+            # Try relative to the directory where run.py is located
+            run_py_dir = os.path.dirname(os.path.abspath(sys.argv[0])) if len(sys.argv) > 0 else os.getcwd()
+            alt2_template_folder = os.path.join(run_py_dir, 'templates')
+            if os.path.exists(alt2_template_folder):
+                print(f"Found templates at run.py directory: {alt2_template_folder}")
+                template_folder = alt2_template_folder
+                static_folder = os.path.join(run_py_dir, 'static')
+            else:
+                print(f"Warning: Could not find templates folder. Tried:")
+                print(f"  1. {os.path.join(project_root, 'templates')}")
+                print(f"  2. {alt_template_folder}")
+                print(f"  3. {alt2_template_folder}")
+    
+    print(f"Using template folder: {template_folder}")
+    print(f"Template folder exists: {os.path.exists(template_folder)}")
+    if os.path.exists(template_folder):
+        auth_login_path = os.path.join(template_folder, 'auth', 'login.html')
+        print(f"Auth login template exists: {os.path.exists(auth_login_path)}")
+        if not os.path.exists(auth_login_path):
+            print(f"Warning: auth/login.html not found at {auth_login_path}")
+            # List available templates for debugging
+            print("Available templates:")
+            try:
+                for root, dirs, files in os.walk(template_folder):
+                    level = root.replace(template_folder, '').count(os.sep)
+                    indent = ' ' * 2 * level
+                    rel_path = os.path.relpath(root, template_folder)
+                    print(f"{indent}{rel_path if rel_path != '.' else 'templates'}/ ")
+                    subindent = ' ' * 2 * (level + 1)
+                    for file in files:
+                        print(f"{subindent}{file}")
+            except Exception as e:
+                print(f"Error listing templates: {e}")
     
     app = Flask(__name__, 
                 template_folder=template_folder,
