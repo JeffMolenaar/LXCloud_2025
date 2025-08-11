@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Login - LXCloud{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card mt-5 shadow">
+                <div class="card-header text-center bg-primary text-white">
+                    <h4><i class="fas fa-cloud"></i> LXCloud</h4>
+                    <p class="mb-0">Cloud Dashboard Platform</p>
+                </div>
+                <div class="card-body">
+                    {% if needs_2fa %}
+                        <h5 class="card-title text-center">Two-Factor Authentication</h5>
+                        <p class="text-center text-muted">Enter your 2FA code to complete login</p>
+                        
+                        <form method="POST">
+                            <input type="hidden" name="username" value="{{ request.form.username }}">
+                            <input type="hidden" name="password" value="{{ request.form.password }}">
+                            
+                            <div class="mb-3">
+                                <label for="two_factor_token" class="form-label">2FA Code</label>
+                                <input type="text" class="form-control text-center" id="two_factor_token" 
+                                       name="two_factor_token" required maxlength="6" 
+                                       pattern="[0-9]{6}" placeholder="000000">
+                                <div class="form-text">Enter the 6-digit code from your authenticator app</div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-shield-alt"></i> Verify
+                            </button>
+                        </form>
+                        
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('auth.login') }}" class="text-decoration-none">
+                                <i class="fas fa-arrow-left"></i> Back to login
+                            </a>
+                        </div>
+                    {% else %}
+                        <h5 class="card-title text-center">Sign In</h5>
+                        
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input type="text" class="form-control" id="username" name="username" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-sign-in-alt"></i> Sign In
+                            </button>
+                        </form>
+                        
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('auth.register') }}" class="text-decoration-none">
+                                Don't have an account? <strong>Sign up</strong>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-center text-muted">
+                    <small>Version {{ config.get_version() }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+
+.form-control {
+    border-left: none;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: none;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, #0056b3, #003f7f);
+}
+</style>
+{% endblock %}
