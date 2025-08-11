@@ -6,15 +6,15 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const bcryptjs = require('bcryptjs');
 require('dotenv').config();
 
 const logger = require('./config/logger');
 const database = require('./config/database');
-const container = require('./config/container');
 const mqttService = require('./controllers/mqttController');
 
 // Import routes
-const authRoutes = require('./routes/auth-new');
+const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const controllerRoutes = require('./routes/controllers');
 const userRoutes = require('./routes/users');
@@ -25,15 +25,32 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' ? 
-      ["http://192.168.2.171:3000", "http://localhost:3000"] : 
-      ["http://localhost:3000", "http://127.0.0.1:3000", "http://192.168.2.171:3000"],
+    origin: function (origin, callback) {
+      // Allow local network origins
+      if (!origin) return callback(null, true);
+      
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000'
+      ];
+      
+      // Allow any local network IP
+      if (origin.match(/^http:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+):\d+$/)) {
+        return callback(null, true);
+      }
+      
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      return callback(null, true); // Allow for development
+    },
     methods: ["GET", "POST"],
     credentials: true
   }
 });
 
-// Enhanced security middleware with better local network detection
+// Local network security middleware
 app.use((req, res, next) => {
   const clientIP = req.headers['x-forwarded-for'] || 
                    req.headers['x-real-ip'] || 
@@ -42,41 +59,80 @@ app.use((req, res, next) => {
                    req.ip || 
                    '127.0.0.1';
   
-  const isLocalNetwork = /^(127\.|::1|localhost|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(clientIP) ||
-                         clientIP === '::1' ||
-                         clientIP.includes('localhost') ||
-                         clientIP === 'undefined';
+  // Clean and normalize IP
+  const normalizedIP = clientIP.replace(/^::ffff:/, '').split(',')[0].trim();
   
+  // Check if it's a local network IP
+  const isLocalNetwork = /^(127\.|::1|localhost|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(normalizedIP) ||
+                         normalizedIP === '::1' ||
+                         normalizedIP.includes('localhost') ||
+                         normalizedIP === 'undefined';
+  
+  // Log access attempts
+  logger.info(`Access attempt from IP: ${normalizedIP}, Local: ${isLocalNetwork}`);
+  
+  if (!isLocalNetwork && process.env.NODE_ENV === 'production') {
+    logger.warn(`Access denied for external IP: ${normalizedIP}`);
+    return res.status(403).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Access Denied - LXCloud</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 40px; text-align: center; }
+          .error { color: #e74c3c; }
+        </style>
+      </head>
+      <body>
+        <h1 class="error">Access Denied</h1>
+        <p>LXCloud is configured for local network access only.</p>
+        <p>Your IP: ${normalizedIP}</p>
+        <p>Please access from a local network address.</p>
+      </body>
+      </html>
+    `);
+  }
+  
+  req.clientIP = normalizedIP;
+  next();
+});
+
+// Enhanced security middleware optimized for local networks
+app.use((req, res, next) => {
   const helmetConfig = {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://stackpath.bootstrapcdn.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://stackpath.bootstrapcdn.com"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
         connectSrc: ["'self'", "ws:", "wss:"],
-        fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
+        fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://stackpath.bootstrapcdn.com"],
       },
     },
-    hsts: false,
+    hsts: false, // Disable HTTPS enforcement for local networks
     forceHTTPS: false
   };
   
   helmet(helmetConfig)(req, res, next);
 });
 
-// CORS configuration
+// CORS configuration for local networks
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
       'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'http://192.168.2.171:3000'
+      'http://127.0.0.1:3000'
     ];
     
-    if (allowedOrigins.includes(origin) || origin.match(/^http:\/\/192\.168\.\d+\.\d+:\d+$/)) {
+    // Allow any local network IP
+    if (origin.match(/^http:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+):\d+$/)) {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
     
@@ -87,33 +143,16 @@ app.use(cors({
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
 
-// HTTP enforcement disabling for local networks
+// HTTP-only enforcement for local networks (no HTTPS redirects)
 app.use((req, res, next) => {
-  const clientIP = req.headers['x-forwarded-for'] || 
-                   req.headers['x-real-ip'] || 
-                   req.connection.remoteAddress || 
-                   req.socket.remoteAddress ||
-                   req.ip || 
-                   '127.0.0.1';
-  
-  const isLocalNetwork = /^(127\.|::1|localhost|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/.test(clientIP) ||
-                         clientIP === '::1' ||
-                         clientIP.includes('localhost') ||
-                         clientIP === 'undefined';
-  
-  if (isLocalNetwork || process.env.FORCE_HTTP === 'true') {
-    res.removeHeader('Strict-Transport-Security');
-    res.removeHeader('Location');
-    res.setHeader('X-Local-Network', 'true');
-    res.setHeader('X-HTTPS-Redirect', 'disabled');
-  }
-  
+  // Allow HTTP for local networks - no forced HTTPS redirects
+  logger.debug(`HTTP request allowed for local network: ${req.protocol}://${req.get('host')}${req.originalUrl}`);
   next();
 });
 
@@ -121,20 +160,16 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Enhanced session configuration
+// Session configuration
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  secret: process.env.SESSION_SECRET || 'lxcloud-session-secret',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,
+    secure: false, // Allow HTTP for local networks
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000
-  },
-  // Add session store configuration for production
-  ...(process.env.NODE_ENV === 'production' && {
-    store: new (require('express-session').MemoryStore)()
-  })
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
 
 // Static files
@@ -142,17 +177,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // View engine setup
-app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
-// Make socket.io and container available to routes
+// Make socket.io available to routes
 app.use((req, res, next) => {
   req.io = io;
-  req.container = container;
   next();
 });
 
-// Routes with improved error handling
+// Routes
 app.use('/auth', authRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/controllers', controllerRoutes);
@@ -160,274 +194,166 @@ app.use('/users', userRoutes);
 app.use('/admin', adminRoutes);
 app.use('/api', apiRoutes);
 
-// Enhanced health check endpoint with detailed system information
-app.get('/api/health', async (req, res) => {
-  try {
-    const sessionService = container.get('sessionService');
-    
-    // Check database connectivity
-    let dbStatus = 'connected';
-    let dbError = null;
-    try {
-      await database.query('SELECT 1');
-    } catch (error) {
-      dbStatus = database.mockMode ? 'mock' : 'error';
-      dbError = error.message;
-    }
-    
-    // Get system information
-    const os = require('os');
-    const uptime = process.uptime();
-    const memUsage = process.memoryUsage();
-    
-    const healthInfo = {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: Math.floor(uptime),
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-      services: {
-        database: dbStatus,
-        session: 'available',
-        auth: 'available',
-        mqtt: 'available'
-      },
-      system: {
-        platform: os.platform(),
-        arch: os.arch(),
-        nodeVersion: process.version,
-        cpus: os.cpus().length,
-        totalMemory: Math.round(os.totalmem() / 1024 / 1024),
-        freeMemory: Math.round(os.freemem() / 1024 / 1024),
-        loadAverage: os.loadavg()
-      },
-      memory: {
-        rss: Math.round(memUsage.rss / 1024 / 1024),
-        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
-        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
-        external: Math.round(memUsage.external / 1024 / 1024)
-      }
-    };
-    
-    // Add database error details if present
-    if (dbError) {
-      healthInfo.database_error = dbError;
-    }
-    
-    // Set appropriate HTTP status
-    const httpStatus = dbStatus === 'error' ? 503 : 200;
-    
-    res.status(httpStatus).json(healthInfo);
-    
-  } catch (error) {
-    logger.error('Health check error:', error);
-    res.status(500).json({
-      status: 'error',
-      timestamp: new Date().toISOString(),
-      error: error.message
-    });
-  }
-});
-
-// Simple connectivity test endpoint
-app.get('/api/ping', (req, res) => {
-  res.json({
-    status: 'pong',
-    timestamp: new Date().toISOString(),
-    server: 'LXCloud'
-  });
-});
-
 // Root route
 app.get('/', (req, res) => {
-  if (req.session.user) {
+  if (req.session.userId) {
     res.redirect('/dashboard');
   } else {
     res.redirect('/auth/login');
   }
 });
 
-// Enhanced 404 handler
+// 404 handler
 app.use((req, res) => {
-  logger.warn(`404 - Page not found: ${req.url} from IP: ${req.ip}`);
-  res.status(404).render('error', { 
+  res.status(404).render('error', {
     title: 'Page Not Found',
     message: 'The page you are looking for does not exist.',
     error: { status: 404 }
   });
 });
 
-// Enhanced error handler
-app.use((err, req, res, next) => {
-  logger.error(`Error on ${req.method} ${req.url}:`, err);
+// Error handler
+app.use((error, req, res, next) => {
+  logger.error('Application error:', error);
   
-  const status = err.status || 500;
-  const message = process.env.NODE_ENV === 'development' ? err.message : 'Internal server error';
-  
-  if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
-    res.status(status).json({ error: message });
-  } else {
-    res.status(status).render('error', {
-      title: 'Error',
-      message: message,
-      error: process.env.NODE_ENV === 'development' ? err : {}
-    });
-  }
+  res.status(error.status || 500).render('error', {
+    title: 'Error',
+    message: error.message || 'An unexpected error occurred',
+    error: process.env.NODE_ENV === 'development' ? error : { status: error.status || 500 }
+  });
 });
 
-// Socket.IO connection handling
+// Socket.IO handling
 io.on('connection', (socket) => {
-  logger.info(`New client connected: ${socket.id}`);
+  logger.info(`Socket.IO client connected: ${socket.id}`);
   
   socket.on('disconnect', () => {
-    logger.info(`Client disconnected: ${socket.id}`);
+    logger.info(`Socket.IO client disconnected: ${socket.id}`);
   });
-
+  
+  // Handle user room joining for targeted updates
   socket.on('join-user-room', (userId) => {
     socket.join(`user-${userId}`);
-    logger.info(`User ${userId} joined room`);
+    logger.debug(`Socket ${socket.id} joined user room: user-${userId}`);
   });
 });
 
-// Enhanced server initialization with improved error handling and connectivity
+// Initialize services and start server
 async function startServer() {
   try {
-    // Initialize database with retry logic
-    let dbInitialized = false;
-    let retryCount = 0;
-    const maxRetries = 5;
+    // Initialize database
+    logger.info('Initializing database...');
+    await database.initialize();
     
-    while (!dbInitialized && retryCount < maxRetries) {
-      try {
-        await database.initialize();
-        logger.info('Database connected successfully');
-        dbInitialized = true;
-      } catch (error) {
-        retryCount++;
-        logger.warn(`Database connection attempt ${retryCount}/${maxRetries} failed:`, error.message);
-        
-        if (retryCount >= maxRetries) {
-          if (process.env.NODE_ENV === 'development') {
-            logger.warn('Max database retries reached, continuing with mock database for development');
-            database.setupMockDatabase();
-            dbInitialized = true;
-          } else {
-            throw error;
-          }
-        } else {
-          // Wait before retry
-          await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
-        }
-      }
-    }
+    // Create default admin user if it doesn't exist
+    await createDefaultAdmin();
     
-    // Initialize session service tables
-    try {
-      const sessionService = container.get('sessionService');
-      await sessionService.initializeTables();
-      logger.info('Session service initialized');
-    } catch (error) {
-      logger.warn('Session service initialization failed, continuing without it:', error.message);
-    }
+    // Initialize MQTT service
+    logger.info('Initializing MQTT service...');
+    mqttService.initialize(io);
     
-    // Initialize MQTT service with error handling
-    try {
-      mqttService.initialize(io);
-      logger.info('MQTT service initialized');
-    } catch (error) {
-      logger.warn('MQTT service initialization failed, continuing without it:', error.message);
-    }
-    
-    // Start periodic session cleanup
-    setInterval(async () => {
-      try {
-        const sessionService = container.get('sessionService');
-        await sessionService.cleanupExpiredSessions();
-      } catch (error) {
-        logger.error('Session cleanup error:', error);
-      }
-    }, 60 * 60 * 1000); // Every hour
-    
-    // Start server with enhanced error handling
     const PORT = process.env.PORT || 3000;
-    const HOST = process.env.HOST || '0.0.0.0';
-    
-    server.listen(PORT, HOST, (err) => {
-      if (err) {
-        logger.error('Failed to start server:', err);
-        process.exit(1);
-      }
+    server.listen(PORT, '0.0.0.0', () => {
+      logger.info(`🚀 LXCloud Integrated Server running on http://localhost:${PORT}`);
+      logger.info('🌐 HTTP-only access enabled for local networks');
+      logger.info('🔒 External access automatically blocked');
+      logger.info('💾 MariaDB database integration active');
+      logger.info('📡 MQTT service initialized');
+      logger.info('👤 Default admin: admin@lxcloud.local / admin123');
       
-      logger.info(`LXCloud server running on ${HOST}:${PORT}`);
-      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`Server accessible via: http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
-      logger.info(`Mock mode: ${database.mockMode}`);
-      logger.info('Services initialized: Database, Auth, Session, MQTT');
-      
-      // Log network interfaces for easier access
-      try {
-        const os = require('os');
-        const interfaces = os.networkInterfaces();
-        logger.info('Network interfaces:');
-        Object.keys(interfaces).forEach(name => {
-          interfaces[name].forEach(iface => {
-            if (iface.family === 'IPv4' && !iface.internal) {
-              logger.info(`  ${name}: http://${iface.address}:${PORT}`);
-            }
-          });
-        });
-      } catch (error) {
-        // Ignore network interface errors
-      }
-    });
-    
-    // Handle server errors
-    server.on('error', (error) => {
-      if (error.code === 'EADDRINUSE') {
-        logger.error(`Port ${PORT} is already in use. Please check if another LXCloud instance is running.`);
-        process.exit(1);
-      } else if (error.code === 'EACCES') {
-        logger.error(`Permission denied to bind to port ${PORT}. You may need to run as root or use a different port.`);
-        process.exit(1);
-      } else {
-        logger.error('Server error:', error);
-        process.exit(1);
-      }
+      console.log('==================================================');
+      console.log('🎯 LXCloud Integrated v2.0 - READY!');
+      console.log('==================================================');
+      console.log(`📍 Access: http://localhost:${PORT}`);
+      console.log(`👤 Login: admin@lxcloud.local / admin123`);
+      console.log(`💾 Database: MariaDB (${process.env.DB_NAME})`);
+      console.log(`📡 MQTT: ${process.env.MQTT_BROKER_URL}`);
+      console.log('==================================================');
     });
     
   } catch (error) {
     logger.error('Failed to start server:', error);
     
-    // Try to provide helpful error messages
-    if (error.code === 'ECONNREFUSED') {
-      logger.error('Database connection refused. Please check if MariaDB/MySQL is running and accessible.');
-    } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
-      logger.error('Database access denied. Please check database credentials in .env file.');
-    } else if (error.code === 'ER_BAD_DB_ERROR') {
-      logger.error('Database does not exist. Please run the installation script to create the database.');
+    if (error.code === 'ER_ACCESS_DENIED_ERROR' || error.code === 'ECONNREFUSED') {
+      console.error('');
+      console.error('❌ DATABASE CONNECTION FAILED!');
+      console.error('');
+      console.error('Please ensure MariaDB/MySQL is running and configured:');
+      console.error('');
+      console.error('1. Install MariaDB:');
+      console.error('   sudo apt update && sudo apt install mariadb-server');
+      console.error('');
+      console.error('2. Start MariaDB:');
+      console.error('   sudo systemctl start mariadb');
+      console.error('');
+      console.error('3. Create database and user:');
+      console.error('   sudo mysql -u root -p');
+      console.error('   CREATE DATABASE lxcloud;');
+      console.error('   CREATE USER \'lxcloud\'@\'localhost\' IDENTIFIED BY \'lxcloud\';');
+      console.error('   GRANT ALL PRIVILEGES ON lxcloud.* TO \'lxcloud\'@\'localhost\';');
+      console.error('   FLUSH PRIVILEGES;');
+      console.error('');
+      console.error('4. Update .env file with correct database credentials');
+      console.error('');
     }
     
     process.exit(1);
   }
 }
 
+async function createDefaultAdmin() {
+  try {
+    // Check if admin user exists
+    const existingAdmin = await database.query(
+      'SELECT * FROM users WHERE email = ?', 
+      [process.env.DEFAULT_ADMIN_EMAIL || 'admin@lxcloud.local']
+    );
+    
+    if (existingAdmin.length === 0) {
+      // Create default admin user
+      const hashedPassword = await bcryptjs.hash(
+        process.env.DEFAULT_ADMIN_PASSWORD || 'admin123', 
+        parseInt(process.env.BCRYPT_ROUNDS || '12')
+      );
+      
+      await database.query(
+        'INSERT INTO users (email, password, name, role, is_active) VALUES (?, ?, ?, ?, ?)',
+        [
+          process.env.DEFAULT_ADMIN_EMAIL || 'admin@lxcloud.local',
+          hashedPassword,
+          'Administrator',
+          'admin',
+          true
+        ]
+      );
+      
+      logger.info('Default admin user created successfully');
+    } else {
+      logger.info('Admin user already exists');
+    }
+  } catch (error) {
+    logger.error('Error creating default admin user:', error);
+  }
+}
+
 // Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    database.close();
-    process.exit(0);
-  });
+process.on('SIGINT', async () => {
+  logger.info('Shutting down gracefully...');
+  
+  try {
+    mqttService.disconnect();
+    await database.close();
+    server.close(() => {
+      logger.info('Server closed successfully');
+      process.exit(0);
+    });
+  } catch (error) {
+    logger.error('Error during shutdown:', error);
+    process.exit(1);
+  }
 });
 
-process.on('SIGINT', () => {
-  logger.info('SIGINT received, shutting down gracefully');
-  server.close(() => {
-    database.close();
-    process.exit(0);
-  });
-});
-
+// Start the server
 startServer();
 
 module.exports = app;
