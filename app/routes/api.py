@@ -180,6 +180,13 @@ def register_controller():
 def update_controller_data(serial_number):
     """Update controller data"""
     try:
+        # Handle special reserved words that should not be treated as serial numbers
+        if serial_number.lower() in ['register', 'list', 'debug']:
+            return jsonify({
+                'error': f'Invalid serial number. {serial_number.lower()} is a reserved endpoint.',
+                'hint': f'Use POST for /api/controllers/register, GET for /api/controllers/list, or GET for /api/controllers/debug'
+            }), 400
+        
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No JSON data provided'}), 400
@@ -234,6 +241,13 @@ def update_controller_data(serial_number):
 def update_controller_status(serial_number):
     """Update controller status"""
     try:
+        # Handle special reserved words that should not be treated as serial numbers
+        if serial_number.lower() in ['register', 'list', 'debug']:
+            return jsonify({
+                'error': f'Invalid serial number. {serial_number.lower()} is a reserved endpoint.',
+                'hint': f'Use POST for /api/controllers/register, GET for /api/controllers/list, or GET for /api/controllers/debug'
+            }), 400
+        
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No JSON data provided'}), 400
@@ -265,6 +279,13 @@ def update_controller_status(serial_number):
 def modify_controller(serial_number):
     """Modify controller configuration"""
     try:
+        # Handle special reserved words that should not be treated as serial numbers
+        if serial_number.lower() in ['register', 'list', 'debug']:
+            return jsonify({
+                'error': f'Method not allowed. {serial_number.lower()} is a reserved endpoint.',
+                'hint': f'Use POST for /api/controllers/register, GET for /api/controllers/list, or GET for /api/controllers/debug'
+            }), 405
+        
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No JSON data provided'}), 400
@@ -313,6 +334,13 @@ def modify_controller(serial_number):
 def get_controller_info(serial_number):
     """Get controller information"""
     try:
+        # Handle special reserved words that should not be treated as serial numbers
+        if serial_number.lower() in ['register', 'list', 'debug']:
+            return jsonify({
+                'error': f'Method not allowed. {serial_number.lower()} is a reserved endpoint.',
+                'hint': f'Use POST for /api/controllers/register, GET for /api/controllers/list, or GET for /api/controllers/debug'
+            }), 405
+        
         serial_number = serial_number.strip().upper()
         
         controller = Controller.query.filter_by(serial_number=serial_number).first()
@@ -344,36 +372,55 @@ def list_all_controllers():
     except Exception as e:
         return jsonify({'error': f'Failed to list controllers: {str(e)}'}), 500
 
-# Handle method not allowed errors for controller registration
-@api_bp.route('/controllers/register', methods=['GET', 'PUT', 'DELETE', 'PATCH'], strict_slashes=False)
-def register_controller_method_not_allowed():
-    """Handle incorrect HTTP methods for controller registration"""
-    return jsonify({
-        'error': 'Method not allowed. Use POST method for controller registration.',
-        'allowed_methods': ['POST'],
-        'example': {
-            'method': 'POST',
-            'url': '/api/controllers/register',
-            'content_type': 'application/json',
-            'body': {
-                'serial_number': 'YOUR_SERIAL_NUMBER',
-                'type': 'speedradar|weatherstation|aicamera|beaufortmeter',
-                'name': 'Optional controller name',
-                'latitude': 'Optional latitude coordinate',
-                'longitude': 'Optional longitude coordinate'
+# Handle method not allowed errors with a more specific route that doesn't conflict
+@api_bp.errorhandler(405)
+def method_not_allowed(error):
+    """Handle method not allowed errors for API endpoints"""
+    if request.path == '/api/controllers/register':
+        return jsonify({
+            'error': 'Method not allowed. Use POST method for controller registration.',
+            'allowed_methods': ['POST'],
+            'example': {
+                'method': 'POST',
+                'url': '/api/controllers/register',
+                'content_type': 'application/json',
+                'body': {
+                    'serial_number': 'YOUR_SERIAL_NUMBER',
+                    'type': 'speedradar|weatherstation|aicamera|beaufortmeter',
+                    'name': 'Optional controller name',
+                    'latitude': 'Optional latitude coordinate',
+                    'longitude': 'Optional longitude coordinate'
+                }
             }
-        }
-    }), 405
+        }), 405
+    else:
+        return jsonify({
+            'error': 'Method not allowed for this endpoint.',
+            'path': request.path,
+            'method': request.method
+        }), 405
 
 # Troubleshooting endpoint
 @api_bp.route('/controllers/debug', methods=['GET', 'POST'], strict_slashes=False)
 def debug_endpoint():
     """Debug endpoint to help troubleshoot API issues"""
+    
+    # Analyze the request to provide specific debugging info
+    request_host = request.headers.get('Host', 'unknown')
+    port_info = ""
+    if ':' not in request_host and request_host not in ['localhost', '127.0.0.1']:
+        port_info = f"WARNING: You're accessing {request_host} without a port number. Flask typically runs on port 5000. Try: http://{request_host}:5000"
+    
     return jsonify({
         'message': 'API endpoints are working correctly',
         'method': request.method,
         'path': request.path,
         'full_url': request.url,
+        'host_analysis': {
+            'host_header': request_host,
+            'port_warning': port_info,
+            'expected_register_url': f"http://{request_host}:5000/api/controllers/register" if ':' not in request_host and request_host not in ['localhost', '127.0.0.1'] else f"{request.host_url}api/controllers/register"
+        },
         'headers': {
             'content-type': request.headers.get('Content-Type'),
             'user-agent': request.headers.get('User-Agent'),
@@ -415,9 +462,14 @@ def debug_endpoint():
         },
         'common_issues': {
             'method_not_allowed': 'Make sure you are using POST for /api/controllers/register',
-            'missing_port': 'If running on port 5000, use http://192.168.1.64:5000/api/controllers/register',
+            'missing_port': f'If running Flask on port 5000, use: http://{request_host}:5000/api/controllers/register',
             'trailing_slash': 'Both /api/controllers/register and /api/controllers/register/ work',
             'content_type': 'Make sure Content-Type header is set to application/json',
             'json_format': 'Ensure request body contains valid JSON'
+        },
+        'curl_example': {
+            'command': f"curl -X POST http://{request_host}:5000/api/controllers/register",
+            'headers': '-H "Content-Type: application/json"',
+            'data': '-d \'{"serial_number": "250100.1.0625", "type": "speedradar", "name": "250100.1.0625", "latitude": 51.913071, "longitude": 5.713852}\''
         }
     }), 200
