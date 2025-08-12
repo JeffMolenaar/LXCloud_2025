@@ -106,3 +106,4 @@ htmlcov/
 # Production
 *.pid
 gunicorn.sock
+/.vs/LXCloud_2025/v17
