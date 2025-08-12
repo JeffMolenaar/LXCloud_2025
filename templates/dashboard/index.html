@@ -668,7 +668,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadLayoutFromStorage();
     // Initialize map after a short delay to ensure proper DOM rendering
     setTimeout(() => {
-        initializeMap();
+        initializeDashboardMap();
     }, 100);
 });
 
@@ -764,10 +764,7 @@ function flash(message, type) {
     alertDiv.style.right = '20px';
     alertDiv.style.zIndex = '9999';
     alertDiv.style.minWidth = '300px';
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
-    `;
+    alertDiv.innerHTML = message + '<button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>';
     
     document.body.appendChild(alertDiv);
     
@@ -839,7 +836,7 @@ function initializeDragAndDrop() {
                 // If map was moved, reinitialize it
                 if (draggedElement.dataset.cardId === 'map' || this.dataset.cardId === 'map') {
                     setTimeout(() => {
-                        initializeMap();
+                        initializeDashboardMap();
                     }, 100);
                 }
             }
@@ -1006,7 +1003,7 @@ function loadLayoutFromStorage() {
         
         // Re-initialize map after layout changes
         setTimeout(() => {
-            initializeMap();
+            initializeDashboardMap();
         }, 200);
         
     } catch (e) {
@@ -1015,8 +1012,8 @@ function loadLayoutFromStorage() {
     }
 }
 
-// Initialize map
-function initializeMap() {
+// Initialize dashboard map
+function initializeDashboardMap() {
     const mapElement = document.getElementById('map');
     if (!mapElement) {
         console.log('Map element not found');
@@ -1034,9 +1031,6 @@ function initializeMap() {
     mapElement.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Loading map...</div>';
     
     try {
-        // Clear any existing content and show loading
-        mapElement.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Loading map...</div>';
-        
         // Create map with standard dragging enabled and centered on Netherlands
         const map = L.map('map').setView([52.3676, 4.9041], 8);
         currentMap = map; // Store reference for resizing
@@ -1097,9 +1091,9 @@ function initializeMap() {
                                     <span class="controller-status status-${statusClass}" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background-color: ${controller.is_online ? '#28a745' : '#dc3545'};"></span>
                                     <span style="font-size: 13px; color: ${controller.is_online ? '#28a745' : '#dc3545'}; font-weight: 500;">${controller.is_online ? 'Online' : 'Offline'}</span>
                                 </p>
-                                <p class="mb-1" style="margin: 0 0 4px 0; font-size: 13px; color: #666;"><strong>Type:</strong> ${controller.type.charAt(0).toUpperCase() + controller.type.slice(1)}</p>
+                                <p class="mb-1" style="margin: 0 0 4px 0; font-size: 13px; color: #666;"><strong>Type:</strong> ${controller.type}</p>
                                 <p class="mb-1" style="margin: 0 0 4px 0; font-size: 13px; color: #666;"><strong>Serial:</strong> ${controller.serial_number}</p>
-                                ${controller.last_seen ? `<p class="mb-2" style="margin: 0 0 8px 0; font-size: 12px; color: #888;"><strong>Last Seen:</strong> ${new Date(controller.last_seen).toLocaleString()}</p>` : ''}
+                                ${controller.last_seen ? '<p class="mb-2" style="margin: 0 0 8px 0; font-size: 12px; color: #888;"><strong>Last Seen:</strong> ' + controller.last_seen + '</p>' : ''}
                                 <div class="text-center" style="margin-top: 10px;">
                                     <a href="/controllers/${controller.id}/data" class="btn btn-sm btn-primary" style="margin-right: 4px; padding: 4px 8px; font-size: 12px; text-decoration: none; background: #007bff; color: white; border-radius: 4px; display: inline-block;">
                                         <i class="fas fa-chart-line"></i> View Data
