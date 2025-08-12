@@ -97,49 +97,27 @@ def stats_overview():
 
 @api_bp.route('/map-data')
 def map_data():
-    """Get map data for visualization"""
-    return jsonify([
-        {
-            "id": 1,
-            "name": "A12 AI Camera",
-            "serial_number": "LX-ABC-001",
-            "latitude": 52.091,
-            "longitude": 5.121,
-            "is_online": True,
-            "type": "aicamera",
-            "last_seen": "2025-08-12T19:21:34Z"
-        },
-        {
-            "id": 2,
-            "name": "Rotterdam Speed Radar",
-            "serial_number": "LX-ABC-002",
-            "latitude": 51.9225,
-            "longitude": 4.47917,
-            "is_online": False,
-            "type": "speedradar",
-            "last_seen": "2025-08-12T18:55:12Z"
-        },
-        {
-            "id": 3,
-            "name": "Texel Weatherstation",
-            "serial_number": "LX-ABC-003",
-            "latitude": 53.0575,
-            "longitude": 4.8003,
-            "is_online": True,
-            "type": "weatherstation",
-            "last_seen": "2025-08-12T19:05:00Z"
-        },
-        {
-            "id": 4,
-            "name": "Scheveningen Beaufort Meter",
-            "serial_number": "LX-ABC-004",
-            "latitude": 52.1046,
-            "longitude": 4.2745,
-            "is_online": True,
-            "type": "beaufortmeter",
-            "last_seen": "2025-08-12T19:10:45Z"
-        }
-    ])
+    """Get map data for visualization from real controller database"""
+    # Query all controllers that have location data (latitude and longitude)
+    controllers = Controller.query.filter(
+        Controller.latitude.isnot(None),
+        Controller.longitude.isnot(None)
+    ).all()
+    
+    map_data = []
+    for controller in controllers:
+        map_data.append({
+            "id": controller.id,
+            "name": controller.name or controller.serial_number,
+            "serial_number": controller.serial_number,
+            "latitude": controller.latitude,
+            "longitude": controller.longitude,
+            "is_online": controller.is_online,
+            "type": controller.controller_type,
+            "last_seen": controller.last_seen.isoformat() if controller.last_seen else None
+        })
+    
+    return jsonify(map_data)
 
 # Controller API Endpoints (for controller devices to communicate)
 
