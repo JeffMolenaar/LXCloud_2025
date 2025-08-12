@@ -1081,10 +1081,11 @@ function initializeMap() {
                 if (data.length > 0) {
                     const group = new L.featureGroup();
                 
-                data.forEach(controller => {
+                data.forEach((controller, index) => {
                     const icon = markerIcons[controller.type] || markerIcons.default;
                     const statusClass = controller.is_online ? 'online' : 'offline';
                     
+                    // Use actual coordinates for positioning
                     const marker = L.marker([controller.latitude, controller.longitude], {
                         icon: icon
                     }).addTo(map);
@@ -1095,19 +1096,19 @@ function initializeMap() {
                     // Create popup content
                     const popupContent = `
                         <div class="marker-popup">
-                            <h6>${controller.name}</h6>
-                            <p class="mb-1">
-                                <span class="controller-status status-${statusClass}"></span>
-                                ${controller.is_online ? 'Online' : 'Offline'}
+                            <h6 style="margin: 0 0 8px 0; color: #333; font-weight: 600;">${controller.name}</h6>
+                            <p class="mb-1" style="margin: 0 0 4px 0; display: flex; align-items: center;">
+                                <span class="controller-status status-${statusClass}" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background-color: ${controller.is_online ? '#28a745' : '#dc3545'};"></span>
+                                <span style="font-size: 13px; color: ${controller.is_online ? '#28a745' : '#dc3545'}; font-weight: 500;">${controller.is_online ? 'Online' : 'Offline'}</span>
                             </p>
-                            <p class="mb-1"><strong>Type:</strong> ${controller.type.charAt(0).toUpperCase() + controller.type.slice(1)}</p>
-                            <p class="mb-1"><strong>Serial:</strong> ${controller.serial_number}</p>
-                            ${controller.last_seen ? `<p class="mb-2"><strong>Last Seen:</strong> ${new Date(controller.last_seen).toLocaleString()}</p>` : ''}
-                            <div class="text-center">
-                                <a href="/controllers/${controller.id}/data" class="btn btn-sm btn-primary">
+                            <p class="mb-1" style="margin: 0 0 4px 0; font-size: 13px; color: #666;"><strong>Type:</strong> ${controller.type.charAt(0).toUpperCase() + controller.type.slice(1)}</p>
+                            <p class="mb-1" style="margin: 0 0 4px 0; font-size: 13px; color: #666;"><strong>Serial:</strong> ${controller.serial_number}</p>
+                            ${controller.last_seen ? `<p class="mb-2" style="margin: 0 0 8px 0; font-size: 12px; color: #888;"><strong>Last Seen:</strong> ${new Date(controller.last_seen).toLocaleString()}</p>` : ''}
+                            <div class="text-center" style="margin-top: 10px;">
+                                <a href="/controllers/${controller.id}/data" class="btn btn-sm btn-primary" style="margin-right: 4px; padding: 4px 8px; font-size: 12px; text-decoration: none; background: #007bff; color: white; border-radius: 4px; display: inline-block;">
                                     <i class="fas fa-chart-line"></i> View Data
                                 </a>
-                                <a href="/controllers/${controller.id}/edit" class="btn btn-sm btn-outline-secondary">
+                                <a href="/controllers/${controller.id}/edit" class="btn btn-sm btn-outline-secondary" style="padding: 4px 8px; font-size: 12px; text-decoration: none; border: 1px solid #6c757d; color: #6c757d; border-radius: 4px; display: inline-block;">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
                             </div>
@@ -1117,12 +1118,12 @@ function initializeMap() {
                     marker.bindPopup(popupContent);
                 });
                 
-                // Fit map to show all markers
+                // Fit map to show all markers with padding
                 if (group.getLayers().length > 0) {
                     map.fitBounds(group.getBounds().pad(0.1));
                 } else {
                     // No markers, show a default message
-                    mapElement.innerHTML = '<div class="text-center p-4 text-muted"><i class="fas fa-map-marker-alt"></i><br>No controllers with location data</div>';
+                    mapElement.innerHTML = '<div class="text-center p-4 text-muted"><i class="fas fa-map-marker-alt fa-2x mb-2"></i><br><p>No controllers with location data</p><small>Add location coordinates to your controllers to see them on the map</small></div>';
                 }
                 
                 // Trigger initial resize to ensure map renders correctly
