@@ -832,6 +832,16 @@ function initializeDragAndDrop() {
                 
                 parent.insertBefore(draggedElement, thisNext);
                 parent.insertBefore(this, draggedNext);
+                
+                // Save layout after position change
+                saveLayoutToStorage();
+                
+                // If map was moved, reinitialize it
+                if (draggedElement.dataset.cardId === 'map' || this.dataset.cardId === 'map') {
+                    setTimeout(() => {
+                        initializeMap();
+                    }, 100);
+                }
             }
         });
         
@@ -859,12 +869,24 @@ function initializeDragAndDrop() {
                     // Update CSS grid properties
                     item.style.gridColumn = `span ${Math.min(newCols, 12)}`;
                     item.style.gridRow = `span ${newRows}`;
+                    
+                    // If this is a map card, trigger map resize
+                    if (item.dataset.cardId === 'map') {
+                        debounceMapResize();
+                    }
                 }
                 
                 function onMouseUp() {
                     document.removeEventListener('mousemove', onMouseMove);
                     document.removeEventListener('mouseup', onMouseUp);
                     saveLayoutToStorage();
+                    
+                    // Final map resize for map cards
+                    if (item.dataset.cardId === 'map') {
+                        setTimeout(() => {
+                            resizeMap();
+                        }, 100);
+                    }
                 }
                 
                 document.addEventListener('mousemove', onMouseMove);
@@ -880,6 +902,26 @@ function getCurrentCols(element) {
     const gridColumn = computedStyle.gridColumn;
     const match = gridColumn.match(/span (\d+)/);
     return match ? parseInt(match[1]) : 3;
+}
+
+// Map resizing utilities
+let mapResizeTimeout;
+let currentMap = null;
+
+function debounceMapResize() {
+    clearTimeout(mapResizeTimeout);
+    mapResizeTimeout = setTimeout(resizeMap, 100);
+}
+
+function resizeMap() {
+    if (currentMap) {
+        try {
+            currentMap.invalidateSize();
+            console.log('Map resized');
+        } catch (error) {
+            console.warn('Error resizing map:', error);
+        }
+    }
 }
 
 // Save layout to localStorage
@@ -913,12 +955,28 @@ function loadLayoutFromStorage() {
         const layout = JSON.parse(saved);
         console.log('Loading layout:', layout);
         
-        // Apply only the visibility and sizing from saved layout
-        // Don't move elements to prevent duplication
-        layout.forEach(item => {
-            const elements = document.querySelectorAll(`[data-card-id="${item.cardId}"].grid-item`);
-            
-            elements.forEach(element => {
+        // Sort layout by order to restore positioning
+        layout.sort((a, b) => a.order - b.order);
+        
+        const grid = document.getElementById('dashboardGrid');
+        const gridItems = Array.from(document.querySelectorAll('.grid-item'));
+        
+        // Create a map of current elements by cardId
+        const elementMap = new Map();
+        gridItems.forEach(element => {
+            const cardId = element.dataset.cardId;
+            if (cardId) {
+                elementMap.set(cardId, element);
+            }
+        });
+        
+        // Reorder elements according to saved layout
+        layout.forEach((item, index) => {
+            const element = elementMap.get(item.cardId);
+            if (element) {
+                // Remove element from current position
+                element.remove();
+                
                 // Apply sizing
                 if (item.gridColumn && item.gridColumn !== 'auto') {
                     element.style.gridColumn = item.gridColumn;
@@ -935,7 +993,10 @@ function loadLayoutFromStorage() {
                     element.style.display = '';
                     console.log(`Showing card on load: ${item.cardId}`);
                 }
-            });
+                
+                // Re-append element to restore order
+                grid.appendChild(element);
+            }
         });
         
         // Update checkboxes if in edit mode
@@ -962,11 +1023,22 @@ function initializeMap() {
         return;
     }
     
-    // Clear any existing content
-    mapElement.innerHTML = '';
+    // Check if the map card is visible
+    const mapCard = mapElement.closest('.grid-item');
+    if (mapCard && mapCard.style.display === 'none') {
+        console.log('Map card is hidden, skipping initialization');
+        return;
+    }
+    
+    // Clear any existing content and show loading
+    mapElement.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Loading map...</div>';
     
     try {
+        // Clear any existing content and show loading
+        mapElement.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Loading map...</div>';
+        
         const map = L.map('map').setView([52.3676, 4.9041], 8); // Default to Netherlands
+        currentMap = map; // Store reference for resizing
 
         // Add tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1046,11 +1118,22 @@ function initializeMap() {
                 });
                 
                 // Fit map to show all markers
-                map.fitBounds(group.getBounds().pad(0.1));
+                if (group.getLayers().length > 0) {
+                    map.fitBounds(group.getBounds().pad(0.1));
+                } else {
+                    // No markers, show a default message
+                    mapElement.innerHTML = '<div class="text-center p-4 text-muted"><i class="fas fa-map-marker-alt"></i><br>No controllers with location data</div>';
+                }
+                
+                // Trigger initial resize to ensure map renders correctly
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 100);
             }
         })
         .catch(error => {
             console.error('Error loading map data:', error);
+            mapElement.innerHTML = '<div class="text-center p-4 text-danger"><i class="fas fa-exclamation-triangle"></i><br>Error loading map data</div>';
         });
 
         // Auto-refresh dashboard data every 30 seconds
@@ -1067,6 +1150,7 @@ function initializeMap() {
         
     } catch (error) {
         console.error('Error initializing map:', error);
+        mapElement.innerHTML = '<div class="text-center p-4 text-danger"><i class="fas fa-exclamation-triangle"></i><br>Failed to initialize map</div>';
     }
 }
 
