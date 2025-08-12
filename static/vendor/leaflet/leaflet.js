@@ -35,19 +35,33 @@
 
   LeafletMap.prototype._initMap = function() {
     this.container.innerHTML = `
-      <div style="position: relative; width: 100%; height: 100%; background: #a8d8f0; overflow: hidden;">
-        <div style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.9); padding: 8px 12px; border-radius: 4px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          Map View (Lat: ${this.center[0].toFixed(4)}, Lng: ${this.center[1].toFixed(4)})
+      <div style="position: relative; width: 100%; height: 100%; background: linear-gradient(180deg, #87CEEB 0%, #98FB98 100%); overflow: hidden; border-radius: 8px;">
+        <div style="position: absolute; inset: 0; background-image: 
+          radial-gradient(2px 2px at 20px 30px, #87CEEB, transparent),
+          radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.1), transparent),
+          radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.1), transparent),
+          radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.1), transparent),
+          radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,0.1), transparent);
+          background-repeat: repeat;
+          background-size: 200px 100px;">
         </div>
         <div class="map-markers" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
-        <div class="leaflet-control leaflet-control-zoom" style="position: absolute; top: 10px; left: 10px;">
-          <a class="leaflet-control-zoom-in" href="#" onclick="return false;">+</a>
-          <a class="leaflet-control-zoom-out" href="#" onclick="return false;">−</a>
+        <div class="leaflet-control leaflet-control-zoom" style="position: absolute; top: 10px; left: 10px; z-index: 1000;">
+          <a class="leaflet-control-zoom-in" href="#" onclick="return false;" style="display: block; width: 30px; height: 30px; line-height: 30px; text-align: center; text-decoration: none; color: #333; background: white; border: 1px solid #ccc; border-bottom: none; font-weight: bold; font-size: 18px;">+</a>
+          <a class="leaflet-control-zoom-out" href="#" onclick="return false;" style="display: block; width: 30px; height: 30px; line-height: 30px; text-align: center; text-decoration: none; color: #333; background: white; border: 1px solid #ccc; font-weight: bold; font-size: 18px;">−</a>
         </div>
-        <div class="leaflet-control-attribution" style="position: absolute; bottom: 0; right: 0;">
+        <div class="leaflet-control-attribution" style="position: absolute; bottom: 0; right: 0; background: rgba(255,255,255,0.7); padding: 2px 4px; font-size: 11px; border-radius: 2px;">
           © OpenStreetMap contributors
         </div>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: pulse 2s infinite;"></div>
       </div>
+      <style>
+        @keyframes pulse {
+          0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+          70% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.5; }
+          100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+      </style>
     `;
     
     this.markersContainer = this.container.querySelector('.map-markers');
