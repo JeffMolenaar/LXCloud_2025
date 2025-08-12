@@ -372,24 +372,63 @@ def list_all_controllers():
     except Exception as e:
         return jsonify({'error': f'Failed to list controllers: {str(e)}'}), 500
 
+# Add a specific route to catch GET requests to register endpoint
+@api_bp.route('/controllers/register', methods=['GET'], strict_slashes=False)
+def register_controller_get():
+    """Handle GET requests to register endpoint with helpful error message"""
+    request_host = request.headers.get('Host', 'unknown')
+    is_docker_env = ':' not in request_host and request_host not in ['localhost', '127.0.0.1']
+    
+    if is_docker_env:
+        correct_url = f"http://{request_host}/api/controllers/register"
+    else:
+        correct_url = f"http://{request_host}/api/controllers/register"
+    
+    return jsonify({
+        'error': 'Method not allowed. Registration requires POST method.',
+        'message': 'You are trying to GET the registration endpoint. Use POST instead.',
+        'correct_method': 'POST',
+        'correct_url': correct_url,
+        'curl_example': f'curl -X POST {correct_url} -H "Content-Type: application/json" -d \'{{"serial_number": "250100.1.0625", "type": "speedradar", "name": "250100.1.0625", "latitude": 51.913071, "longitude": 5.713852}}\'',
+        'required_headers': {
+            'Content-Type': 'application/json'
+        },
+        'example_body': {
+            'serial_number': '250100.1.0625',
+            'type': 'speedradar',
+            'name': '250100.1.0625',
+            'latitude': 51.913071,
+            'longitude': 5.713852
+        }
+    }), 405
+
 # Handle method not allowed errors with a more specific route that doesn't conflict
 @api_bp.errorhandler(405)
 def method_not_allowed(error):
     """Handle method not allowed errors for API endpoints"""
+    request_host = request.headers.get('Host', 'unknown')
+    is_docker_env = ':' not in request_host and request_host not in ['localhost', '127.0.0.1']
+    
+    if is_docker_env:
+        base_url = f"http://{request_host}"
+    else:
+        base_url = f"http://{request_host}"
+    
     if request.path == '/api/controllers/register':
         return jsonify({
             'error': 'Method not allowed. Use POST method for controller registration.',
             'allowed_methods': ['POST'],
+            'correct_url': f"{base_url}/api/controllers/register",
             'example': {
                 'method': 'POST',
-                'url': '/api/controllers/register',
+                'url': f"{base_url}/api/controllers/register",
                 'content_type': 'application/json',
                 'body': {
-                    'serial_number': 'YOUR_SERIAL_NUMBER',
-                    'type': 'speedradar|weatherstation|aicamera|beaufortmeter',
-                    'name': 'Optional controller name',
-                    'latitude': 'Optional latitude coordinate',
-                    'longitude': 'Optional longitude coordinate'
+                    'serial_number': '250100.1.0625',
+                    'type': 'speedradar',
+                    'name': '250100.1.0625',
+                    'latitude': 51.913071,
+                    'longitude': 5.713852
                 }
             }
         }), 405
@@ -397,7 +436,8 @@ def method_not_allowed(error):
         return jsonify({
             'error': 'Method not allowed for this endpoint.',
             'path': request.path,
-            'method': request.method
+            'method': request.method,
+            'message': f'The endpoint {request.path} does not support {request.method} method.'
         }), 405
 
 # Troubleshooting endpoint
@@ -407,19 +447,35 @@ def debug_endpoint():
     
     # Analyze the request to provide specific debugging info
     request_host = request.headers.get('Host', 'unknown')
-    port_info = ""
-    if ':' not in request_host and request_host not in ['localhost', '127.0.0.1']:
-        port_info = f"WARNING: You're accessing {request_host} without a port number. Flask typically runs on port 5000. Try: http://{request_host}:5000"
+    
+    # Detect if running in Docker or standard setup
+    is_docker_env = ':' not in request_host and request_host not in ['localhost', '127.0.0.1']
+    
+    # Provide appropriate URL guidance based on environment
+    if is_docker_env:
+        expected_register_url = f"http://{request_host}/api/controllers/register"
+        port_guidance = f"DETECTED: Docker environment. Use port 80 (default HTTP): http://{request_host}"
+        curl_command = f"curl -X POST http://{request_host}/api/controllers/register"
+    else:
+        expected_register_url = f"http://{request_host}/api/controllers/register"
+        port_guidance = f"DETECTED: Development environment. Current URL is correct: http://{request_host}"
+        curl_command = f"curl -X POST http://{request_host}/api/controllers/register"
+    
+    # Check if this is a GET request to register endpoint (common mistake)
+    routing_issue = ""
+    if request.path == '/api/controllers/debug' and request.args.get('test_register'):
+        routing_issue = "TEST: You're correctly reaching the debug endpoint"
     
     return jsonify({
         'message': 'API endpoints are working correctly',
         'method': request.method,
         'path': request.path,
         'full_url': request.url,
-        'host_analysis': {
+        'environment_analysis': {
             'host_header': request_host,
-            'port_warning': port_info,
-            'expected_register_url': f"http://{request_host}:5000/api/controllers/register" if ':' not in request_host and request_host not in ['localhost', '127.0.0.1'] else f"{request.host_url}api/controllers/register"
+            'detected_environment': 'Docker (port 80)' if is_docker_env else 'Development (custom port)',
+            'port_guidance': port_guidance,
+            'correct_register_url': expected_register_url
         },
         'headers': {
             'content-type': request.headers.get('Content-Type'),
@@ -428,6 +484,11 @@ def debug_endpoint():
         },
         'json_received': request.is_json,
         'data_received': bool(request.get_data()),
+        'routing_diagnosis': {
+            'register_endpoint_test': 'POST /api/controllers/register should work',
+            'common_mistake': 'GET /api/controllers/register returns Method Not Allowed (this is correct)',
+            'route_collision_protection': 'Reserved words (register, list, debug) are protected from serial number conflicts'
+        },
         'available_endpoints': {
             'register_controller': {
                 'method': 'POST',
@@ -460,16 +521,17 @@ def debug_endpoint():
                 'description': 'List all controllers'
             }
         },
-        'common_issues': {
-            'method_not_allowed': 'Make sure you are using POST for /api/controllers/register',
-            'missing_port': f'If running Flask on port 5000, use: http://{request_host}:5000/api/controllers/register',
-            'trailing_slash': 'Both /api/controllers/register and /api/controllers/register/ work',
-            'content_type': 'Make sure Content-Type header is set to application/json',
-            'json_format': 'Ensure request body contains valid JSON'
+        'troubleshooting_steps': {
+            'step_1': f'Verify you are using: {expected_register_url}',
+            'step_2': 'Ensure method is POST (not GET)',
+            'step_3': 'Set Content-Type: application/json header',
+            'step_4': 'Send valid JSON in request body',
+            'step_5': 'Check server logs for detailed error info'
         },
         'curl_example': {
-            'command': f"curl -X POST http://{request_host}:5000/api/controllers/register",
+            'command': curl_command,
             'headers': '-H "Content-Type: application/json"',
-            'data': '-d \'{"serial_number": "250100.1.0625", "type": "speedradar", "name": "250100.1.0625", "latitude": 51.913071, "longitude": 5.713852}\''
+            'data': '-d \'{"serial_number": "250100.1.0625", "type": "speedradar", "name": "250100.1.0625", "latitude": 51.913071, "longitude": 5.713852}\'',
+            'full_example': curl_command + ' -H "Content-Type: application/json" -d \'{"serial_number": "250100.1.0625", "type": "speedradar", "name": "250100.1.0625", "latitude": 51.913071, "longitude": 5.713852}\''
         }
     }), 200
