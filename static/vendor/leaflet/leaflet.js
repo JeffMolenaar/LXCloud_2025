@@ -51,6 +51,7 @@
         this._center = options.center || [51.505, -0.09];
         this._layers = [];
         this._markers = [];
+        this.options = options;
         
         this._initContainer();
         this._initEvents();
@@ -114,52 +115,57 @@
         _initEvents: function() {
             var self = this;
             
-            // Mouse events for panning
-            var dragging = false;
-            var startX, startY, startCenterX, startCenterY;
+            // Check if dragging is enabled (default true)
+            var isDraggingEnabled = this.options.dragging !== false;
             
-            this._container.addEventListener('mousedown', function(e) {
-                dragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                startCenterX = self._center[1];
-                startCenterY = self._center[0];
-                self._container.style.cursor = 'grabbing';
-                e.preventDefault();
-            });
-            
-            document.addEventListener('mousemove', function(e) {
-                if (!dragging) return;
+            if (isDraggingEnabled) {
+                // Mouse events for panning
+                var dragging = false;
+                var startX, startY, startCenterX, startCenterY;
                 
-                var deltaX = e.clientX - startX;
-                var deltaY = e.clientY - startY;
+                this._container.addEventListener('mousedown', function(e) {
+                    dragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startCenterX = self._center[1];
+                    startCenterY = self._center[0];
+                    self._container.style.cursor = 'grabbing';
+                    e.preventDefault();
+                });
                 
-                var scale = 256 * Math.pow(2, self._zoom);
-                var deltaLng = (deltaX / scale) * 360;
-                var deltaLat = (deltaY / scale) * 360;
+                document.addEventListener('mousemove', function(e) {
+                    if (!dragging) return;
+                    
+                    var deltaX = e.clientX - startX;
+                    var deltaY = e.clientY - startY;
+                    
+                    var scale = 256 * Math.pow(2, self._zoom);
+                    var deltaLng = (deltaX / scale) * 360;
+                    var deltaLat = (deltaY / scale) * 360;
+                    
+                    self._center = [startCenterY - deltaLat, startCenterX - deltaLng];
+                    self._update();
+                });
                 
-                self._center = [startCenterY - deltaLat, startCenterX - deltaLng];
-                self._update();
-            });
+                document.addEventListener('mouseup', function(e) {
+                    if (dragging) {
+                        dragging = false;
+                        self._container.style.cursor = 'grab';
+                    }
+                });
+                
+                this._container.style.cursor = 'grab';
+            }
             
-            document.addEventListener('mouseup', function(e) {
-                if (dragging) {
-                    dragging = false;
-                    self._container.style.cursor = 'grab';
-                }
-            });
-            
-            // Wheel zoom
+            // Wheel zoom (always enabled)
             this._container.addEventListener('wheel', function(e) {
                 e.preventDefault();
                 var delta = e.deltaY < 0 ? 1 : -1;
                 self.setZoom(self._zoom + delta);
             });
-            
-            this._container.style.cursor = 'grab';
         },
 
-        setView: function(center, zoom) {
+        setView: function(center, zoom, options) {
             this._center = center;
             this._zoom = Math.max(1, Math.min(18, zoom));
             this._update();
@@ -203,6 +209,50 @@
             return this;
         },
 
+        getContainer: function() {
+            return this._container;
+        },
+
+        getCenter: function() {
+            return { lat: this._center[0], lng: this._center[1] };
+        },
+
+        getZoom: function() {
+            return this._zoom;
+        },
+
+        invalidateSize: function() {
+            // Force recalculation of map size and tile positions
+            for (var i = 0; i < this._layers.length; i++) {
+                if (this._layers[i]._update) {
+                    this._layers[i]._update();
+                }
+            }
+            this._updateMarkers();
+            return this;
+        },
+
+        fitBounds: function(bounds, options) {
+            options = options || {};
+            
+            var sw = bounds.getSouthWest();
+            var ne = bounds.getNorthEast();
+            
+            var centerLat = (sw.lat + ne.lat) / 2;
+            var centerLng = (sw.lng + ne.lng) / 2;
+            
+            // Calculate zoom level based on bounds
+            var latDiff = Math.abs(ne.lat - sw.lat);
+            var lngDiff = Math.abs(ne.lng - sw.lng);
+            
+            // Simple zoom calculation (can be improved)
+            var zoom = Math.floor(Math.log2(360 / Math.max(latDiff, lngDiff))) - 1;
+            zoom = Math.max(1, Math.min(18, zoom));
+            
+            this.setView([centerLat, centerLng], zoom);
+            return this;
+        },
+
         _update: function() {
             // Update all layers
             for (var i = 0; i < this._layers.length; i++) {
@@ -211,6 +261,10 @@
                 }
             }
             
+            this._updateMarkers();
+        },
+
+        _updateMarkers: function() {
             // Update markers
             for (var j = 0; j < this._markers.length; j++) {
                 if (this._markers[j]._update) {
