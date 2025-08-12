@@ -143,7 +143,7 @@
                     var deltaLng = (deltaX / scale) * 360;
                     var deltaLat = (deltaY / scale) * 360;
                     
-                    self._center = [startCenterY - deltaLat, startCenterX - deltaLng];
+                    self._center = [startCenterY + deltaLat, startCenterX + deltaLng];
                     self._update();
                 });
                 

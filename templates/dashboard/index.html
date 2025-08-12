@@ -1073,9 +1073,9 @@ function initializeMap() {
             const zoom = map.getZoom();
             const pixelsPerDegree = 256 * Math.pow(2, zoom) / 360;
             
-            // Invert the movement: positive deltaX moves map right, positive deltaY moves map down
-            const newLat = center.lat - (deltaY / pixelsPerDegree);
-            const newLng = center.lng + (deltaX / (pixelsPerDegree * Math.cos(center.lat * Math.PI / 180)));
+            // Natural movement: positive deltaX moves map right, positive deltaY moves map down
+            const newLat = center.lat + (deltaY / pixelsPerDegree);
+            const newLng = center.lng - (deltaX / (pixelsPerDegree * Math.cos(center.lat * Math.PI / 180)));
             
             // Update map center
             map.setView([newLat, newLng], zoom, {animate: false});
