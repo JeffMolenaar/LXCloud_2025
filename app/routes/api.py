@@ -6,6 +6,22 @@ import json
 
 api_bp = Blueprint('api', __name__)
 
+# Add debug logging for routing issues
+@api_bp.before_request
+def log_request_info():
+    """Log request details for debugging"""
+    if request.path.startswith('/api/controllers'):
+        print(f"API Request: {request.method} {request.path}")
+        print(f"Content-Type: {request.headers.get('Content-Type', 'Not set')}")
+        print(f"User-Agent: {request.headers.get('User-Agent', 'Not set')}")
+        print(f"Host: {request.headers.get('Host', 'Not set')}")
+        if request.is_json:
+            print(f"JSON data received: True")
+        else:
+            print(f"JSON data received: False")
+            print(f"Raw data: {request.get_data(as_text=True)[:200]}")
+    return None
+
 @api_bp.route('/controllers/status')
 @login_required
 def controller_status():
@@ -81,7 +97,7 @@ def stats_overview():
 
 # Controller API Endpoints (for controller devices to communicate)
 
-@api_bp.route('/controllers/register', methods=['POST'])
+@api_bp.route('/controllers/register', methods=['POST'], strict_slashes=False)
 def register_controller():
     """Register a new controller device"""
     try:
@@ -160,7 +176,7 @@ def register_controller():
         db.session.rollback()
         return jsonify({'error': f'Registration failed: {str(e)}'}), 500
 
-@api_bp.route('/controllers/<serial_number>/data', methods=['POST'])
+@api_bp.route('/controllers/<serial_number>/data', methods=['POST'], strict_slashes=False)
 def update_controller_data(serial_number):
     """Update controller data"""
     try:
@@ -214,7 +230,7 @@ def update_controller_data(serial_number):
         db.session.rollback()
         return jsonify({'error': f'Data update failed: {str(e)}'}), 500
 
-@api_bp.route('/controllers/<serial_number>/status', methods=['POST'])
+@api_bp.route('/controllers/<serial_number>/status', methods=['POST'], strict_slashes=False)
 def update_controller_status(serial_number):
     """Update controller status"""
     try:
@@ -245,7 +261,7 @@ def update_controller_status(serial_number):
         db.session.rollback()
         return jsonify({'error': f'Status update failed: {str(e)}'}), 500
 
-@api_bp.route('/controllers/<serial_number>', methods=['PUT'])
+@api_bp.route('/controllers/<serial_number>', methods=['PUT'], strict_slashes=False)
 def modify_controller(serial_number):
     """Modify controller configuration"""
     try:
@@ -293,7 +309,7 @@ def modify_controller(serial_number):
         db.session.rollback()
         return jsonify({'error': f'Controller update failed: {str(e)}'}), 500
 
-@api_bp.route('/controllers/<serial_number>', methods=['GET'])
+@api_bp.route('/controllers/<serial_number>', methods=['GET'], strict_slashes=False)
 def get_controller_info(serial_number):
     """Get controller information"""
     try:
@@ -310,7 +326,7 @@ def get_controller_info(serial_number):
     except Exception as e:
         return jsonify({'error': f'Failed to get controller info: {str(e)}'}), 500
 
-@api_bp.route('/controllers/list', methods=['GET'])
+@api_bp.route('/controllers/list', methods=['GET'], strict_slashes=False)
 def list_all_controllers():
     """List all controllers (for testing - no authentication required)"""
     try:
@@ -327,3 +343,81 @@ def list_all_controllers():
         
     except Exception as e:
         return jsonify({'error': f'Failed to list controllers: {str(e)}'}), 500
+
+# Handle method not allowed errors for controller registration
+@api_bp.route('/controllers/register', methods=['GET', 'PUT', 'DELETE', 'PATCH'], strict_slashes=False)
+def register_controller_method_not_allowed():
+    """Handle incorrect HTTP methods for controller registration"""
+    return jsonify({
+        'error': 'Method not allowed. Use POST method for controller registration.',
+        'allowed_methods': ['POST'],
+        'example': {
+            'method': 'POST',
+            'url': '/api/controllers/register',
+            'content_type': 'application/json',
+            'body': {
+                'serial_number': 'YOUR_SERIAL_NUMBER',
+                'type': 'speedradar|weatherstation|aicamera|beaufortmeter',
+                'name': 'Optional controller name',
+                'latitude': 'Optional latitude coordinate',
+                'longitude': 'Optional longitude coordinate'
+            }
+        }
+    }), 405
+
+# Troubleshooting endpoint
+@api_bp.route('/controllers/debug', methods=['GET', 'POST'], strict_slashes=False)
+def debug_endpoint():
+    """Debug endpoint to help troubleshoot API issues"""
+    return jsonify({
+        'message': 'API endpoints are working correctly',
+        'method': request.method,
+        'path': request.path,
+        'full_url': request.url,
+        'headers': {
+            'content-type': request.headers.get('Content-Type'),
+            'user-agent': request.headers.get('User-Agent'),
+            'host': request.headers.get('Host')
+        },
+        'json_received': request.is_json,
+        'data_received': bool(request.get_data()),
+        'available_endpoints': {
+            'register_controller': {
+                'method': 'POST',
+                'url': '/api/controllers/register',
+                'description': 'Register a new controller or update existing one'
+            },
+            'update_data': {
+                'method': 'POST', 
+                'url': '/api/controllers/{serial}/data',
+                'description': 'Send sensor data from controller'
+            },
+            'update_status': {
+                'method': 'POST',
+                'url': '/api/controllers/{serial}/status', 
+                'description': 'Update controller online/offline status'
+            },
+            'modify_controller': {
+                'method': 'PUT',
+                'url': '/api/controllers/{serial}',
+                'description': 'Modify controller configuration'
+            },
+            'get_controller': {
+                'method': 'GET',
+                'url': '/api/controllers/{serial}',
+                'description': 'Get controller information'
+            },
+            'list_controllers': {
+                'method': 'GET',
+                'url': '/api/controllers/list',
+                'description': 'List all controllers'
+            }
+        },
+        'common_issues': {
+            'method_not_allowed': 'Make sure you are using POST for /api/controllers/register',
+            'missing_port': 'If running on port 5000, use http://192.168.1.64:5000/api/controllers/register',
+            'trailing_slash': 'Both /api/controllers/register and /api/controllers/register/ work',
+            'content_type': 'Make sure Content-Type header is set to application/json',
+            'json_format': 'Ensure request body contains valid JSON'
+        }
+    }), 200
