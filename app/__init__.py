@@ -217,6 +217,34 @@ def create_app():
     def method_not_allowed_error(error):
         """Handle 405 Method Not Allowed errors for API routes with JSON response"""
         if request.path.startswith('/api/'):
+            # Clean the path by removing trailing whitespace, newlines, etc.
+            clean_path = request.path.strip().rstrip('\n\r\t ')
+            
+            # Special handling for register endpoint with malformed URLs
+            if clean_path == '/api/controllers/register' or clean_path.startswith('/api/controllers/register'):
+                if request.method == 'POST':
+                    # This should work, but might be hitting due to malformed URL
+                    return jsonify({
+                        'error': 'POST request failed due to malformed URL',
+                        'message': f'POST method is supported for /api/controllers/register, but your request path "{request.path}" may have extra characters.',
+                        'original_path': request.path,
+                        'cleaned_path': clean_path,
+                        'method': request.method,
+                        'solution': 'Ensure your URL is exactly /api/controllers/register without trailing characters',
+                        'allowed_methods': ['POST', 'GET'],
+                        'hint': 'Check for trailing newlines, spaces, or other characters in your URL.'
+                    }), 400  # Return 400 instead of 405 for malformed URL
+                else:
+                    return jsonify({
+                        'error': 'Method not allowed',
+                        'message': f'The method {request.method} is not allowed for endpoint /api/controllers/register.',
+                        'path': clean_path,
+                        'method': request.method,
+                        'allowed_methods': ['POST', 'GET'],
+                        'hint': 'Use POST method for registration or GET for registration information.'
+                    }), 405
+            
+            # For other API endpoints
             return jsonify({
                 'error': 'Method not allowed',
                 'message': f'The method {request.method} is not allowed for endpoint {request.path}.',

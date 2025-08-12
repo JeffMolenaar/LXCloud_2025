@@ -402,6 +402,35 @@ def register_controller_get():
         }
     }), 405
 
+# Add a catch-all route for malformed register URLs (with trailing characters)
+@api_bp.route('/controllers/register<path:extra>', methods=['GET', 'POST', 'PUT', 'DELETE'], strict_slashes=False)
+def register_controller_malformed(extra):
+    """Handle malformed register URLs with trailing characters"""
+    request_host = request.headers.get('Host', 'unknown')
+    correct_url = f"http://{request_host}/api/controllers/register"
+    
+    if request.method == 'POST':
+        return jsonify({
+            'error': 'Malformed URL',
+            'message': f'POST method is supported for registration, but your URL has extra characters: "{extra}"',
+            'original_path': request.path,
+            'correct_url': correct_url,
+            'method': request.method,
+            'solution': 'Remove trailing characters from your URL',
+            'curl_example': f'curl -X POST {correct_url} -H "Content-Type: application/json" -d \'{{"serial_number": "250100.1.0625", "type": "speedradar"}}\'',
+            'hint': 'Ensure your URL is exactly /api/controllers/register without trailing newlines, spaces, or other characters.'
+        }), 400
+    else:
+        return jsonify({
+            'error': 'Malformed URL and incorrect method',
+            'message': f'The URL has extra characters "{extra}" and method {request.method} is not allowed.',
+            'original_path': request.path,
+            'correct_url': correct_url,
+            'correct_method': 'POST',
+            'solution': 'Use correct URL and POST method',
+            'curl_example': f'curl -X POST {correct_url} -H "Content-Type: application/json" -d \'{{"serial_number": "250100.1.0625", "type": "speedradar"}}\''
+        }), 400
+
 # Handle method not allowed errors with a more specific route that doesn't conflict
 @api_bp.errorhandler(405)
 def method_not_allowed(error):
