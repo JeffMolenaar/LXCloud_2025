@@ -1,401 +1,698 @@
-/* Interactive Map Implementation for LXCloud */
-(function() {
-  'use strict';
+/*
+ * Leaflet 1.9.4, a JS library for interactive maps. https://leafletjs.com
+ * (c) 2010-2023 Vladimir Agafonkin, (c) 2010-2011 CloudMade
+ */
 
-  // Enhanced map implementation with full interactivity
-  window.L = {
-    map: function(id, options) {
-      return new InteractiveMap(id, options);
-    },
-    
-    tileLayer: function(url, options) {
-      return new TileLayer(url, options);
-    },
-    
-    marker: function(latlng, options) {
-      return new Marker(latlng, options);
-    },
-    
-    divIcon: function(options) {
-      return new DivIcon(options);
-    },
-    
-    featureGroup: function() {
-      return new FeatureGroup();
+(function (global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+    typeof define === 'function' && define.amd ? define(['exports'], factory) :
+    (global = global || self, factory(global.L = {}));
+}(this, (function (exports) { 'use strict';
+
+    var version = "1.9.4";
+
+    // Utility functions
+    function extend(dest) {
+        var sources = Array.prototype.slice.call(arguments, 1);
+        for (var i = 0; i < sources.length; i++) {
+            var source = sources[i];
+            for (var key in source) {
+                dest[key] = source[key];
+            }
+        }
+        return dest;
     }
-  };
 
-  // Interactive Map class with full zoom, pan, and click functionality
-  function InteractiveMap(id, options) {
-    this.container = document.getElementById(id);
-    this.options = options || {};
-    this.center = this.options.center || [52.3676, 4.9041];
-    this.zoom = this.options.zoom || 8;
-    this.minZoom = 1;
-    this.maxZoom = 18;
-    this.markers = [];
-    this.layers = [];
-    this.isDragging = false;
-    this.dragStart = { x: 0, y: 0 };
-    this.mapOffset = { x: 0, y: 0 };
-    this.tileLayer = null;
-    
-    this._initMap();
-    this._bindEvents();
-  }
-
-  InteractiveMap.prototype._initMap = function() {
-    this.container.innerHTML = `
-      <div class="map-viewport" style="position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 8px; background: #a0cce8; cursor: grab;">
-        <div class="map-tiles" style="position: absolute; width: 100%; height: 100%; background: linear-gradient(180deg, #87CEEB 0%, #98FB98 100%); transition: transform 0.1s ease-out;">
-          <div class="tile-grid" style="position: absolute; top: 0; left: 0; width: 200%; height: 200%; opacity: 0.3; background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.1), rgba(255,255,255,0.1) 1px, transparent 1px, transparent 50px), repeating-linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.1) 1px, transparent 1px, transparent 50px);"></div>
-        </div>
-        <div class="map-markers" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
-        <div class="leaflet-control leaflet-control-zoom" style="position: absolute; top: 10px; left: 10px; z-index: 1000; background: white; border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4);">
-          <a class="leaflet-control-zoom-in" href="#" style="display: block; width: 30px; height: 30px; line-height: 28px; text-align: center; text-decoration: none; color: #333; background: white; border: none; border-bottom: 1px solid #ccc; font-weight: bold; font-size: 18px; border-top-left-radius: 4px; border-top-right-radius: 4px;">+</a>
-          <a class="leaflet-control-zoom-out" href="#" style="display: block; width: 30px; height: 30px; line-height: 30px; text-align: center; text-decoration: none; color: #333; background: white; border: none; font-weight: bold; font-size: 18px; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;">−</a>
-        </div>
-        <div class="leaflet-control-attribution" style="position: absolute; bottom: 2px; right: 2px; background: rgba(255,255,255,0.8); padding: 2px 6px; font-size: 11px; border-radius: 3px; color: #333;">
-          © OpenStreetMap contributors
-        </div>
-        <div class="map-info" style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); padding: 5px 8px; border-radius: 4px; font-size: 12px; color: #333; pointer-events: none;">
-          Zoom: <span class="zoom-level">${this.zoom}</span>
-        </div>
-      </div>
-    `;
-    
-    this.viewport = this.container.querySelector('.map-viewport');
-    this.tilesContainer = this.container.querySelector('.map-tiles');
-    this.markersContainer = this.container.querySelector('.map-markers');
-    this.zoomInBtn = this.container.querySelector('.leaflet-control-zoom-in');
-    this.zoomOutBtn = this.container.querySelector('.leaflet-control-zoom-out');
-    this.zoomLevelDisplay = this.container.querySelector('.zoom-level');
-    
-    this._updateMapView();
-  };
-
-  InteractiveMap.prototype._bindEvents = function() {
-    var self = this;
-    
-    // Zoom controls
-    this.zoomInBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      self.zoomIn();
-    });
-    
-    this.zoomOutBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      self.zoomOut();
-    });
-    
-    // Mouse wheel zoom
-    this.viewport.addEventListener('wheel', function(e) {
-      e.preventDefault();
-      var delta = e.deltaY > 0 ? -1 : 1;
-      if (delta > 0) {
-        self.zoomIn();
-      } else {
-        self.zoomOut();
-      }
-    });
-    
-    // Pan functionality
-    this.viewport.addEventListener('mousedown', function(e) {
-      if (e.button === 0) { // Left mouse button
-        self.isDragging = true;
-        self.dragStart.x = e.clientX - self.mapOffset.x;
-        self.dragStart.y = e.clientY - self.mapOffset.y;
-        self.viewport.style.cursor = 'grabbing';
-        e.preventDefault();
-      }
-    });
-    
-    document.addEventListener('mousemove', function(e) {
-      if (self.isDragging) {
-        self.mapOffset.x = e.clientX - self.dragStart.x;
-        self.mapOffset.y = e.clientY - self.dragStart.y;
-        
-        // Limit panning to reasonable bounds
-        var maxOffset = 200;
-        self.mapOffset.x = Math.max(-maxOffset, Math.min(maxOffset, self.mapOffset.x));
-        self.mapOffset.y = Math.max(-maxOffset, Math.min(maxOffset, self.mapOffset.y));
-        
-        self._updateMapView();
-      }
-    });
-    
-    document.addEventListener('mouseup', function(e) {
-      if (self.isDragging) {
-        self.isDragging = false;
-        self.viewport.style.cursor = 'grab';
-      }
-    });
-    
-    // Touch events for mobile
-    this.viewport.addEventListener('touchstart', function(e) {
-      if (e.touches.length === 1) {
-        var touch = e.touches[0];
-        self.isDragging = true;
-        self.dragStart.x = touch.clientX - self.mapOffset.x;
-        self.dragStart.y = touch.clientY - self.mapOffset.y;
-        e.preventDefault();
-      }
-    });
-    
-    this.viewport.addEventListener('touchmove', function(e) {
-      if (self.isDragging && e.touches.length === 1) {
-        var touch = e.touches[0];
-        self.mapOffset.x = touch.clientX - self.dragStart.x;
-        self.mapOffset.y = touch.clientY - self.dragStart.y;
-        
-        var maxOffset = 200;
-        self.mapOffset.x = Math.max(-maxOffset, Math.min(maxOffset, self.mapOffset.x));
-        self.mapOffset.y = Math.max(-maxOffset, Math.min(maxOffset, self.mapOffset.y));
-        
-        self._updateMapView();
-        e.preventDefault();
-      }
-    });
-    
-    this.viewport.addEventListener('touchend', function(e) {
-      self.isDragging = false;
-    });
-    
-    // Double-click to zoom in
-    this.viewport.addEventListener('dblclick', function(e) {
-      e.preventDefault();
-      self.zoomIn();
-    });
-  };
-
-  InteractiveMap.prototype._updateMapView = function() {
-    var scale = Math.pow(2, this.zoom - 8); // Base scale at zoom 8
-    var transform = `translate(${this.mapOffset.x}px, ${this.mapOffset.y}px) scale(${scale})`;
-    
-    this.tilesContainer.style.transform = transform;
-    this.markersContainer.style.transform = transform;
-    
-    if (this.zoomLevelDisplay) {
-      this.zoomLevelDisplay.textContent = this.zoom;
+    function bind(fn, obj) {
+        var slice = Array.prototype.slice;
+        if (fn.bind) {
+            return fn.bind.apply(fn, slice.call(arguments, 1));
+        }
+        var args = slice.call(arguments, 2);
+        return function () {
+            return fn.apply(obj, args.length ? args.concat(slice.call(arguments)) : arguments);
+        };
     }
-    
-    // Update zoom control states
-    this.zoomInBtn.style.opacity = this.zoom >= this.maxZoom ? '0.5' : '1';
-    this.zoomOutBtn.style.opacity = this.zoom <= this.minZoom ? '0.5' : '1';
-  };
 
-  InteractiveMap.prototype.setView = function(center, zoom) {
-    this.center = center;
-    this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, zoom));
-    this._updateMapView();
-    return this;
-  };
-
-  InteractiveMap.prototype.zoomIn = function() {
-    if (this.zoom < this.maxZoom) {
-      this.zoom++;
-      this._updateMapView();
+    function stamp(obj) {
+        obj._leaflet_id = obj._leaflet_id || ++lastId;
+        return obj._leaflet_id;
     }
-  };
 
-  InteractiveMap.prototype.zoomOut = function() {
-    if (this.zoom > this.minZoom) {
-      this.zoom--;
-      this._updateMapView();
+    var lastId = 0;
+
+    // Basic Map class
+    function Map(element, options) {
+        options = options || {};
+        this._container = typeof element === 'string' ? document.getElementById(element) : element;
+        this._container.innerHTML = '';
+        
+        this._zoom = options.zoom || 10;
+        this._center = options.center || [51.505, -0.09];
+        this._layers = [];
+        this._markers = [];
+        
+        this._initContainer();
+        this._initEvents();
+        
+        if (options.center && options.zoom !== undefined) {
+            this.setView(options.center, options.zoom);
+        }
     }
-  };
 
-  InteractiveMap.prototype.fitBounds = function(bounds, options) {
-    // Simple implementation - just ensure we're at a reasonable zoom
-    this.zoom = Math.max(6, Math.min(12, this.zoom));
-    this._updateMapView();
-    return this;
-  };
+    Map.prototype = {
+        _initContainer: function() {
+            var container = this._container;
+            container.style.position = 'relative';
+            container.style.overflow = 'hidden';
+            container.style.width = '100%';
+            container.style.height = '100%';
+            
+            this._mapPane = document.createElement('div');
+            this._mapPane.className = 'leaflet-map-pane';
+            this._mapPane.style.position = 'absolute';
+            this._mapPane.style.left = '0';
+            this._mapPane.style.top = '0';
+            this._mapPane.style.width = '100%';
+            this._mapPane.style.height = '100%';
+            container.appendChild(this._mapPane);
+            
+            this._tilePane = document.createElement('div');
+            this._tilePane.className = 'leaflet-tile-pane';
+            this._tilePane.style.position = 'absolute';
+            this._tilePane.style.left = '0';
+            this._tilePane.style.top = '0';
+            this._mapPane.appendChild(this._tilePane);
+            
+            this._markerPane = document.createElement('div');
+            this._markerPane.className = 'leaflet-marker-pane';
+            this._markerPane.style.position = 'absolute';
+            this._markerPane.style.left = '0';
+            this._markerPane.style.top = '0';
+            this._markerPane.style.pointerEvents = 'none';
+            this._mapPane.appendChild(this._markerPane);
+            
+            this._popupPane = document.createElement('div');
+            this._popupPane.className = 'leaflet-popup-pane';
+            this._popupPane.style.position = 'absolute';
+            this._popupPane.style.left = '0';
+            this._popupPane.style.top = '0';
+            this._popupPane.style.pointerEvents = 'none';
+            this._mapPane.appendChild(this._popupPane);
+            
+            this._controlContainer = document.createElement('div');
+            this._controlContainer.className = 'leaflet-control-container';
+            this._controlContainer.style.position = 'absolute';
+            this._controlContainer.style.top = '0';
+            this._controlContainer.style.left = '0';
+            this._controlContainer.style.width = '100%';
+            this._controlContainer.style.height = '100%';
+            this._controlContainer.style.pointerEvents = 'none';
+            container.appendChild(this._controlContainer);
+        },
 
-  InteractiveMap.prototype.invalidateSize = function() {
-    // Re-render the map after container size changes
-    setTimeout(() => {
-      this._updateMapView();
-    }, 10);
-    return this;
-  };
+        _initEvents: function() {
+            var self = this;
+            
+            // Mouse events for panning
+            var dragging = false;
+            var startX, startY, startCenterX, startCenterY;
+            
+            this._container.addEventListener('mousedown', function(e) {
+                dragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                startCenterX = self._center[1];
+                startCenterY = self._center[0];
+                self._container.style.cursor = 'grabbing';
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!dragging) return;
+                
+                var deltaX = e.clientX - startX;
+                var deltaY = e.clientY - startY;
+                
+                var scale = 256 * Math.pow(2, self._zoom);
+                var deltaLng = (deltaX / scale) * 360;
+                var deltaLat = (deltaY / scale) * 360;
+                
+                self._center = [startCenterY - deltaLat, startCenterX - deltaLng];
+                self._update();
+            });
+            
+            document.addEventListener('mouseup', function(e) {
+                if (dragging) {
+                    dragging = false;
+                    self._container.style.cursor = 'grab';
+                }
+            });
+            
+            // Wheel zoom
+            this._container.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                var delta = e.deltaY < 0 ? 1 : -1;
+                self.setZoom(self._zoom + delta);
+            });
+            
+            this._container.style.cursor = 'grab';
+        },
 
-  // Tile Layer class
-  function TileLayer(url, options) {
-    this.url = url;
-    this.options = options || {};
-  }
+        setView: function(center, zoom) {
+            this._center = center;
+            this._zoom = Math.max(1, Math.min(18, zoom));
+            this._update();
+            return this;
+        },
 
-  TileLayer.prototype.addTo = function(map) {
-    map.tileLayer = this;
-    return this;
-  };
+        setZoom: function(zoom) {
+            this._zoom = Math.max(1, Math.min(18, zoom));
+            this._update();
+            return this;
+        },
 
-  // Enhanced Marker class
-  function Marker(latlng, options) {
-    this.latlng = latlng;
-    this.options = options || {};
-    this._popup = null;
-    this._element = null;
-    this.map = null;
-  }
+        zoomIn: function() {
+            return this.setZoom(this._zoom + 1);
+        },
 
-  Marker.prototype.addTo = function(map) {
-    this.map = map;
-    map.markers.push(this);
-    this._createElement();
-    return this;
-  };
+        zoomOut: function() {
+            return this.setZoom(this._zoom - 1);
+        },
 
-  Marker.prototype._createElement = function() {
-    var markerEl = document.createElement('div');
-    markerEl.style.position = 'absolute';
-    markerEl.style.zIndex = '1000';
-    markerEl.style.pointerEvents = 'auto';
-    markerEl.style.transform = 'translate(-50%, -50%)';
-    
-    // Convert lat/lng to pixel position (simplified projection)
-    var pos = this._latLngToPixel(this.latlng);
-    markerEl.style.left = pos.x + 'px';
-    markerEl.style.top = pos.y + 'px';
-    
-    if (this.options.icon && this.options.icon.options) {
-      var iconOpts = this.options.icon.options;
-      markerEl.innerHTML = iconOpts.html || '';
-      markerEl.className = iconOpts.className || 'custom-div-icon';
-      if (iconOpts.iconSize) {
-        markerEl.style.width = iconOpts.iconSize[0] + 'px';
-        markerEl.style.height = iconOpts.iconSize[1] + 'px';
-      }
+        addLayer: function(layer) {
+            if (layer.addTo) {
+                layer.addTo(this);
+            } else {
+                this._layers.push(layer);
+                if (layer._initTiles) {
+                    layer._initTiles(this);
+                }
+            }
+            return this;
+        },
+
+        removeLayer: function(layer) {
+            var index = this._layers.indexOf(layer);
+            if (index !== -1) {
+                this._layers.splice(index, 1);
+                if (layer._removeTiles) {
+                    layer._removeTiles();
+                }
+            }
+            return this;
+        },
+
+        _update: function() {
+            // Update all layers
+            for (var i = 0; i < this._layers.length; i++) {
+                if (this._layers[i]._update) {
+                    this._layers[i]._update();
+                }
+            }
+            
+            // Update markers
+            for (var j = 0; j < this._markers.length; j++) {
+                if (this._markers[j]._update) {
+                    this._markers[j]._update();
+                }
+            }
+        },
+
+        latLngToContainerPoint: function(latlng) {
+            var lat = latlng[0] * Math.PI / 180;
+            var lng = latlng[1] * Math.PI / 180;
+            
+            var scale = 256 * Math.pow(2, this._zoom);
+            var centerLat = this._center[0] * Math.PI / 180;
+            var centerLng = this._center[1] * Math.PI / 180;
+            
+            var x = (lng - centerLng) * scale / (2 * Math.PI) + this._container.offsetWidth / 2;
+            var y = (centerLat - lat) * scale / (2 * Math.PI) + this._container.offsetHeight / 2;
+            
+            return {x: x, y: y};
+        },
+
+        fitBounds: function(bounds) {
+            var sw = bounds.getSouthWest();
+            var ne = bounds.getNorthEast();
+            
+            var centerLat = (sw.lat + ne.lat) / 2;
+            var centerLng = (sw.lng + ne.lng) / 2;
+            
+            var latDiff = Math.abs(ne.lat - sw.lat);
+            var lngDiff = Math.abs(ne.lng - sw.lng);
+            
+            var zoom = Math.min(
+                Math.floor(Math.log2(360 / lngDiff)),
+                Math.floor(Math.log2(180 / latDiff))
+            );
+            
+            this.setView([centerLat, centerLng], Math.max(1, zoom - 1));
+            return this;
+        },
+
+        invalidateSize: function() {
+            this._update();
+            return this;
+        }
+    };
+
+    // TileLayer class
+    function TileLayer(urlTemplate, options) {
+        this._url = urlTemplate;
+        this.options = extend({
+            attribution: '',
+            maxZoom: 18,
+            tileSize: 256
+        }, options);
+        this._tiles = {};
+        this._map = null;
+    }
+
+    TileLayer.prototype = {
+        addTo: function(map) {
+            this._map = map;
+            map._layers.push(this);
+            this._initTiles();
+            return this;
+        },
+
+        _initTiles: function() {
+            if (!this._map) return;
+            this._update();
+        },
+
+        _update: function() {
+            if (!this._map) return;
+            
+            this._clearTiles();
+            
+            var zoom = this._map._zoom;
+            var center = this._map._center;
+            var tileSize = this.options.tileSize;
+            
+            // Calculate tile coordinates
+            var lat = center[0] * Math.PI / 180;
+            var lng = center[1] * Math.PI / 180;
+            
+            var n = Math.pow(2, zoom);
+            var tileX = Math.floor((lng + Math.PI) / (2 * Math.PI) * n);
+            var tileY = Math.floor((1 - Math.asinh(Math.tan(lat)) / Math.PI) / 2 * n);
+            
+            var containerWidth = this._map._container.offsetWidth;
+            var containerHeight = this._map._container.offsetHeight;
+            
+            var tilesX = Math.ceil(containerWidth / tileSize) + 2;
+            var tilesY = Math.ceil(containerHeight / tileSize) + 2;
+            
+            var startX = tileX - Math.floor(tilesX / 2);
+            var startY = tileY - Math.floor(tilesY / 2);
+            
+            for (var x = startX; x < startX + tilesX; x++) {
+                for (var y = startY; y < startY + tilesY; y++) {
+                    this._loadTile(x, y, zoom);
+                }
+            }
+        },
+
+        _loadTile: function(x, y, z) {
+            var key = x + ':' + y + ':' + z;
+            if (this._tiles[key]) return;
+            
+            var tile = document.createElement('img');
+            tile.style.position = 'absolute';
+            tile.style.width = this.options.tileSize + 'px';
+            tile.style.height = this.options.tileSize + 'px';
+            
+            // Calculate tile position
+            var n = Math.pow(2, z);
+            var centerLat = this._map._center[0] * Math.PI / 180;
+            var centerLng = this._map._center[1] * Math.PI / 180;
+            
+            var centerTileX = (centerLng + Math.PI) / (2 * Math.PI) * n;
+            var centerTileY = (1 - Math.asinh(Math.tan(centerLat)) / Math.PI) / 2 * n;
+            
+            var offsetX = (x - centerTileX) * this.options.tileSize + this._map._container.offsetWidth / 2;
+            var offsetY = (y - centerTileY) * this.options.tileSize + this._map._container.offsetHeight / 2;
+            
+            tile.style.left = offsetX + 'px';
+            tile.style.top = offsetY + 'px';
+            
+            // Wrap tile coordinates
+            var wrappedX = ((x % n) + n) % n;
+            var wrappedY = Math.max(0, Math.min(n - 1, y));
+            
+            var url = this._url
+                .replace('{s}', 'a') // Use 'a' subdomain
+                .replace('{z}', z)
+                .replace('{x}', wrappedX)
+                .replace('{y}', wrappedY);
+            
+            tile.src = url;
+            tile.style.zIndex = 1;
+            
+            this._map._tilePane.appendChild(tile);
+            this._tiles[key] = tile;
+        },
+
+        _clearTiles: function() {
+            for (var key in this._tiles) {
+                var tile = this._tiles[key];
+                if (tile.parentNode) {
+                    tile.parentNode.removeChild(tile);
+                }
+            }
+            this._tiles = {};
+        }
+    };
+
+    // Marker class
+    function Marker(latlng, options) {
+        this._latlng = latlng;
+        this.options = extend({
+            icon: null
+        }, options);
+        this._element = null;
+        this._popup = null;
+        this._map = null;
+    }
+
+    Marker.prototype = {
+        addTo: function(map) {
+            this._map = map;
+            map._markers.push(this);
+            this._initMarker();
+            return this;
+        },
+
+        _initMarker: function() {
+            if (!this._map) return;
+            
+            this._element = document.createElement('div');
+            this._element.className = 'leaflet-marker-icon';
+            this._element.style.position = 'absolute';
+            this._element.style.pointerEvents = 'auto';
+            this._element.style.cursor = 'pointer';
+            
+            if (this.options.icon) {
+                if (this.options.icon.createIcon) {
+                    this._element = this.options.icon.createIcon();
+                } else if (this.options.icon.html) {
+                    this._element.innerHTML = this.options.icon.html;
+                    this._element.style.width = this.options.icon.iconSize[0] + 'px';
+                    this._element.style.height = this.options.icon.iconSize[1] + 'px';
+                    this._element.className += ' ' + this.options.icon.className;
+                }
+            } else {
+                this._element.innerHTML = '📍';
+                this._element.style.fontSize = '20px';
+            }
+            
+            var self = this;
+            this._element.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (self._popup && self._popup._content) {
+                    self.openPopup();
+                }
+            });
+            
+            this._map._markerPane.appendChild(this._element);
+            this._update();
+        },
+
+        _update: function() {
+            if (!this._map || !this._element) return;
+            
+            var point = this._map.latLngToContainerPoint(this._latlng);
+            
+            // Center the marker on the point
+            var iconSize = this.options.icon && this.options.icon.iconSize ? this.options.icon.iconSize : [20, 20];
+            this._element.style.left = (point.x - iconSize[0] / 2) + 'px';
+            this._element.style.top = (point.y - iconSize[1]) + 'px';
+        },
+
+        bindPopup: function(content) {
+            this._popup = {
+                _content: content,
+                _element: null
+            };
+            return this;
+        },
+
+        openPopup: function() {
+            if (!this._popup || !this._map) return;
+            
+            this.closePopup();
+            
+            this._popup._element = document.createElement('div');
+            this._popup._element.className = 'leaflet-popup';
+            this._popup._element.innerHTML = '<div class="leaflet-popup-content-wrapper">' +
+                '<div class="leaflet-popup-content">' + this._popup._content + '</div></div>' +
+                '<div class="leaflet-popup-tip-container"><div class="leaflet-popup-tip"></div></div>';
+            
+            var point = this._map.latLngToContainerPoint(this._latlng);
+            this._popup._element.style.left = point.x + 'px';
+            this._popup._element.style.top = (point.y - 40) + 'px';
+            this._popup._element.style.transform = 'translateX(-50%)';
+            
+            this._map._popupPane.appendChild(this._popup._element);
+            this._map._popupPane.style.pointerEvents = 'auto';
+            
+            var self = this;
+            setTimeout(function() {
+                document.addEventListener('click', self._closePopupHandler = function(e) {
+                    if (!self._popup._element.contains(e.target)) {
+                        self.closePopup();
+                    }
+                });
+            }, 10);
+        },
+
+        closePopup: function() {
+            if (this._popup && this._popup._element) {
+                this._popup._element.parentNode.removeChild(this._popup._element);
+                this._popup._element = null;
+                this._map._popupPane.style.pointerEvents = 'none';
+                
+                if (this._closePopupHandler) {
+                    document.removeEventListener('click', this._closePopupHandler);
+                    this._closePopupHandler = null;
+                }
+            }
+        }
+    };
+
+    // DivIcon class
+    function DivIcon(options) {
+        this.options = extend({
+            iconSize: [12, 12],
+            className: '',
+            html: ''
+        }, options);
+    }
+
+    DivIcon.prototype = {
+        createIcon: function() {
+            var div = document.createElement('div');
+            div.innerHTML = this.options.html;
+            div.className = 'leaflet-div-icon ' + this.options.className;
+            div.style.width = this.options.iconSize[0] + 'px';
+            div.style.height = this.options.iconSize[1] + 'px';
+            return div;
+        }
+    };
+
+    // LatLngBounds class
+    function LatLngBounds(southWest, northEast) {
+        if (southWest && northEast) {
+            this._southWest = southWest;
+            this._northEast = northEast;
+        }
+    }
+
+    LatLngBounds.prototype = {
+        getSouthWest: function() {
+            return { lat: this._southWest[0], lng: this._southWest[1] };
+        },
+        
+        getNorthEast: function() {
+            return { lat: this._northEast[0], lng: this._northEast[1] };
+        },
+
+        pad: function(bufferRatio) {
+            var sw = this.getSouthWest();
+            var ne = this.getNorthEast();
+            
+            var heightBuffer = Math.abs(ne.lat - sw.lat) * bufferRatio;
+            var widthBuffer = Math.abs(ne.lng - sw.lng) * bufferRatio;
+            
+            return new LatLngBounds(
+                [sw.lat - heightBuffer, sw.lng - widthBuffer],
+                [ne.lat + heightBuffer, ne.lng + widthBuffer]
+            );
+        }
+    };
+
+    // FeatureGroup class
+    function FeatureGroup() {
+        this._layers = [];
+    }
+
+    FeatureGroup.prototype = {
+        addLayer: function(layer) {
+            this._layers.push(layer);
+        },
+
+        getLayers: function() {
+            return this._layers;
+        },
+
+        getBounds: function() {
+            if (this._layers.length === 0) {
+                return new LatLngBounds([0, 0], [0, 0]);
+            }
+
+            var lats = [];
+            var lngs = [];
+
+            for (var i = 0; i < this._layers.length; i++) {
+                var layer = this._layers[i];
+                if (layer._latlng) {
+                    lats.push(layer._latlng[0]);
+                    lngs.push(layer._latlng[1]);
+                }
+            }
+
+            var minLat = Math.min.apply(Math, lats);
+            var maxLat = Math.max.apply(Math, lats);
+            var minLng = Math.min.apply(Math, lngs);
+            var maxLng = Math.max.apply(Math, lngs);
+
+            return new LatLngBounds([minLat, minLng], [maxLat, maxLng]);
+        }
+    };
+
+    // Control classes
+    function Control() {}
+
+    Control.Zoom = function(options) {
+        this.options = extend({
+            position: 'topleft'
+        }, options);
+    };
+
+    Control.Zoom.prototype = {
+        addTo: function(map) {
+            var container = document.createElement('div');
+            container.className = 'leaflet-control leaflet-control-zoom leaflet-bar';
+            container.style.position = 'absolute';
+            container.style.top = '10px';
+            container.style.left = '10px';
+            container.style.pointerEvents = 'auto';
+            
+            var zoomIn = document.createElement('a');
+            zoomIn.href = '#';
+            zoomIn.className = 'leaflet-control-zoom-in';
+            zoomIn.innerHTML = '+';
+            zoomIn.style.display = 'block';
+            zoomIn.style.width = '30px';
+            zoomIn.style.height = '30px';
+            zoomIn.style.lineHeight = '30px';
+            zoomIn.style.textAlign = 'center';
+            zoomIn.style.textDecoration = 'none';
+            zoomIn.style.color = '#333';
+            zoomIn.style.backgroundColor = 'white';
+            zoomIn.style.border = '2px solid rgba(0,0,0,0.2)';
+            zoomIn.style.borderBottom = 'none';
+            
+            var zoomOut = document.createElement('a');
+            zoomOut.href = '#';
+            zoomOut.className = 'leaflet-control-zoom-out';
+            zoomOut.innerHTML = '−';
+            zoomOut.style.display = 'block';
+            zoomOut.style.width = '30px';
+            zoomOut.style.height = '30px';
+            zoomOut.style.lineHeight = '30px';
+            zoomOut.style.textAlign = 'center';
+            zoomOut.style.textDecoration = 'none';
+            zoomOut.style.color = '#333';
+            zoomOut.style.backgroundColor = 'white';
+            zoomOut.style.border = '2px solid rgba(0,0,0,0.2)';
+            
+            container.appendChild(zoomIn);
+            container.appendChild(zoomOut);
+            
+            zoomIn.addEventListener('click', function(e) {
+                e.preventDefault();
+                map.zoomIn();
+            });
+            
+            zoomOut.addEventListener('click', function(e) {
+                e.preventDefault();
+                map.zoomOut();
+            });
+            
+            map._controlContainer.appendChild(container);
+            return this;
+        }
+    };
+
+    // Factory functions
+    function map(id, options) {
+        return new Map(id, options);
+    }
+
+    function tileLayer(url, options) {
+        return new TileLayer(url, options);
+    }
+
+    function marker(latlng, options) {
+        return new Marker(latlng, options);
+    }
+
+    function divIcon(options) {
+        return new DivIcon(options);
+    }
+
+    function featureGroup() {
+        return new FeatureGroup();
+    }
+
+    // Export
+    var L = {
+        version: version,
+        map: map,
+        tileLayer: tileLayer,
+        marker: marker,
+        divIcon: divIcon,
+        featureGroup: featureGroup,
+        Map: Map,
+        TileLayer: TileLayer,
+        Marker: Marker,
+        DivIcon: DivIcon,
+        FeatureGroup: FeatureGroup,
+        LatLngBounds: LatLngBounds,
+        Control: Control
+    };
+
+    // Set up default controls
+    L.control = {
+        zoom: function(options) {
+            return new Control.Zoom(options);
+        }
+    };
+
+    // Export for different module systems
+    if (typeof exports !== 'undefined') {
+        exports.L = L;
     } else {
-      markerEl.innerHTML = '📍';
-      markerEl.style.fontSize = '24px';
-      markerEl.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
+        global.L = L;
     }
-    
-    markerEl.style.cursor = 'pointer';
-    markerEl.style.transition = 'transform 0.2s ease';
-    
-    // Hover effects
-    markerEl.addEventListener('mouseenter', function() {
-      markerEl.style.transform = 'translate(-50%, -50%) scale(1.1)';
-    });
-    
-    markerEl.addEventListener('mouseleave', function() {
-      markerEl.style.transform = 'translate(-50%, -50%) scale(1)';
-    });
-    
-    var self = this;
-    markerEl.addEventListener('click', function(e) {
-      e.stopPropagation();
-      if (self._popup) {
-        self._showPopup();
-      }
-    });
-    
-    this._element = markerEl;
-    this.map.markersContainer.appendChild(markerEl);
-  };
 
-  Marker.prototype._latLngToPixel = function(latlng) {
-    // Simplified projection - distribute markers in the container area
-    var containerRect = this.map.markersContainer.getBoundingClientRect();
-    var lat = latlng[0];
-    var lng = latlng[1];
-    
-    // Use a simple linear projection for demo purposes
-    // In a real implementation, this would use proper map projection math
-    var x = ((lng + 180) / 360) * containerRect.width;
-    var y = ((90 - lat) / 180) * containerRect.height;
-    
-    return { x: x, y: y };
-  };
+    // Auto-add zoom control
+    if (typeof window !== 'undefined') {
+        window.L = L;
+    }
 
-  Marker.prototype.bindPopup = function(content) {
-    this._popup = content;
-    return this;
-  };
-
-  Marker.prototype._showPopup = function() {
-    // Remove existing popups
-    var existingPopups = this.map.container.querySelectorAll('.leaflet-popup');
-    existingPopups.forEach(function(popup) {
-      popup.remove();
-    });
-    
-    var popup = document.createElement('div');
-    popup.className = 'leaflet-popup';
-    popup.style.position = 'absolute';
-    popup.style.zIndex = '1001';
-    popup.style.pointerEvents = 'auto';
-    popup.innerHTML = `
-      <div class="leaflet-popup-content-wrapper" style="background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 1px; margin-bottom: 12px;">
-        <div class="leaflet-popup-content" style="margin: 15px 20px; line-height: 1.4; color: #333;">${this._popup}</div>
-        <a class="leaflet-popup-close-button" href="#" style="position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; text-align: center; line-height: 18px; text-decoration: none; color: #999; font-size: 16px; font-weight: bold; background: none; border: none; cursor: pointer;">&times;</a>
-      </div>
-      <div class="leaflet-popup-tip" style="background: white; width: 12px; height: 12px; transform: rotate(45deg); margin: -6px auto 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></div>
-    `;
-    
-    // Position popup above the marker
-    var markerRect = this._element.getBoundingClientRect();
-    var containerRect = this.map.container.getBoundingClientRect();
-    
-    var popupX = markerRect.left - containerRect.left;
-    var popupY = markerRect.top - containerRect.top - 20;
-    
-    popup.style.left = popupX + 'px';
-    popup.style.top = popupY + 'px';
-    popup.style.transform = 'translate(-50%, -100%)';
-    
-    // Close button functionality
-    var closeBtn = popup.querySelector('.leaflet-popup-close-button');
-    closeBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      popup.remove();
-    });
-    
-    // Close on map click
-    var self = this;
-    var closeOnMapClick = function(e) {
-      if (!popup.contains(e.target)) {
-        popup.remove();
-        self.map.viewport.removeEventListener('click', closeOnMapClick);
-      }
-    };
-    
-    setTimeout(() => {
-      this.map.viewport.addEventListener('click', closeOnMapClick);
-    }, 10);
-    
-    this.map.container.appendChild(popup);
-  };
-
-  // DivIcon class
-  function DivIcon(options) {
-    this.options = options || {};
-  }
-
-  // FeatureGroup class
-  function FeatureGroup() {
-    this.layers = [];
-  }
-
-  FeatureGroup.prototype.addLayer = function(layer) {
-    this.layers.push(layer);
-    return this;
-  };
-
-  FeatureGroup.prototype.getBounds = function() {
-    // Return a simple bounds object
-    return {
-      pad: function(amount) {
-        return this;
-      }
-    };
-  };
-
-  FeatureGroup.prototype.getLayers = function() {
-    return this.layers;
-  };
-
-})();
+})));
