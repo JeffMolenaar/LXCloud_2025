@@ -662,6 +662,8 @@ let draggedElement = null;
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
+    // Remove any duplicate cards first
+    removeDuplicateCards();
     initializeDragAndDrop();
     loadLayoutFromStorage();
     // Initialize map after a short delay to ensure proper DOM rendering
@@ -669,6 +671,19 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeMap();
     }, 100);
 });
+
+// Remove duplicate cards that might be created during development
+function removeDuplicateCards() {
+    const cardIds = ['welcome', 'total-controllers', 'online-controllers', 'offline-controllers', 'system-version', 'map', 'controller-list', 'quick-actions', 'system-status'];
+    
+    cardIds.forEach(cardId => {
+        const elements = document.querySelectorAll(`[data-card-id="${cardId}"].grid-item`);
+        // Keep only the first element, remove the rest
+        for (let i = 1; i < elements.length; i++) {
+            elements[i].remove();
+        }
+    });
+}
 
 // Edit mode toggle
 function toggleEditMode() {
@@ -701,15 +716,19 @@ function toggleEditMode() {
 
 // Card Management Functions
 function toggleCard(cardId) {
-    const card = document.querySelector(`[data-card-id="${cardId}"]`);
+    const cards = document.querySelectorAll(`[data-card-id="${cardId}"]`);
     const checkbox = document.getElementById(`card-${cardId}`);
     
-    if (card && checkbox) {
-        if (checkbox.checked) {
-            card.style.display = '';
-        } else {
-            card.style.display = 'none';
-        }
+    if (cards.length > 0 && checkbox) {
+        cards.forEach(card => {
+            if (checkbox.checked) {
+                card.style.display = '';
+                console.log(`Showing card: ${cardId}`);
+            } else {
+                card.style.display = 'none';
+                console.log(`Hiding card: ${cardId}`);
+            }
+        });
         // Save layout immediately when card visibility changes
         saveLayoutToStorage();
     }
@@ -869,55 +888,69 @@ function saveLayoutToStorage() {
     document.querySelectorAll('.grid-item').forEach((item, index) => {
         const cardId = item.dataset.cardId;
         const style = window.getComputedStyle(item);
+        const isVisible = item.style.display !== 'none';
         layout.push({
             cardId: cardId,
             order: index,
             gridColumn: item.style.gridColumn || style.gridColumn,
             gridRow: item.style.gridRow || style.gridRow,
-            visible: item.style.display !== 'none'
+            visible: isVisible
         });
     });
+    console.log('Saving layout:', layout);
     localStorage.setItem('dashboardLayout', JSON.stringify(layout));
 }
 
 // Load layout from localStorage
 function loadLayoutFromStorage() {
     const saved = localStorage.getItem('dashboardLayout');
-    if (!saved) return;
+    if (!saved) {
+        console.log('No saved layout found');
+        return;
+    }
     
     try {
         const layout = JSON.parse(saved);
-        const grid = document.getElementById('dashboardGrid');
+        console.log('Loading layout:', layout);
         
-        // Sort items by saved order
-        layout.sort((a, b) => a.order - b.order);
-        
+        // Apply only the visibility and sizing from saved layout
+        // Don't move elements to prevent duplication
         layout.forEach(item => {
-            const element = document.querySelector(`[data-card-id="${item.cardId}"]`);
-            if (element && element.classList.contains('grid-item')) {
+            const elements = document.querySelectorAll(`[data-card-id="${item.cardId}"].grid-item`);
+            
+            elements.forEach(element => {
+                // Apply sizing
                 if (item.gridColumn && item.gridColumn !== 'auto') {
                     element.style.gridColumn = item.gridColumn;
                 }
                 if (item.gridRow && item.gridRow !== 'auto') {
                     element.style.gridRow = item.gridRow;
                 }
-                // Set visibility - handle both boolean and string values
+                
+                // Apply visibility
                 if (item.visible === false || item.visible === 'false') {
                     element.style.display = 'none';
+                    console.log(`Hiding card on load: ${item.cardId}`);
                 } else {
                     element.style.display = '';
+                    console.log(`Showing card on load: ${item.cardId}`);
                 }
-                // Only move grid items, not management panel elements
-                grid.appendChild(element);
-            }
+            });
         });
         
         // Update checkboxes if in edit mode
         if (editMode) {
             updateCardCheckboxes();
         }
+        
+        // Re-initialize map after layout changes
+        setTimeout(() => {
+            initializeMap();
+        }, 200);
+        
     } catch (e) {
         console.warn('Failed to load dashboard layout:', e);
+        localStorage.removeItem('dashboardLayout'); // Clear corrupt data
     }
 }
 
