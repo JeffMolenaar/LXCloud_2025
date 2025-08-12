@@ -107,3 +107,5 @@ htmlcov/
 *.pid
 gunicorn.sock
 /.vs/LXCloud_2025/v17
+/.vs/LXCloud_2025/FileContentIndex
+/.vs
