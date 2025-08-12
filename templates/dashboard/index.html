@@ -1037,13 +1037,63 @@ function initializeMap() {
         // Clear any existing content and show loading
         mapElement.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Loading map...</div>';
         
-        const map = L.map('map').setView([52.3676, 4.9041], 8); // Default to Netherlands
+        const map = L.map('map', {
+            // Disable default dragging to implement custom inverted dragging
+            dragging: false
+        }).setView([52.3676, 4.9041], 8); // Default to Netherlands
         currentMap = map; // Store reference for resizing
 
         // Add tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
+
+        // Implement custom inverted dragging behavior
+        let isDragging = false;
+        let lastMousePos = null;
+
+        map.getContainer().addEventListener('mousedown', function(e) {
+            isDragging = true;
+            lastMousePos = {x: e.clientX, y: e.clientY};
+            map.getContainer().style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging || !lastMousePos) return;
+            
+            // Calculate mouse movement delta
+            const deltaX = e.clientX - lastMousePos.x;
+            const deltaY = e.clientY - lastMousePos.y;
+            
+            // Get current map center
+            const center = map.getCenter();
+            
+            // Convert pixel movement to lat/lng movement (inverted)
+            const zoom = map.getZoom();
+            const pixelsPerDegree = 256 * Math.pow(2, zoom) / 360;
+            
+            // Invert the movement: positive deltaX moves map right, positive deltaY moves map down
+            const newLat = center.lat - (deltaY / pixelsPerDegree);
+            const newLng = center.lng + (deltaX / (pixelsPerDegree * Math.cos(center.lat * Math.PI / 180)));
+            
+            // Update map center
+            map.setView([newLat, newLng], zoom, {animate: false});
+            
+            // Update last mouse position
+            lastMousePos = {x: e.clientX, y: e.clientY};
+        });
+
+        document.addEventListener('mouseup', function(e) {
+            if (isDragging) {
+                isDragging = false;
+                lastMousePos = null;
+                map.getContainer().style.cursor = 'grab';
+            }
+        });
+
+        // Set initial cursor
+        map.getContainer().style.cursor = 'grab';
 
         // Custom markers for different controller types
         const markerIcons = {
