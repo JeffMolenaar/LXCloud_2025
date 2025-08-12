@@ -911,38 +911,23 @@ function loadLayoutFromStorage() {
     
     try {
         const layout = JSON.parse(saved);
-        const grid = document.getElementById('dashboardGrid');
         console.log('Loading layout:', layout);
         
-        // Create a map to track which elements we've processed
-        const processedElements = new Set();
-        
-        // Sort items by saved order
-        layout.sort((a, b) => a.order - b.order);
-        
+        // Apply only the visibility and sizing from saved layout
+        // Don't move elements to prevent duplication
         layout.forEach(item => {
-            // Only select elements that are actual grid items and haven't been processed
             const elements = document.querySelectorAll(`[data-card-id="${item.cardId}"].grid-item`);
             
-            // Use the first element that hasn't been processed
-            let element = null;
-            for (const el of elements) {
-                if (!processedElements.has(el)) {
-                    element = el;
-                    break;
-                }
-            }
-            
-            if (element) {
-                processedElements.add(element);
-                
+            elements.forEach(element => {
+                // Apply sizing
                 if (item.gridColumn && item.gridColumn !== 'auto') {
                     element.style.gridColumn = item.gridColumn;
                 }
                 if (item.gridRow && item.gridRow !== 'auto') {
                     element.style.gridRow = item.gridRow;
                 }
-                // Set visibility - handle both boolean and string values
+                
+                // Apply visibility
                 if (item.visible === false || item.visible === 'false') {
                     element.style.display = 'none';
                     console.log(`Hiding card on load: ${item.cardId}`);
@@ -950,11 +935,7 @@ function loadLayoutFromStorage() {
                     element.style.display = '';
                     console.log(`Showing card on load: ${item.cardId}`);
                 }
-                // Move to maintain order (only if not already in correct position)
-                if (element.parentElement === grid) {
-                    grid.appendChild(element);
-                }
-            }
+            });
         });
         
         // Update checkboxes if in edit mode
