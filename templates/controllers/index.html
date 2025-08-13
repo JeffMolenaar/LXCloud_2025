@@ -6,48 +6,41 @@
 <style>
 /* ===== Page shell (match dashboard) ===== */
 .page-wrap {
-    min-height: calc(100vh - 120px);
-    background: #f8f9fa;
+    min-height: calc(100vh - 88px);
+    background: var(--gray-50);
 }
 .page-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--primary-color);
     color: #fff;
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     padding: 24px 28px;
     margin: 24px 0 28px 0;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 10px 24px rgba(118,75,162,.25);
+    box-shadow: var(--shadow-md);
 }
 .page-header h1 {
     margin: 0;
-    font-weight: 300;
-    letter-spacing: -0.4px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.025em;
 }
 .page-header p {
     margin: 6px 0 0 0;
-    opacity: .92;
+    opacity: .9;
 }
 .page-header::before,
 .page-header::after {
-    content: '';
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255,255,255,.12);
-    filter: blur(0.5px);
-}
-.page-header::before {
-    width: 160px; height: 160px; right: -40px; top: -40px;
-}
-.page-header::after {
-    width: 90px; height: 90px; right: 70px; top: -20px; background: rgba(255,255,255,.09);
+    display: none;
 }
 
 /* ===== Cards (match dashboard look) ===== */
 .card-soft {
     background: #fff;
-    border: 1px solid #eef0f5;
-    border-radius: 14px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-fast);
+}
     box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
     transition: transform .2s ease, box-shadow .2s ease;
 }
