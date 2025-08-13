@@ -534,7 +534,7 @@
                                 </span>
                             </td>
                             <td class="text-muted">
-                                {% if controller.last_seen %}{{ controller.last_seen.strftime('%m/%d %H:%M') }}{% else %}Never{% endif %}
+                                {{ format_local_datetime(controller.last_seen) }}
                             </td>
                             <td style="text-align: right;">
                                 <form method="POST" action="{{ url_for('controllers.bind_controller') }}" class="d-inline">
@@ -600,7 +600,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-muted">
-                                    {% if controller.last_seen %}{{ controller.last_seen.strftime('%m/%d %H:%M') }}{% else %}Never{% endif %}
+                                    {{ format_local_datetime(controller.last_seen) }}
                                 </td>
                                 <td style="text-align: right;">
                                     <div class="d-flex justify-content-end gap-2">
