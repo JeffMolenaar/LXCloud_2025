@@ -166,16 +166,9 @@ def create_app():
             print(f"Warning: Could not load UI customizations: {e}")
             # Continue without UI customizations
         
-        # Add timezone utility functions to template context
-        from app.utils import format_local_datetime, format_local_time, format_local_date, format_local_datetime_full
-        
         return dict(
             version=Config.get_version(),
-            ui_customizations=ui_customizations,
-            format_local_datetime=format_local_datetime,
-            format_local_time=format_local_time,
-            format_local_date=format_local_date,
-            format_local_datetime_full=format_local_datetime_full
+            ui_customizations=ui_customizations
         )
     
     # Register blueprints

@@ -33,16 +33,13 @@ def controller_status():
     
     status_data = []
     for controller in controllers:
-        from app.utils import utc_to_local
-        last_seen_local = utc_to_local(controller.last_seen) if controller.last_seen else None
         status_data.append({
             'id': controller.id,
             'serial_number': controller.serial_number,
             'name': controller.name or controller.serial_number,
             'type': controller.controller_type,
             'is_online': controller.is_online,
-            'last_seen': controller.last_seen.isoformat() if controller.last_seen else None,
-            'last_seen_local': last_seen_local.isoformat() if last_seen_local else None
+            'last_seen': controller.last_seen.isoformat() if controller.last_seen else None
         })
     
     return jsonify(status_data)
@@ -67,11 +64,8 @@ def controller_recent_data(controller_id):
     
     result = []
     for dp in data_points:
-        from app.utils import utc_to_local
-        local_timestamp = utc_to_local(dp.timestamp)
         result.append({
             'timestamp': dp.timestamp.isoformat(),
-            'timestamp_local': local_timestamp.isoformat() if local_timestamp else None,
             'data': dp.get_data_dict()
         })
     
@@ -120,8 +114,6 @@ def map_data():
     
     map_data = []
     for controller in controllers:
-        from app.utils import utc_to_local
-        last_seen_local = utc_to_local(controller.last_seen) if controller.last_seen else None
         map_data.append({
             "id": controller.id,
             "name": controller.name or controller.serial_number,
@@ -130,8 +122,7 @@ def map_data():
             "longitude": controller.longitude,
             "is_online": controller.is_online,
             "type": controller.controller_type,
-            "last_seen": controller.last_seen.isoformat() if controller.last_seen else None,
-            "last_seen_local": last_seen_local.isoformat() if last_seen_local else None
+            "last_seen": controller.last_seen.isoformat() if controller.last_seen else None
         })
     
     return jsonify(map_data)
