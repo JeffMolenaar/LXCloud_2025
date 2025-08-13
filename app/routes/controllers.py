@@ -107,6 +107,35 @@ def view_data(controller_id):
                          controller=controller,
                          data_points=data_points)
 
+@controllers_bp.route('/<int:controller_id>/data/api')
+@login_required
+def data_api(controller_id):
+    """API endpoint for refreshing controller data"""
+    controller = Controller.query.get_or_404(controller_id)
+    
+    # Check permissions
+    if not current_user.is_admin and controller.user_id != current_user.id:
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    limit = request.args.get('limit', 100, type=int)
+    
+    # Get recent data points
+    data_points = ControllerData.query.filter_by(controller_id=controller_id)\
+        .order_by(ControllerData.timestamp.desc())\
+        .limit(limit).all()
+    
+    result = []
+    for dp in data_points:
+        from app.utils import utc_to_local
+        local_timestamp = utc_to_local(dp.timestamp)
+        result.append({
+            'timestamp': dp.timestamp.isoformat(),
+            'timestamp_local': local_timestamp.isoformat() if local_timestamp else None,
+            'data': dp.get_data_dict()
+        })
+    
+    return jsonify(result)
+
 @controllers_bp.route('/api/all')
 @login_required
 def api_all_controllers():
