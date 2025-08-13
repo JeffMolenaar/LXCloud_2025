@@ -754,7 +754,7 @@ function refreshData() {
     refreshIcon.classList.add('fa-spin');
     indicator.style.display = 'block';
     
-    fetch(`/controllers/{{ controller.id }}/data/api?limit=100`)
+    fetch(`/api/controllers/{{ controller.id }}/recent-data?limit=100`)
         .then(response => response.json())
         .then(data => {
             updateDataTable(data);
