@@ -8,8 +8,11 @@
     .dashboard-container { min-height: calc(100vh - 120px); background: #f8f9fa; padding: 0; }
 
     .dashboard-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white; padding: 2rem 0; margin-bottom: 2rem;
+        background: var(--bg-primary);
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary); 
+        padding: 1.5rem 0; 
+        margin-bottom: 1.5rem;
     }
     .dashboard-header h1 { margin: 0; font-weight: 300; letter-spacing: -1px; }
     .dashboard-header p { margin: 0.5rem 0 0 0; opacity: 0.9; }
@@ -95,10 +98,14 @@
     .controller-actions .btn { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
 
     /* Welcome Card */
-    .welcome-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .welcome-card { 
+        background: var(--bg-primary); 
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color); 
+    }
     .welcome-card .card-content { justify-content: center; text-align: center; }
-    .welcome-card h3 { margin: 0; font-weight: 300; }
-    .welcome-card p { margin: 0.5rem 0 0 0; opacity: 0.9; }
+    .welcome-card h3 { margin: 0; font-weight: 500; color: inherit; }
+    .welcome-card p { margin: 0.5rem 0 0 0; opacity: 0.8; color: inherit; }
 
     /* Responsive */
     @media (max-width: 1200px) {

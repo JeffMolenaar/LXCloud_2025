@@ -71,7 +71,7 @@
 
 <style>
 body {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--info-color) 100%);
+    background: var(--bg-secondary);
     min-height: 100vh;
     font-family: var(--font-family-sans);
 }
@@ -86,32 +86,25 @@ body {
 
 .login-card {
     background: var(--bg-primary);
-    border: none;
-    border-radius: var(--radius-2xl);
-    box-shadow: var(--shadow-2xl);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
     overflow: hidden;
     width: 100%;
     max-width: 400px;
-    backdrop-filter: blur(20px);
     position: relative;
 }
 
 .login-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary-color), var(--info-color), var(--success-color));
+    display: none;
 }
 
 .card-header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
-    color: var(--text-inverse);
-    padding: var(--space-8) var(--space-6);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    padding: var(--space-6) var(--space-6);
     text-align: center;
-    border: none;
+    border-bottom: 1px solid var(--border-light);
 }
 
 .card-header h4 {
@@ -174,7 +167,7 @@ body {
 }
 
 .input-group-text {
-    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+    background: var(--bg-tertiary);
     border: 2px solid var(--border-light);
     border-right: none;
     color: var(--text-secondary);
@@ -197,7 +190,7 @@ body {
 }
 
 .btn-login {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    background: var(--primary-color);
     border: none;
     border-radius: var(--radius-xl);
     padding: var(--space-4) var(--space-6);
@@ -211,24 +204,17 @@ body {
 }
 
 .btn-login::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: var(--transition-normal);
+    display: none;
 }
 
 .btn-login:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-xl);
-    background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-dark) 100%);
+    transform: none;
+    box-shadow: var(--shadow-md);
+    background: var(--primary-hover);
 }
 
 .btn-login:hover::before {
-    left: 100%;
+    display: none;
 }
 
 .btn-login:active {
