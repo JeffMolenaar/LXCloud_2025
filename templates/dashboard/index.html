@@ -4,433 +4,155 @@
 
 {% block extra_css %}
 <style>
-/* Modern Dashboard Styles */
-.dashboard-container {
-    min-height: calc(100vh - 120px);
-    background: #f8f9fa;
-    padding: 0;
-}
+    /* Modern Dashboard Styles */
+    .dashboard-container { min-height: calc(100vh - 120px); background: #f8f9fa; padding: 0; }
 
-.dashboard-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 2rem 0;
-    margin-bottom: 2rem;
-}
-
-.dashboard-header h1 {
-    margin: 0;
-    font-weight: 300;
-    letter-spacing: -1px;
-}
-
-.dashboard-header p {
-    margin: 0.5rem 0 0 0;
-    opacity: 0.9;
-}
-
-.edit-mode-toggle {
-    position: fixed;
-    top: 80px;
-    right: 30px;
-    z-index: 1001;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 50px;
-    padding: 12px 20px;
-    box-shadow: 0 4px 12px rgba(0,123,255,0.3);
-    transition: all 0.3s ease;
-}
-
-.edit-mode-toggle:hover {
-    background: #0056b3;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,123,255,0.4);
-}
-
-.edit-mode-toggle.active {
-    background: #dc3545;
-}
-
-.edit-mode-toggle.active:hover {
-    background: #c82333;
-}
-
-/* Grid System */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    grid-auto-rows: 100px;
-    gap: 1rem;
-    padding: 2rem 2rem 2rem 2rem;
-    max-width: 1600px;
-    margin: 0 auto;
-}
-
-.grid-item {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    border: 2px solid transparent;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.grid-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-}
-
-.grid-item.edit-mode {
-    border-color: #007bff;
-    cursor: move;
-}
-
-.grid-item.edit-mode::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,123,255,0.1);
-    z-index: 1;
-}
-
-.grid-item.edit-mode .resize-handle {
-    display: block;
-}
-
-.resize-handle {
-    display: none;
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    width: 15px;
-    height: 15px;
-    background: #007bff;
-    cursor: nw-resize;
-    border-radius: 3px;
-    z-index: 2;
-}
-
-/* Card Sizes */
-.card-small { grid-column: span 3; grid-row: span 2; }
-.card-medium { grid-column: span 4; grid-row: span 3; }
-.card-large { grid-column: span 6; grid-row: span 4; }
-.card-xl { grid-column: span 8; grid-row: span 5; }
-.card-full { grid-column: span 12; grid-row: span 4; }
-
-/* Card Content */
-.card-content {
-    padding: 1.5rem;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    z-index: 0;
-}
-
-.stat-card .card-content {
-    justify-content: center;
-    text-align: center;
-}
-
-.stat-card .stat-value {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin: 0;
-    line-height: 1;
-}
-
-.stat-card .stat-label {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin: 0.5rem 0 0 0;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.stat-card .stat-icon {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    font-size: 2rem;
-    opacity: 0.3;
-}
-
-/* Map Card */
-.map-card #map {
-    height: 100%;
-    min-height: 300px;
-    border-radius: 8px;
-    border: 1px solid var(--border-light);
-    background-color: var(--bg-primary);
-}
-
-.map-card .card-content {
-    padding: 1rem;
-}
-
-/* Improve map visibility */
-.leaflet-container {
-    background: var(--bg-primary) !important;
-}
-
-.leaflet-control-zoom a {
-    background-color: var(--bg-primary) !important;
-    border: 1px solid var(--border-medium) !important;
-    color: var(--text-primary) !important;
-}
-
-.leaflet-control-zoom a:hover {
-    background-color: var(--primary-light) !important;
-    color: var(--primary-color) !important;
-}
-
-.leaflet-control-attribution {
-    background-color: rgba(255, 255, 255, 0.9) !important;
-    color: var(--text-primary) !important;
-    font-size: 11px !important;
-}
-
-/* Controller List Card */
-.controller-list-card .controller-item {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.controller-list-card .controller-item:last-child {
-    border-bottom: none;
-}
-
-.controller-status {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-right: 0.75rem;
-    flex-shrink: 0;
-}
-
-.status-online { background-color: #28a745; }
-.status-offline { background-color: #dc3545; }
-
-.controller-name {
-    font-weight: 500;
-    margin: 0;
-    font-size: 0.9rem;
-}
-
-.controller-type {
-    font-size: 0.8rem;
-    color: #6c757d;
-    margin: 0;
-}
-
-.controller-actions {
-    margin-left: auto;
-    display: flex;
-    gap: 0.5rem;
-}
-
-.controller-actions .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
-}
-
-/* Welcome Card */
-.welcome-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.welcome-card .card-content {
-    justify-content: center;
-    text-align: center;
-}
-
-.welcome-card h3 {
-    margin: 0;
-    font-weight: 300;
-}
-
-.welcome-card p {
-    margin: 0.5rem 0 0 0;
-    opacity: 0.9;
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-    .dashboard-grid {
-        grid-template-columns: repeat(8, 1fr);
-        padding: 0 1rem 2rem 1rem;
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white; padding: 2rem 0; margin-bottom: 2rem;
     }
-    .card-large { grid-column: span 4; }
-    .card-xl { grid-column: span 6; }
-    .card-full { grid-column: span 8; }
-}
+    .dashboard-header h1 { margin: 0; font-weight: 300; letter-spacing: -1px; }
+    .dashboard-header p { margin: 0.5rem 0 0 0; opacity: 0.9; }
 
-@media (max-width: 768px) {
-    .dashboard-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0.75rem;
-    }
-    .card-small, .card-medium, .card-large, .card-xl { 
-        grid-column: span 4; 
-        grid-row: span 3;
-    }
-    .card-full { grid-column: span 4; grid-row: span 4; }
-    
     .edit-mode-toggle {
-        top: 80px;
-        right: 15px;
-        padding: 10px 16px;
+        position: fixed; top: 80px; right: 30px; z-index: 1001;
+        background: #007bff; color: white; border: none; border-radius: 50px;
+        padding: 12px 20px; box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        transition: all 0.3s ease;
     }
-}
+    .edit-mode-toggle:hover { background: #0056b3; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,123,255,0.4); }
+    .edit-mode-toggle.active { background: #dc3545; }
+    .edit-mode-toggle.active:hover { background: #c82333; }
 
-/* Drag and Drop Styles */
-.grid-item.dragging {
-    opacity: 0.5;
-    transform: rotate(5deg);
-}
+    /* Grid System */
+    .dashboard-grid {
+        display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: 100px;
+        gap: 1rem; padding: 2rem; max-width: 1600px; margin: 0 auto;
+    }
 
-.grid-item.drag-over {
-    border-color: #28a745;
-    background-color: rgba(40, 167, 69, 0.1);
-}
+    .grid-item {
+        background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 2px solid transparent; transition: all 0.3s ease; position: relative; overflow: hidden;
+    }
+    .grid-item:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+    .grid-item.edit-mode { border-color: #007bff; cursor: move; }
+    .grid-item.edit-mode::before { content: ''; position: absolute; inset: 0; background: rgba(0,123,255,0.1); z-index: 1; }
+    .grid-item.edit-mode .resize-handle { display: block; }
 
-/* Card Header */
-.card-header-custom {
-    display: flex;
-    align-items: center;
-    justify-content: between;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e9ecef;
-}
+    .resize-handle {
+        display: none; position: absolute; bottom: 5px; right: 5px; width: 15px; height: 15px;
+        background: #007bff; cursor: nw-resize; border-radius: 3px; z-index: 2;
+    }
 
-.card-header-custom h5 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #495057;
-}
+    /* Card Sizes */
+    .card-small { grid-column: span 3; grid-row: span 2; }
+    .card-medium { grid-column: span 4; grid-row: span 3; }
+    .card-large { grid-column: span 6; grid-row: span 4; }
+    .card-xl { grid-column: span 8; grid-row: span 5; }
+    .card-full { grid-column: span 12; grid-row: span 4; }
 
-.card-header-custom .icon {
-    margin-right: 0.5rem;
-    color: #6c757d;
-}
+    /* Card Content */
+    .card-content { padding: 1.5rem; height: 100%; display: flex; flex-direction: column; position: relative; z-index: 0; }
 
-/* Card Management Panel */
-.card-management-panel {
-    position: fixed;
-    top: 80px;
-    right: 200px;
-    width: 280px;
-    background: white;
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-xl);
-    z-index: 998;
-    max-height: 70vh;
-    overflow-y: auto;
-}
+    .stat-card .card-content { justify-content: center; text-align: center; }
+    .stat-card .stat-value { font-size: 2.5rem; font-weight: 700; margin: 0; line-height: 1; }
+    .stat-card .stat-label { font-size: 0.9rem; color: #6c757d; margin: 0.5rem 0 0 0; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-card .stat-icon { position: absolute; top: 1rem; right: 1rem; font-size: 2rem; opacity: 0.3; }
 
-.card-management-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-light);
-    background: var(--bg-secondary);
-    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-}
+    /* Map Card */
+    .map-card #map {
+        height: 100%; min-height: 300px; border-radius: 8px; border: 1px solid var(--border-light);
+        background-color: var(--bg-primary); position: relative; /* overlay anchor */
+    }
+    .map-card .card-content { padding: 1rem; }
 
-.card-management-header h6 {
-    margin: 0;
-    font-weight: 600;
-    color: var(--text-primary);
-}
+    /* IMPORTANT: disable hover transform on the map card to avoid pointer math issues */
+    .map-card.grid-item:hover { transform: none; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
 
-.btn-close-panel {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    padding: 0;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-}
+    /* OpenLayers popup */
+    .ol-popup {
+        position: absolute; background: #fff; padding: 10px 12px; border: 1px solid #e5e7eb;
+        border-radius: 6px; min-width: 200px; box-shadow: 0 2px 10px rgba(0,0,0,.12);
+        transform: translate(-50%, -100%); /* anchor above */
+    }
+    .ol-popup:after, .ol-popup:before {
+        top: 100%; border: solid transparent; content: " "; height: 0; width: 0; position: absolute; pointer-events: none;
+    }
+    .ol-popup:after { border-top-color: #fff; border-width: 10px; left: 50%; margin-left: -10px; }
+    .ol-popup:before { border-top-color: #e5e7eb; border-width: 11px; left: 50%; margin-left: -11px; }
 
-.btn-close-panel:hover {
-    background: var(--danger-light);
-    color: var(--danger-color);
-}
+    /* Controller List Card */
+    .controller-list-card .controller-item { display: flex; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0; }
+    .controller-list-card .controller-item:last-child { border-bottom: none; }
 
-.card-management-content {
-    padding: 1rem;
-}
+    .controller-status { width: 8px; height: 8px; border-radius: 50%; margin-right: 0.75rem; flex-shrink: 0; }
+    .status-online { background-color: #28a745; }
+    .status-offline { background-color: #dc3545; }
 
-.available-cards h6 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    color: var(--text-primary);
-}
+    .controller-name { font-weight: 500; margin: 0; font-size: 0.9rem; }
+    .controller-type { font-size: 0.8rem; color: #6c757d; margin: 0; }
+    .controller-actions { margin-left: auto; display: flex; gap: 0.5rem; }
+    .controller-actions .btn { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
 
-.card-option {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    padding: 0.25rem 0;
-}
+    /* Welcome Card */
+    .welcome-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .welcome-card .card-content { justify-content: center; text-align: center; }
+    .welcome-card h3 { margin: 0; font-weight: 300; }
+    .welcome-card p { margin: 0.5rem 0 0 0; opacity: 0.9; }
 
-.card-option input[type="checkbox"] {
-    margin-right: 0.5rem;
-    width: 16px;
-    height: 16px;
-}
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .dashboard-grid { grid-template-columns: repeat(8, 1fr); padding: 0 1rem 2rem 1rem; }
+        .card-large { grid-column: span 4; }
+        .card-xl { grid-column: span 6; }
+        .card-full { grid-column: span 8; }
+    }
+    @media (max-width: 768px) {
+        .dashboard-grid { grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+        .card-small, .card-medium, .card-large, .card-xl { grid-column: span 4; grid-row: span 3; }
+        .card-full { grid-column: span 4; grid-row: span 4; }
+        .edit-mode-toggle { top: 80px; right: 15px; padding: 10px 16px; }
+    }
 
-.card-option label {
-    font-size: 0.85rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    margin: 0;
-}
+    /* Drag/Drop */
+    .grid-item.dragging { opacity: 0.5; transform: rotate(5deg); }
+    .grid-item.drag-over { border-color: #28a745; background-color: rgba(40,167,69,0.1); }
 
-.card-management-actions {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-light);
-    display: flex;
-    gap: 0.5rem;
-}
+    /* Card Header */
+    .card-header-custom { display: flex; align-items: center; justify-content: between; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e9ecef; }
+    .card-header-custom h5 { margin: 0; font-size: 1rem; font-weight: 600; color: #495057; }
+    .card-header-custom .icon { margin-right: 0.5rem; color: #6c757d; }
 
-.card-management-actions .btn {
-    flex: 1;
-    font-size: 0.8rem;
-}
+    /* Card Management Panel */
+    .card-management-panel {
+        position: fixed; top: 80px; right: 200px; width: 280px; background: white; border: 1px solid var(--border-light);
+        border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); z-index: 998; max-height: 70vh; overflow-y: auto;
+    }
+    .card-management-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border-light); background: var(--bg-secondary); border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+    .card-management-header h6 { margin: 0; font-weight: 600; color: var(--text-primary); }
+
+    .btn-close-panel { background: none; border: none; font-size: 1.2rem; color: var(--text-secondary); cursor: pointer; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+    .btn-close-panel:hover { background: var(--danger-light); color: var(--danger-color); }
+
+    .card-management-content { padding: 1rem; }
+    .available-cards h6 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary); }
+    .card-option { display: flex; align-items: center; margin-bottom: 0.5rem; padding: 0.25rem 0; }
+    .card-option input[type="checkbox"] { margin-right: 0.5rem; width: 16px; height: 16px; }
+    .card-option label { font-size: 0.85rem; color: var(--text-primary); cursor: pointer; margin: 0; }
+
+    .card-management-actions { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-light); display: flex; gap: 0.5rem; }
+    .card-management-actions .btn { flex: 1; font-size: 0.8rem; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
-    
 
     <!-- Edit Mode Toggle -->
     <button class="edit-mode-toggle" id="editModeToggle" onclick="toggleEditMode()">
         <i class="fas fa-edit"></i> <span id="editModeText">Edit Layout</span>
     </button>
-    
+
     <!-- Card Management Panel -->
     <div class="card-management-panel" id="cardManagementPanel" style="display: none;">
         <div class="card-management-header">
@@ -488,7 +210,7 @@
 
     <!-- Dashboard Grid -->
     <div class="dashboard-grid" id="dashboardGrid">
-        
+
         <!-- Welcome Card -->
         <div class="grid-item card-medium welcome-card" data-card-id="welcome">
             <div class="card-content">
@@ -501,7 +223,6 @@
         <!-- Total Controllers Card -->
         <div class="grid-item card-small stat-card" data-card-id="total-controllers">
             <div class="card-content">
-                <i class="fas fa-microchip stat-icon"></i>
                 <h2 class="stat-value text-primary">{{ total_controllers }}</h2>
                 <p class="stat-label">Total Controllers</p>
             </div>
@@ -521,7 +242,6 @@
         <!-- Offline Controllers Card -->
         <div class="grid-item card-small stat-card" data-card-id="offline-controllers">
             <div class="card-content">
-                <i class="fas fa-exclamation-triangle stat-icon"></i>
                 <h2 class="stat-value text-warning">{{ total_controllers - online_controllers }}</h2>
                 <p class="stat-label">Offline</p>
             </div>
@@ -542,10 +262,7 @@
         <div class="grid-item card-large map-card" data-card-id="map">
             <div class="card-content">
                 <div class="card-header-custom">
-                    <h5>
-                        <i class="fas fa-map-marked-alt icon"></i>
-                        Controller Locations
-                    </h5>
+                    <h5><i class="fas fa-map-marked-alt icon"></i> Controller Locations</h5>
                 </div>
                 <div id="map"></div>
             </div>
@@ -556,44 +273,37 @@
         <div class="grid-item card-medium controller-list-card" data-card-id="controller-list">
             <div class="card-content">
                 <div class="card-header-custom">
-                    <h5>
-                        <i class="fas fa-list icon"></i>
-                        Recent Controllers
-                    </h5>
+                    <h5><i class="fas fa-list icon"></i> Recent Controllers</h5>
                 </div>
                 <div class="controller-list">
                     {% if controllers %}
-                        {% for controller in controllers[:8] %}
-                        <div class="controller-item">
-                            <span class="controller-status {{ 'status-online' if controller.is_online else 'status-offline' }}"></span>
-                            <div class="controller-info">
-                                <p class="controller-name">{{ controller.name or controller.serial_number }}</p>
-                                <p class="controller-type">{{ controller.controller_type.title() }}</p>
-                            </div>
-                            <div class="controller-actions">
-                                <a href="{{ url_for('controllers.view_data', controller_id=controller.id) }}" 
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-chart-line"></i>
-                                </a>
-                            </div>
+                    {% for controller in controllers[:8] %}
+                    <div class="controller-item">
+                        <span class="controller-status {{ 'status-online' if controller.is_online else 'status-offline' }}"></span>
+                        <div class="controller-info">
+                            <p class="controller-name">{{ controller.name or controller.serial_number }}</p>
+                            <p class="controller-type">{{ controller.controller_type.title() }}</p>
                         </div>
-                        {% endfor %}
-                        
-                        {% if controllers|length > 8 %}
-                        <div class="text-center mt-2">
-                            <a href="{{ url_for('controllers.index') }}" class="btn btn-sm btn-outline-primary">
-                                View All
+                        <div class="controller-actions">
+                            <a href="{{ url_for('controllers.view_data', controller_id=controller.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-chart-line"></i>
                             </a>
                         </div>
-                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% if controllers|length > 8 %}
+                    <div class="text-center mt-2">
+                        <a href="{{ url_for('controllers.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    {% endif %}
                     {% else %}
-                        <div class="text-center py-3">
-                            <i class="fas fa-microchip fa-2x text-muted mb-2"></i>
-                            <p class="text-muted small">No Controllers</p>
-                            <a href="{{ url_for('controllers.index') }}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-plus"></i> Add Controller
-                            </a>
-                        </div>
+                    <div class="text-center py-3">
+                        <i class="fas fa-microchip fa-2x text-muted mb-2"></i>
+                        <p class="text-muted small">No Controllers</p>
+                        <a href="{{ url_for('controllers.index') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> Add Controller
+                        </a>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -604,10 +314,7 @@
         <div class="grid-item card-small" data-card-id="quick-actions">
             <div class="card-content">
                 <div class="card-header-custom">
-                    <h5>
-                        <i class="fas fa-bolt icon"></i>
-                        Quick Actions
-                    </h5>
+                    <h5><i class="fas fa-bolt icon"></i> Quick Actions</h5>
                 </div>
                 <div class="d-grid gap-2">
                     <a href="{{ url_for('controllers.index') }}" class="btn btn-sm btn-outline-primary">
@@ -627,23 +334,17 @@
         <div class="grid-item card-small" data-card-id="system-status">
             <div class="card-content">
                 <div class="card-header-custom">
-                    <h5>
-                        <i class="fas fa-heartbeat icon"></i>
-                        System Status
-                    </h5>
+                    <h5><i class="fas fa-heartbeat icon"></i> System Status</h5>
                 </div>
                 <div class="status-indicators">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <small>Database</small>
-                        <span class="badge bg-success">Online</span>
+                        <small>Database</small><span class="badge bg-success">Online</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <small>MQTT</small>
-                        <span class="badge bg-warning">Connecting</span>
+                        <small>MQTT</small><span class="badge bg-warning">Connecting</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <small>Web Server</small>
-                        <span class="badge bg-success">Running</span>
+                        <small>Web Server</small><span class="badge bg-success">Running</span>
                     </div>
                 </div>
             </div>
@@ -656,627 +357,518 @@
 
 {% block extra_js %}
 <script>
-// Dashboard state
+/* --------- Dynamically load OpenLayers (JS + CSS) ---------- */
+function ensureOpenLayers() {
+  return new Promise((resolve, reject) => {
+    if (window.ol && typeof ol.Map === 'function') return resolve();
+    if (window.__olLoading) {
+      const iv = setInterval(() => {
+        if (window.ol && typeof ol.Map === 'function') { clearInterval(iv); resolve(); }
+      }, 50);
+      return;
+    }
+    window.__olLoading = true;
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/ol@latest/ol.css';
+    document.head.appendChild(link);
+
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load OpenLayers'));
+    document.body.appendChild(script);
+  });
+}
+/* ---------------------------------------------------------- */
+</script>
+
+<script>
+/* ======= Dashboard state ======= */
 let editMode = false;
 let draggedElement = null;
 
-// Initialize dashboard
-document.addEventListener('DOMContentLoaded', function() {
-    // Remove any duplicate cards first
+/* ======= Map state (OpenLayers) ======= */
+let olMap = null;
+let vectorSource = null;
+let vectorLayer = null;
+let popupOverlay = null;
+const featuresById = {};  // id -> ol.Feature
+const REFRESH_MS = 10000;
+let mapStatusEl = null;
+
+document.addEventListener('DOMContentLoaded', async function () {
     removeDuplicateCards();
     initializeDragAndDrop();
     loadLayoutFromStorage();
-    // Initialize map after a short delay to ensure proper DOM rendering
-    setTimeout(() => {
-        initializeMap();
-    }, 100);
+
+    try { await ensureOpenLayers(); }
+    catch (e) { console.error(e); setMapStatus('Map library failed to load.', 'error'); return; }
+
+    setTimeout(initializeMap, 50);
+
+    setInterval(() => {
+        fetch('/api/stats/overview')
+            .then(r => r.json())
+            .then(updateStatistics)
+            .catch(err => console.error('Error updating stats:', err));
+    }, 30000);
 });
 
-// Remove duplicate cards that might be created during development
+/* ---------- Layout helpers ---------- */
 function removeDuplicateCards() {
-    const cardIds = ['welcome', 'total-controllers', 'online-controllers', 'offline-controllers', 'system-version', 'map', 'controller-list', 'quick-actions', 'system-status'];
-    
-    cardIds.forEach(cardId => {
-        const elements = document.querySelectorAll(`[data-card-id="${cardId}"].grid-item`);
-        // Keep only the first element, remove the rest
-        for (let i = 1; i < elements.length; i++) {
-            elements[i].remove();
-        }
+    const ids = ['welcome','total-controllers','online-controllers','offline-controllers','system-version','map','controller-list','quick-actions','system-status'];
+    ids.forEach(id => {
+        const els = document.querySelectorAll(`[data-card-id="${id}"].grid-item`);
+        for (let i = 1; i < els.length; i++) els[i].remove();
     });
 }
 
-// Edit mode toggle
 function toggleEditMode() {
     editMode = !editMode;
     const toggle = document.getElementById('editModeToggle');
     const text = document.getElementById('editModeText');
     const grid = document.getElementById('dashboardGrid');
     const panel = document.getElementById('cardManagementPanel');
-    
+
     if (editMode) {
-        toggle.classList.add('active');
-        text.textContent = 'Exit Edit';
-        grid.classList.add('edit-mode');
-        panel.style.display = 'block';
-        document.querySelectorAll('.grid-item').forEach(item => {
-            item.classList.add('edit-mode');
-        });
+        toggle.classList.add('active'); text.textContent = 'Exit Edit';
+        grid.classList.add('edit-mode'); panel.style.display = 'block';
+        document.querySelectorAll('.grid-item').forEach(i => i.classList.add('edit-mode'));
         updateCardCheckboxes();
     } else {
-        toggle.classList.remove('active');
-        text.textContent = 'Edit Layout';
-        grid.classList.remove('edit-mode');
-        panel.style.display = 'none';
-        document.querySelectorAll('.grid-item').forEach(item => {
-            item.classList.remove('edit-mode');
-        });
-        // Don't reload layout here since we save immediately on changes
+        toggle.classList.remove('active'); text.textContent = 'Edit Layout';
+        grid.classList.remove('edit-mode'); panel.style.display = 'none';
+        document.querySelectorAll('.grid-item').forEach(i => i.classList.remove('edit-mode'));
     }
 }
 
-// Card Management Functions
 function toggleCard(cardId) {
     const cards = document.querySelectorAll(`[data-card-id="${cardId}"]`);
     const checkbox = document.getElementById(`card-${cardId}`);
-    
-    if (cards.length > 0 && checkbox) {
-        cards.forEach(card => {
-            if (checkbox.checked) {
-                card.style.display = '';
-                console.log(`Showing card: ${cardId}`);
-            } else {
-                card.style.display = 'none';
-                console.log(`Hiding card: ${cardId}`);
-            }
-        });
-        // Save layout immediately when card visibility changes
-        saveLayoutToStorage();
-    }
+    if (!checkbox) return;
+    cards.forEach(card => {
+        card.style.display = checkbox.checked ? '' : 'none';
+        if (cardId === 'map' && checkbox.checked) setTimeout(resizeMap, 100);
+    });
+    saveLayoutToStorage();
 }
 
 function updateCardCheckboxes() {
     document.querySelectorAll('.grid-item').forEach(item => {
-        const cardId = item.dataset.cardId;
-        const checkbox = document.getElementById(`card-${cardId}`);
-        if (checkbox) {
-            checkbox.checked = item.style.display !== 'none';
-        }
+        const cb = document.getElementById(`card-${item.dataset.cardId}`);
+        if (cb) cb.checked = item.style.display !== 'none';
     });
 }
 
-function closeCardManagement() {
-    if (editMode) {
-        toggleEditMode();
-    }
-}
-
-function saveLayout() {
-    saveLayoutToStorage();
-    flash('Layout saved successfully!', 'success');
-}
+function closeCardManagement() { if (editMode) toggleEditMode(); }
+function saveLayout() { saveLayoutToStorage(); flash('Layout saved successfully!', 'success'); }
 
 function flash(message, type) {
-    // Create a simple flash message
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-    alertDiv.style.position = 'fixed';
-    alertDiv.style.top = '100px';
-    alertDiv.style.right = '20px';
-    alertDiv.style.zIndex = '9999';
-    alertDiv.style.minWidth = '300px';
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
-    `;
-    
-    document.body.appendChild(alertDiv);
-    
-    // Auto-remove after 3 seconds
-    setTimeout(() => {
-        if (alertDiv.parentElement) {
-            alertDiv.remove();
-        }
-    }, 3000);
+    const el = document.createElement('div');
+    el.className = `alert alert-${type} alert-dismissible fade show`;
+    el.style.position = 'fixed'; el.style.top = '100px'; el.style.right = '20px';
+    el.style.zIndex = '9999'; el.style.minWidth = '300px';
+    el.innerHTML = `${message}<button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
 }
 
-// Initialize drag and drop
 function initializeDragAndDrop() {
-    const gridItems = document.querySelectorAll('.grid-item');
-    
-    gridItems.forEach(item => {
-        // Make items draggable
+    const items = document.querySelectorAll('.grid-item');
+    items.forEach(item => {
         item.draggable = true;
-        
-        // Drag start
-        item.addEventListener('dragstart', function(e) {
-            if (!editMode) {
-                e.preventDefault();
-                return;
-            }
-            draggedElement = this;
-            this.classList.add('dragging');
+
+        item.addEventListener('dragstart', e => {
+            if (!editMode) { e.preventDefault(); return; }
+            draggedElement = item;
+            item.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', this.outerHTML);
+            e.dataTransfer.setData('text/html', item.outerHTML);
         });
-        
-        // Drag end
-        item.addEventListener('dragend', function(e) {
-            this.classList.remove('dragging');
+
+        item.addEventListener('dragend', () => {
+            item.classList.remove('dragging');
             draggedElement = null;
         });
-        
-        // Drag over
-        item.addEventListener('dragover', function(e) {
+
+        item.addEventListener('dragover', e => {
             if (!editMode || !draggedElement) return;
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
-            this.classList.add('drag-over');
+            item.classList.add('drag-over');
         });
-        
-        // Drag leave
-        item.addEventListener('dragleave', function(e) {
-            this.classList.remove('drag-over');
-        });
-        
-        // Drop
-        item.addEventListener('drop', function(e) {
+
+        item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+
+        item.addEventListener('drop', e => {
             if (!editMode || !draggedElement) return;
             e.preventDefault();
-            this.classList.remove('drag-over');
-            
-            // Swap elements
-            if (this !== draggedElement) {
-                const parent = this.parentNode;
+            item.classList.remove('drag-over');
+
+            if (item !== draggedElement) {
+                const parent = item.parentNode;
                 const draggedNext = draggedElement.nextSibling;
-                const thisNext = this.nextSibling;
-                
+                const thisNext = item.nextSibling;
+
                 parent.insertBefore(draggedElement, thisNext);
-                parent.insertBefore(this, draggedNext);
-                
-                // Save layout after position change
+                parent.insertBefore(item, draggedNext);
+
                 saveLayoutToStorage();
-                
-                // If map was moved, reinitialize it
-                if (draggedElement.dataset.cardId === 'map' || this.dataset.cardId === 'map') {
-                    setTimeout(() => {
-                        initializeMap();
-                    }, 100);
+                if (draggedElement.dataset.cardId === 'map' || item.dataset.cardId === 'map') {
+                    setTimeout(initializeMap, 100);
                 }
             }
         });
-        
-        // Resize functionality
-        const resizeHandle = item.querySelector('.resize-handle');
-        if (resizeHandle) {
-            resizeHandle.addEventListener('mousedown', function(e) {
+
+        const handle = item.querySelector('.resize-handle');
+        if (handle) {
+            handle.addEventListener('mousedown', e => {
                 if (!editMode) return;
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const startX = e.clientX;
-                const startY = e.clientY;
-                const startRect = item.getBoundingClientRect();
-                
-                function onMouseMove(e) {
-                    const deltaX = e.clientX - startX;
-                    const deltaY = e.clientY - startY;
-                    
-                    // Calculate new size based on grid
-                    const gridSize = 100; // Grid row height
-                    const newCols = Math.max(3, Math.round((startRect.width + deltaX) / (startRect.width / getCurrentCols(item))));
-                    const newRows = Math.max(2, Math.round((startRect.height + deltaY) / gridSize));
-                    
-                    // Update CSS grid properties
+                e.preventDefault(); e.stopPropagation();
+                const startX = e.clientX, startY = e.clientY, startRect = item.getBoundingClientRect();
+
+                function onMove(e2) {
+                    const dx = e2.clientX - startX, dy = e2.clientY - startY;
+                    const gridSize = 100;
+                    const newCols = Math.max(3, Math.round((startRect.width + dx) / (startRect.width / getCurrentCols(item))));
+                    const newRows = Math.max(2, Math.round((startRect.height + dy) / gridSize));
                     item.style.gridColumn = `span ${Math.min(newCols, 12)}`;
                     item.style.gridRow = `span ${newRows}`;
-                    
-                    // If this is a map card, trigger map resize
-                    if (item.dataset.cardId === 'map') {
-                        debounceMapResize();
-                    }
+                    if (item.dataset.cardId === 'map') debounceMapResize();
                 }
-                
-                function onMouseUp() {
-                    document.removeEventListener('mousemove', onMouseMove);
-                    document.removeEventListener('mouseup', onMouseUp);
+                function onUp() {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', onUp);
                     saveLayoutToStorage();
-                    
-                    // Final map resize for map cards
-                    if (item.dataset.cardId === 'map') {
-                        setTimeout(() => {
-                            resizeMap();
-                        }, 100);
-                    }
+                    if (item.dataset.cardId === 'map') setTimeout(resizeMap, 100);
                 }
-                
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', onUp);
             });
         }
     });
 }
 
-// Get current column span of an element
-function getCurrentCols(element) {
-    const computedStyle = window.getComputedStyle(element);
-    const gridColumn = computedStyle.gridColumn;
-    const match = gridColumn.match(/span (\d+)/);
-    return match ? parseInt(match[1]) : 3;
+function getCurrentCols(el) {
+    const gc = window.getComputedStyle(el).gridColumn;
+    const m = gc.match(/span (\d+)/);
+    return m ? parseInt(m[1]) : 3;
 }
 
-// Map resizing utilities
 let mapResizeTimeout;
-let currentMap = null;
+function debounceMapResize() { clearTimeout(mapResizeTimeout); mapResizeTimeout = setTimeout(resizeMap, 100); }
+function resizeMap() { if (olMap) olMap.updateSize(); }
 
-function debounceMapResize() {
-    clearTimeout(mapResizeTimeout);
-    mapResizeTimeout = setTimeout(resizeMap, 100);
-}
-
-function resizeMap() {
-    if (currentMap) {
-        try {
-            currentMap.invalidateSize();
-            console.log('Map resized');
-        } catch (error) {
-            console.warn('Error resizing map:', error);
-        }
-    }
-}
-
-// Save layout to localStorage
 function saveLayoutToStorage() {
     const layout = [];
-    document.querySelectorAll('.grid-item').forEach((item, index) => {
-        const cardId = item.dataset.cardId;
+    document.querySelectorAll('.grid-item').forEach((item, i) => {
         const style = window.getComputedStyle(item);
-        const isVisible = item.style.display !== 'none';
         layout.push({
-            cardId: cardId,
-            order: index,
+            cardId: item.dataset.cardId,
+            order: i,
             gridColumn: item.style.gridColumn || style.gridColumn,
             gridRow: item.style.gridRow || style.gridRow,
-            visible: isVisible
+            visible: item.style.display !== 'none'
         });
     });
-    console.log('Saving layout:', layout);
     localStorage.setItem('dashboardLayout', JSON.stringify(layout));
 }
 
-// Load layout from localStorage
 function loadLayoutFromStorage() {
     const saved = localStorage.getItem('dashboardLayout');
-    if (!saved) {
-        console.log('No saved layout found');
-        return;
-    }
-    
+    if (!saved) return;
     try {
-        const layout = JSON.parse(saved);
-        console.log('Loading layout:', layout);
-        
-        // Sort layout by order to restore positioning
-        layout.sort((a, b) => a.order - b.order);
-        
+        const layout = JSON.parse(saved).sort((a,b)=>a.order-b.order);
         const grid = document.getElementById('dashboardGrid');
-        const gridItems = Array.from(document.querySelectorAll('.grid-item'));
-        
-        // Create a map of current elements by cardId
-        const elementMap = new Map();
-        gridItems.forEach(element => {
-            const cardId = element.dataset.cardId;
-            if (cardId) {
-                elementMap.set(cardId, element);
-            }
+        const items = Array.from(document.querySelectorAll('.grid-item'));
+        const map = new Map(items.map(el => [el.dataset.cardId, el]));
+        layout.forEach(conf => {
+            const el = map.get(conf.cardId);
+            if (!el) return;
+            el.remove();
+            if (conf.gridColumn && conf.gridColumn !== 'auto') el.style.gridColumn = conf.gridColumn;
+            if (conf.gridRow && conf.gridRow !== 'auto') el.style.gridRow = conf.gridRow;
+            el.style.display = conf.visible ? '' : 'none';
+            grid.appendChild(el);
         });
-        
-        // Reorder elements according to saved layout
-        layout.forEach((item, index) => {
-            const element = elementMap.get(item.cardId);
-            if (element) {
-                // Remove element from current position
-                element.remove();
-                
-                // Apply sizing
-                if (item.gridColumn && item.gridColumn !== 'auto') {
-                    element.style.gridColumn = item.gridColumn;
-                }
-                if (item.gridRow && item.gridRow !== 'auto') {
-                    element.style.gridRow = item.gridRow;
-                }
-                
-                // Apply visibility
-                if (item.visible === false || item.visible === 'false') {
-                    element.style.display = 'none';
-                    console.log(`Hiding card on load: ${item.cardId}`);
-                } else {
-                    element.style.display = '';
-                    console.log(`Showing card on load: ${item.cardId}`);
-                }
-                
-                // Re-append element to restore order
-                grid.appendChild(element);
-            }
-        });
-        
-        // Update checkboxes if in edit mode
-        if (editMode) {
-            updateCardCheckboxes();
-        }
-        
-        // Re-initialize map after layout changes
-        setTimeout(() => {
-            initializeMap();
-        }, 200);
-        
+        if (editMode) updateCardCheckboxes();
+        setTimeout(initializeMap, 200);
     } catch (e) {
         console.warn('Failed to load dashboard layout:', e);
-        localStorage.removeItem('dashboardLayout'); // Clear corrupt data
+        localStorage.removeItem('dashboardLayout');
     }
 }
 
-// Initialize map
+/* =================== MAP (OpenLayers) =================== */
 function initializeMap() {
-    const mapElement = document.getElementById('map');
-    if (!mapElement) {
-        console.log('Map element not found');
-        return;
+    const mapEl = document.getElementById('map');
+    if (!mapEl) return;
+    const mapCard = mapEl.closest('.grid-item');
+    if (mapCard && mapCard.style.display === 'none') return;
+
+    // Status overlay (create once)
+    if (!mapStatusEl) {
+        mapStatusEl = document.createElement('div');
+        mapStatusEl.style.position = 'absolute';
+        mapStatusEl.style.inset = '0';
+        mapStatusEl.style.display = 'none';
+        mapStatusEl.style.alignItems = 'center';
+        mapStatusEl.style.justifyContent = 'center';
+        mapStatusEl.style.pointerEvents = 'none';
+        mapStatusEl.innerHTML = `
+          <div style="background:rgba(255,255,255,.92); border:1px solid #e5e7eb; padding:12px 14px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.08); font-size:14px; color:#444;">
+            <i class="fas fa-info-circle"></i> <span id="mapStatusMsg">Loading map…</span>
+          </div>`;
+        mapEl.appendChild(mapStatusEl);
     }
-    
-    // Check if the map card is visible
-    const mapCard = mapElement.closest('.grid-item');
-    if (mapCard && mapCard.style.display === 'none') {
-        console.log('Map card is hidden, skipping initialization');
-        return;
-    }
-    
-    // Clear any existing content and show loading
-    mapElement.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Loading map...</div>';
-    
-    try {
-        // Clear any existing content and show loading
-        mapElement.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Loading map...</div>';
-        
-        const map = L.map('map', {
-            // Disable default dragging to implement custom inverted dragging
-            dragging: false
-        }).setView([52.3676, 4.9041], 8); // Default to Netherlands
-        currentMap = map; // Store reference for resizing
 
-        // Add tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Implement custom inverted dragging behavior
-        let isDragging = false;
-        let lastMousePos = null;
-
-        map.getContainer().addEventListener('mousedown', function(e) {
-            isDragging = true;
-            lastMousePos = {x: e.clientX, y: e.clientY};
-            map.getContainer().style.cursor = 'grabbing';
-            e.preventDefault();
+    if (!olMap) {
+        const center = ol.proj.fromLonLat([4.9041, 52.3676]); // Amsterdam
+        vectorSource = new ol.source.Vector();
+        vectorLayer  = new ol.layer.Vector({
+            source: vectorSource,
+            style: defaultFeatureStyle
         });
 
-        document.addEventListener('mousemove', function(e) {
-            if (!isDragging || !lastMousePos) return;
-            
-            // Calculate mouse movement delta
-            const deltaX = e.clientX - lastMousePos.x;
-            const deltaY = e.clientY - lastMousePos.y;
-            
-            // Get current map center
-            const center = map.getCenter();
-            
-            // Convert pixel movement to lat/lng movement (inverted)
-            const zoom = map.getZoom();
-            const pixelsPerDegree = 256 * Math.pow(2, zoom) / 360;
-            
-            // Natural movement: positive deltaX moves map right, positive deltaY moves map down
-            const newLat = center.lat + (deltaY / pixelsPerDegree);
-            const newLng = center.lng - (deltaX / (pixelsPerDegree * Math.cos(center.lat * Math.PI / 180)));
-            
-            // Update map center
-            map.setView([newLat, newLng], zoom, {animate: false});
-            
-            // Update last mouse position
-            lastMousePos = {x: e.clientX, y: e.clientY};
+        olMap = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Tile({ source: new ol.source.OSM() }),
+                vectorLayer
+            ],
+            view: new ol.View({ center, zoom: 8 })
         });
 
-        document.addEventListener('mouseup', function(e) {
-            if (isDragging) {
-                isDragging = false;
-                lastMousePos = null;
-                map.getContainer().style.cursor = 'grab';
+        // Popup overlay
+        const popup = document.createElement('div');
+        popup.className = 'ol-popup';
+        popupOverlay = new ol.Overlay({ element: popup, offset: [0, -10], positioning: 'bottom-center', stopEvent: true });
+        olMap.addOverlay(popupOverlay);
+
+        // Click to show popup
+        olMap.on('singleclick', function (evt) {
+            const feature = olMap.forEachFeatureAtPixel(evt.pixel, f => f);
+            if (feature) {
+                const c = feature.get('controller');
+                popup.innerHTML = buildPopupHtml(c);
+                popupOverlay.setPosition(evt.coordinate);
+            } else {
+                popupOverlay.setPosition(undefined);
             }
         });
-
-        // Set initial cursor
-        map.getContainer().style.cursor = 'grab';
-
-        // Custom markers for different controller types
-        const markerIcons = {
-            speedradar: L.divIcon({
-                html: '<i class="fas fa-tachometer-alt"></i>',
-                iconSize: [30, 30],
-                className: 'custom-div-icon custom-marker-speedradar'
-            }),
-            beaufortmeter: L.divIcon({
-                html: '<i class="fas fa-wind"></i>',
-                iconSize: [30, 30],
-                className: 'custom-div-icon custom-marker-beaufortmeter'
-            }),
-            weatherstation: L.divIcon({
-                html: '<i class="fas fa-cloud-sun"></i>',
-                iconSize: [30, 30],
-                className: 'custom-div-icon custom-marker-weatherstation'
-            }),
-            aicamera: L.divIcon({
-                html: '<i class="fas fa-camera"></i>',
-                iconSize: [30, 30],
-                className: 'custom-div-icon custom-marker-aicamera'
-            }),
-            default: L.divIcon({
-                html: '<i class="fas fa-microchip"></i>',
-                iconSize: [30, 30],
-                className: 'custom-div-icon custom-marker-default'
-            })
-        };
-
-        // Load controller data and add markers
-        fetch('/map-data')
-            .then(response => response.json())
-            .then(data => {
-                if (data.length > 0) {
-                    const group = new L.featureGroup();
-                
-                data.forEach((controller, index) => {
-                    const icon = markerIcons[controller.type] || markerIcons.default;
-                    const statusClass = controller.is_online ? 'online' : 'offline';
-                    
-                    // Use actual coordinates for positioning
-                    const marker = L.marker([controller.latitude, controller.longitude], {
-                        icon: icon
-                    }).addTo(map);
-                    
-                    // Add marker to group for auto-fitting bounds
-                    group.addLayer(marker);
-                    
-                    // Create popup content
-                    const popupContent = `
-                        <div class="marker-popup">
-                            <h6 style="margin: 0 0 8px 0; color: #333; font-weight: 600;">${controller.name}</h6>
-                            <p class="mb-1" style="margin: 0 0 4px 0; display: flex; align-items: center;">
-                                <span class="controller-status status-${statusClass}" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background-color: ${controller.is_online ? '#28a745' : '#dc3545'};"></span>
-                                <span style="font-size: 13px; color: ${controller.is_online ? '#28a745' : '#dc3545'}; font-weight: 500;">${controller.is_online ? 'Online' : 'Offline'}</span>
-                            </p>
-                            <p class="mb-1" style="margin: 0 0 4px 0; font-size: 13px; color: #666;"><strong>Type:</strong> ${controller.type.charAt(0).toUpperCase() + controller.type.slice(1)}</p>
-                            <p class="mb-1" style="margin: 0 0 4px 0; font-size: 13px; color: #666;"><strong>Serial:</strong> ${controller.serial_number}</p>
-                            ${controller.last_seen ? `<p class="mb-2" style="margin: 0 0 8px 0; font-size: 12px; color: #888;"><strong>Last Seen:</strong> ${new Date(controller.last_seen).toLocaleString()}</p>` : ''}
-                            <div class="text-center" style="margin-top: 10px;">
-                                <a href="/controllers/${controller.id}/data" class="btn btn-sm btn-primary" style="margin-right: 4px; padding: 4px 8px; font-size: 12px; text-decoration: none; background: #007bff; color: white; border-radius: 4px; display: inline-block;">
-                                    <i class="fas fa-chart-line"></i> View Data
-                                </a>
-                                <a href="/controllers/${controller.id}/edit" class="btn btn-sm btn-outline-secondary" style="padding: 4px 8px; font-size: 12px; text-decoration: none; border: 1px solid #6c757d; color: #6c757d; border-radius: 4px; display: inline-block;">
-                                    <i class="fas fa-edit"></i> Edit
-                                </a>
-                            </div>
-                        </div>
-                    `;
-                    
-                    marker.bindPopup(popupContent);
-                });
-                
-                // Fit map to show all markers with padding
-                if (group.getLayers().length > 0) {
-                    map.fitBounds(group.getBounds().pad(0.1));
-                } else {
-                    // No markers, show a default message
-                    mapElement.innerHTML = '<div class="text-center p-4 text-muted"><i class="fas fa-map-marker-alt fa-2x mb-2"></i><br><p>No controllers with location data</p><small>Add location coordinates to your controllers to see them on the map</small></div>';
-                }
-                
-                // Trigger initial resize to ensure map renders correctly
-                setTimeout(() => {
-                    map.invalidateSize();
-                }, 100);
-            }
-        })
-        .catch(error => {
-            console.error('Error loading map data:', error);
-            mapElement.innerHTML = '<div class="text-center p-4 text-danger"><i class="fas fa-exclamation-triangle"></i><br>Error loading map data</div>';
-        });
-
-        // Auto-refresh dashboard data every 30 seconds
-        setInterval(() => {
-            // Update statistics if needed
-            fetch('/api/stats/overview')
-                .then(response => response.json())
-                .then(data => {
-                    // Update statistics
-                    updateStatistics(data);
-                })
-                .catch(error => console.error('Error updating stats:', error));
-        }, 30000);
-        
-    } catch (error) {
-        console.error('Error initializing map:', error);
-        mapElement.innerHTML = '<div class="text-center p-4 text-danger"><i class="fas fa-exclamation-triangle"></i><br>Failed to initialize map</div>';
     }
+
+    setMapStatus('Loading data…', 'info');
+    refreshMapData(true);
+    startMapAutoRefresh();
+    setTimeout(() => olMap && olMap.updateSize(), 100);
 }
 
-// Update statistics
+/* ---- Map marker style: maps-like pin (green/red) ---- */
+function getIconStyleForController(c) {
+  const online = !!c?.is_online;
+  const fill   = online ? '#28a745' : '#dc3545';   // body color
+  const stroke = online ? '#166F2D' : '#912029';   // border color
+  const dot    = '#ffffff';                        // inner dot
+
+  const svg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+    <!-- drop shadow -->
+    <ellipse cx="24" cy="44" rx="8" ry="3" fill="rgba(0,0,0,0.25)"/>
+    <!-- pin -->
+    <g transform="translate(0,0)">
+      <path d="M24 4
+               C14 4 6 12 6 22
+               c0 9.5 9.2 17.7 16.3 23.9
+               a2.5 2.5 0 0 0 3.4 0C32.8 39.7 42 31.5 42 22
+               C42 12 34 4 24 4z"
+            fill="${fill}" stroke="${stroke}" stroke-width="2"/>
+      <circle cx="24" cy="22" r="7" fill="${dot}" />
+    </g>
+  </svg>`.trim();
+
+  const url = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+
+  return new ol.style.Style({
+    image: new ol.style.Icon({
+      src: url,
+      anchor: [0.5, 1],           // bottom tip sits on the coordinate
+      anchorXUnits: 'fraction',
+      anchorYUnits: 'fraction'
+    })
+  });
+}
+
+function defaultFeatureStyle(feature) {
+  const c = feature.get('controller') || {};
+  return getIconStyleForController(c);
+}
+
+function startMapAutoRefresh() {
+    if (window.__olRefreshTimer) return;
+    window.__olRefreshTimer = setInterval(() => refreshMapData(false), REFRESH_MS);
+}
+
+function setMapStatus(msg, type) {
+    if (!mapStatusEl) return;
+    mapStatusEl.style.display = 'flex';
+    const span = mapStatusEl.querySelector('#mapStatusMsg');
+    if (span) span.textContent = msg;
+    const icon = mapStatusEl.querySelector('i');
+    if (icon) {
+        icon.className = type === 'error' ? 'fas fa-exclamation-triangle'
+                       : type === 'empty' ? 'fas fa-map-marker-alt'
+                       : 'fas fa-info-circle';
+    }
+    const box = mapStatusEl.firstElementChild;
+    if (box) {
+        box.style.borderColor = type === 'error' ? '#f5c2c7' : type === 'empty' ? '#cfe2ff' : '#e5e7eb';
+        box.style.background = type === 'error' ? 'rgba(255,245,245,.95)'
+                             : type === 'empty' ? 'rgba(248,249,255,.95)'
+                             : 'rgba(255,255,255,.92)';
+    }
+}
+function clearMapStatus() { if (mapStatusEl) mapStatusEl.style.display = 'none'; }
+
+function refreshMapData(fitOnFirstLoad = false) {
+    fetch('/api/map-data', {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(async res => {
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText} — ${text.slice(0,180)}`);
+        try { return JSON.parse(text); }
+        catch(e){ console.error('[map] Non-JSON body:', text.slice(0,200)); throw new Error(`Invalid JSON: ${e.message}`); }
+    })
+    .then(payload => {
+        const data = unwrapArray(payload);
+        if (!Array.isArray(data)) throw new Error('Expected array from /api/map-data');
+
+        const seen = new Set();
+        let added = 0, updated = 0, removed = 0, skipped = 0;
+
+        data.forEach(item => {
+            const id  = item.id ?? item.controller_id ?? item.serial_number ?? item.name;
+            const lat = toNum(item.latitude);
+            const lng = toNum(item.longitude);
+            if (!id || !isFinite(lat) || !isFinite(lng)) { skipped++; return; }
+
+            seen.add(String(id));
+            const key = String(id);
+            const coord3857 = ol.proj.fromLonLat([lng, lat]);
+
+            if (featuresById[key]) {
+                featuresById[key].setGeometry(new ol.geom.Point(coord3857));
+                featuresById[key].set('controller', item);
+                updated++;
+            } else {
+                const feat = new ol.Feature({ geometry: new ol.geom.Point(coord3857), controller: item });
+                feat.setStyle(defaultFeatureStyle(feat));
+                vectorSource.addFeature(feat);
+                featuresById[key] = feat;
+                added++;
+            }
+        });
+
+        // remove vanished
+        Object.keys(featuresById).forEach(key => {
+            if (!seen.has(key)) {
+                vectorSource.removeFeature(featuresById[key]);
+                delete featuresById[key];
+                removed++;
+            }
+        });
+
+        // Fit once
+        if (fitOnFirstLoad) {
+            const feats = vectorSource.getFeatures();
+            if (feats.length > 0) {
+                const extent = vectorSource.getExtent();
+                if (extent && isFinite(extent[0])) {
+                    olMap.getView().fit(extent, { padding: [40, 40, 40, 40], duration: 300, maxZoom: 15 });
+                    clearMapStatus();
+                }
+            } else {
+                setMapStatus('No controllers with location data', 'empty');
+            }
+        } else {
+            if (vectorSource.getFeatures().length > 0) clearMapStatus();
+            else setMapStatus('No controllers with location data', 'empty');
+        }
+
+        console.log('[map] added:', added, 'updated:', updated, 'removed:', removed, 'skipped:', skipped);
+    })
+    .catch(err => {
+        console.error('[map] Error loading map data:', err);
+        setMapStatus('Error loading data', 'error');
+    });
+}
+
+function buildPopupHtml(c) {
+    const name = c.name || c.serial_number || 'Unnamed';
+    const type = (c.type || c.controller_type || 'default') + '';
+    const capType = type.charAt(0).toUpperCase() + type.slice(1);
+    const online = !!c.is_online;
+    const statusColor = online ? '#28a745' : '#dc3545';
+    const lastSeen = c.last_seen ? new Date(c.last_seen).toLocaleString() : null;
+    const id = c.id ?? c.controller_id ?? '';
+
+    return `
+        <div class="marker-popup">
+            <h6 style="margin:0 0 8px 0; color:#333; font-weight:600;">${escapeHtml(name)}</h6>
+            <p style="margin:0 0 4px 0; display:flex; align-items:center;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:${statusColor};"></span>
+                <span style="font-size:13px;color:${statusColor};font-weight:500;">${online ? 'Online' : 'Offline'}</span>
+            </p>
+            <p style="margin:0 0 4px 0; font-size:13px; color:#666;"><strong>Type:</strong> ${escapeHtml(capType)}</p>
+            ${c.serial_number ? `<p style="margin:0 0 4px 0; font-size:13px; color:#666;"><strong>Serial:</strong> ${escapeHtml(c.serial_number)}</p>` : ''}
+            ${lastSeen ? `<p style="margin:0 0 8px 0; font-size:12px; color:#888;"><strong>Last Seen:</strong> ${escapeHtml(lastSeen)}</p>` : ''}
+            <div class="text-center" style="margin-top:10px;">
+                ${id ? `<a href="/controllers/${id}/data" class="btn btn-sm btn-primary" style="margin-right:4px;padding:4px 8px;font-size:12px;"><i class="fas fa-chart-line"></i> View Data</a>` : ''}
+                ${id ? `<a href="/controllers/${id}/edit" class="btn btn-sm btn-outline-secondary" style="padding:4px 8px;font-size:12px;"><i class="fas fa-edit"></i> Edit</a>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+/* -------- helpers -------- */
+function unwrapArray(payload) {
+    if (Array.isArray(payload)) return payload;
+    const cands = [payload?.data, payload?.items, payload?.controllers, payload?.results?.items, payload?.result?.items, payload?.payload];
+    for (const c of cands) if (Array.isArray(c)) return c;
+    return null;
+}
+function toNum(v) { if (v == null) return NaN; if (typeof v === 'string') v = v.trim().replace(',', '.'); return parseFloat(v); }
+function escapeHtml(v) {
+    return String(v).replace(/[&<>"'`=\/]/g, s => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+        "'": '&#39;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;'
+    }[s]));
+}
+
+/* === stats === */
 function updateStatistics(data) {
-    // Update stat cards with new data
     if (data.total_controllers !== undefined) {
         const totalCard = document.querySelector('[data-card-id="total-controllers"] .stat-value');
         if (totalCard) totalCard.textContent = data.total_controllers;
     }
-    
     if (data.online_controllers !== undefined) {
         const onlineCard = document.querySelector('[data-card-id="online-controllers"] .stat-value');
         if (onlineCard) onlineCard.textContent = data.online_controllers;
-        
         const offlineCard = document.querySelector('[data-card-id="offline-controllers"] .stat-value');
         if (offlineCard) offlineCard.textContent = data.total_controllers - data.online_controllers;
     }
 }
 
-// Reset layout to default
-function resetLayout() {
-    localStorage.removeItem('dashboardLayout');
-    location.reload();
-}
-
-// Add keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    // Ctrl/Cmd + E to toggle edit mode
-    if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
-        e.preventDefault();
-        toggleEditMode();
-    }
-    
-    // Escape to exit edit mode
-    if (e.key === 'Escape' && editMode) {
-        toggleEditMode();
-    }
+/* === reset / shortcuts === */
+function resetLayout() { localStorage.removeItem('dashboardLayout'); location.reload(); }
+document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'e') { e.preventDefault(); toggleEditMode(); }
+    if (e.key === 'Escape' && editMode) toggleEditMode();
 });
 </script>
-
-<style>
-.custom-div-icon {
-    background: #007bff;
-    color: white;
-    border-radius: 50%;
-    text-align: center;
-    line-height: 30px;
-    border: 2px solid white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-}
-
-.custom-marker-speedradar { background: #17a2b8; }
-.custom-marker-beaufortmeter { background: #28a745; }
-.custom-marker-weatherstation { background: #ffc107; color: #000; }
-.custom-marker-aicamera { background: #dc3545; }
-
-.marker-popup {
-    min-width: 200px;
-}
-
-.marker-popup .controller-status {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-right: 5px;
-}
-
-.marker-popup .status-online {
-    background-color: #28a745;
-}
-
-.marker-popup .status-offline {
-    background-color: #dc3545;
-}
-</style>
 {% endblock %}

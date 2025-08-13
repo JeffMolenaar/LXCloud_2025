@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_login import LoginManager
 from flask_cors import CORS
 import os
@@ -189,6 +189,72 @@ def create_app():
     app.register_blueprint(users_bp, url_prefix='/users')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(api_bp, url_prefix='/api')
+    
+    # Add global error handlers for API routes to ensure JSON responses
+    @app.errorhandler(404)
+    def not_found_error(error):
+        """Handle 404 errors for API routes with JSON response"""
+        if request.path.startswith('/api/'):
+            return jsonify({
+                'error': 'Endpoint not found',
+                'message': f'The requested endpoint {request.path} was not found.',
+                'path': request.path,
+                'method': request.method,
+                'available_api_endpoints': {
+                    'register_controller': 'POST /api/controllers/register',
+                    'update_data': 'POST /api/controllers/{serial}/data',
+                    'update_status': 'POST /api/controllers/{serial}/status',
+                    'modify_controller': 'PUT /api/controllers/{serial}',
+                    'get_controller': 'GET /api/controllers/{serial}',
+                    'list_controllers': 'GET /api/controllers/list',
+                    'debug': 'GET /api/controllers/debug'
+                }
+            }), 404
+        # For non-API routes, use default HTML error page
+        return error
+    
+    @app.errorhandler(405)
+    def method_not_allowed_error(error):
+        """Handle 405 Method Not Allowed errors for API routes with JSON response"""
+        if request.path.startswith('/api/'):
+            # Clean the path by removing trailing whitespace, newlines, etc.
+            clean_path = request.path.strip().rstrip('\n\r\t ')
+            
+            # Special handling for register endpoint with malformed URLs
+            if clean_path == '/api/controllers/register' or clean_path.startswith('/api/controllers/register'):
+                if request.method == 'POST':
+                    # This should work, but might be hitting due to malformed URL
+                    return jsonify({
+                        'error': 'POST request failed due to malformed URL',
+                        'message': f'POST method is supported for /api/controllers/register, but your request path "{request.path}" may have extra characters.',
+                        'original_path': request.path,
+                        'cleaned_path': clean_path,
+                        'method': request.method,
+                        'solution': 'Ensure your URL is exactly /api/controllers/register without trailing characters',
+                        'allowed_methods': ['POST', 'GET'],
+                        'hint': 'Check for trailing newlines, spaces, or other characters in your URL.'
+                    }), 400  # Return 400 instead of 405 for malformed URL
+                else:
+                    return jsonify({
+                        'error': 'Method not allowed',
+                        'message': f'The method {request.method} is not allowed for endpoint /api/controllers/register.',
+                        'path': clean_path,
+                        'method': request.method,
+                        'allowed_methods': ['POST', 'GET'],
+                        'hint': 'Use POST method for registration or GET for registration information.'
+                    }), 405
+            
+            # For other API endpoints
+            return jsonify({
+                'error': 'Method not allowed',
+                'message': f'The method {request.method} is not allowed for endpoint {request.path}.',
+                'path': request.path,
+                'method': request.method,
+                'allowed_methods': getattr(error, 'valid_methods', None) or ['GET', 'POST', 'PUT', 'DELETE'],
+                'hint': 'Check the API documentation for supported methods on this endpoint.'
+            }), 405
+        # For non-API routes, use default HTML error page  
+        return error
     
     # Add custom error handler for template not found
     @app.errorhandler(500)
