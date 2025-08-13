@@ -235,19 +235,109 @@
     color: hsl(var(--muted-foreground));
 }
 
-/* Modal Styles */
+/* Modal Styles - Fix positioning issues */
+.modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 1055 !important;
+    display: none;
+    width: 100% !important;
+    height: 100% !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    outline: 0;
+}
+
+.modal.fade {
+    opacity: 0;
+    transition: opacity 0.15s linear;
+}
+
+.modal.show {
+    opacity: 1;
+}
+
+.modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 1050 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.modal-dialog {
+    position: relative;
+    width: auto;
+    margin: 0.5rem;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 1rem);
+}
+
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+    transform: translate(0, -50px);
+}
+
+.modal.show .modal-dialog {
+    transform: none;
+}
+
+@media (min-width: 576px) {
+    .modal-dialog {
+        max-width: 500px;
+        margin: 1.75rem auto;
+    }
+}
+
 .modal-modern .modal-content {
     border-radius: calc(var(--radius) + 4px);
     border: 1px solid hsl(var(--border));
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: #fff;
+    background-clip: padding-box;
 }
 
 .modal-modern .modal-header {
     border-bottom: 1px solid hsl(var(--border));
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-modern .modal-body {
+    position: relative;
+    flex: 1 1 auto;
+    padding: 1.5rem;
 }
 
 .modal-modern .modal-footer {
     border-top: 1px solid hsl(var(--border));
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Ensure modal appears on top of everything */
+.modal-open {
+    overflow: hidden !important;
+}
+
+.modal-open .modal {
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 /* Icons */
@@ -587,12 +677,102 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Bootstrap modal
+    // Custom Modal Implementation for Bootstrap Modal functionality
+    class SimpleModal {
+        constructor(element) {
+            this.element = element;
+            this.backdrop = null;
+            this.isVisible = false;
+        }
+        
+        show() {
+            if (this.isVisible) return;
+            
+            // Create backdrop
+            this.backdrop = document.createElement('div');
+            this.backdrop.className = 'modal-backdrop fade show';
+            this.backdrop.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                z-index: 1050 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background-color: rgba(0, 0, 0, 0.5) !important;
+            `;
+            
+            // Show modal
+            document.body.appendChild(this.backdrop);
+            document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+            
+            // Show the modal element
+            this.element.style.display = 'block';
+            this.element.classList.add('show');
+            this.element.style.cssText += `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                z-index: 1055 !important;
+                width: 100% !important;
+                height: 100% !important;
+                overflow-x: hidden;
+                overflow-y: auto;
+                outline: 0;
+            `;
+            
+            this.isVisible = true;
+            
+            // Focus on first input
+            const firstInput = this.element.querySelector('input, textarea, select');
+            if (firstInput) {
+                setTimeout(() => firstInput.focus(), 100);
+            }
+            
+            // Handle backdrop clicks
+            this.backdrop.addEventListener('click', () => this.hide());
+            
+            // Handle escape key
+            this.escapeHandler = (e) => {
+                if (e.key === 'Escape') this.hide();
+            };
+            document.addEventListener('keydown', this.escapeHandler);
+        }
+        
+        hide() {
+            if (!this.isVisible) return;
+            
+            // Hide modal
+            this.element.classList.remove('show');
+            this.element.style.display = 'none';
+            this.element.style.cssText = '';
+            
+            // Remove backdrop
+            if (this.backdrop) {
+                document.body.removeChild(this.backdrop);
+                this.backdrop = null;
+            }
+            
+            // Restore body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            
+            this.isVisible = false;
+            
+            // Remove escape handler
+            if (this.escapeHandler) {
+                document.removeEventListener('keydown', this.escapeHandler);
+                this.escapeHandler = null;
+            }
+        }
+    }
+    
+    // Initialize modal
     const bindModalEl = document.getElementById('bindControllerModal');
     let bindModal = null;
     
-    if (bindModalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-        bindModal = new bootstrap.Modal(bindModalEl);
+    if (bindModalEl) {
+        bindModal = new SimpleModal(bindModalEl);
         
         // Handle all bind controller button clicks
         const bindButtons = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#bindControllerModal"]');
@@ -602,8 +782,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 bindModal.show();
             });
         });
-    } else {
-        console.warn('Bootstrap not found, modal functionality may not work properly');
+        
+        // Handle close buttons
+        const closeButtons = bindModalEl.querySelectorAll('[data-bs-dismiss="modal"]');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                bindModal.hide();
+            });
+        });
     }
 
     // Handle form submission for bind controller
