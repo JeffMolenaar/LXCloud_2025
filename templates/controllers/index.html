@@ -4,756 +4,606 @@
 
 {% block extra_css %}
 <style>
-.controller-card {
-    transition: all 0.3s ease;
-    border: 1px solid #e3e6f0;
-    border-radius: 0.5rem;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+/* ===== Page shell (match dashboard) ===== */
+.page-wrap {
+    min-height: calc(100vh - 120px);
+    background: #f8f9fa;
 }
-
-.controller-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.2);
-}
-
-.controller-status-indicator {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    display: inline-block;
-    animation: pulse 2s infinite;
-}
-
-.controller-status-indicator.online {
-    background-color: #1cc88a;
-}
-
-.controller-status-indicator.offline {
-    background-color: #e74a3b;
-    animation: none;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
-.controller-type-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: white;
-    margin-bottom: 1rem;
-}
-
-.controller-type-icon.speedradar { background: linear-gradient(45deg, #4e73df, #224abe); }
-.controller-type-icon.beaufortmeter { background: linear-gradient(45deg, #1cc88a, #17a2b8); }
-.controller-type-icon.weatherstation { background: linear-gradient(45deg, #f6c23e, #e0a800); }
-.controller-type-icon.aicamera { background: linear-gradient(45deg, #e74a3b, #c0392b); }
-.controller-type-icon.default { background: linear-gradient(45deg, #858796, #6c757d); }
-
-.stats-card {
-    border-left: 4px solid;
-    background: white;
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-}
-
-.stats-card.primary { border-left-color: #4e73df; }
-.stats-card.success { border-left-color: #1cc88a; }
-.stats-card.warning { border-left-color: #f6c23e; }
-.stats-card.info { border-left-color: #36b9cc; }
-
 .page-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
+    color: #fff;
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin: 24px 0 28px 0;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 10px 24px rgba(118,75,162,.25);
 }
-
-.page-header::before {
+.page-header h1 {
+    margin: 0;
+    font-weight: 300;
+    letter-spacing: -0.4px;
+}
+.page-header p {
+    margin: 6px 0 0 0;
+    opacity: .92;
+}
+.page-header::before,
+.page-header::after {
     content: '';
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 100px;
-    height: 100px;
-    background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
-    transform: translate(30px, -30px);
+    background: rgba(255,255,255,.12);
+    filter: blur(0.5px);
+}
+.page-header::before {
+    width: 160px; height: 160px; right: -40px; top: -40px;
+}
+.page-header::after {
+    width: 90px; height: 90px; right: 70px; top: -20px; background: rgba(255,255,255,.09);
 }
 
-.admin-section {
-    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    border: 2px solid rgba(231, 74, 59, 0.2);
+/* ===== Cards (match dashboard look) ===== */
+.card-soft {
+    background: #fff;
+    border: 1px solid #eef0f5;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.card-soft:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.10);
+}
+.card-soft .card-body {
+    padding: 16px;
 }
 
+/* ===== Stat cards ===== */
+.stats-card {
+    border-left: 4px solid transparent;
+}
+.stats-card.primary   { border-left-color: #4e73df; }
+.stats-card.success   { border-left-color: #1cc88a; }
+.stats-card.warning   { border-left-color: #f6c23e; }
+.stats-card.info      { border-left-color: #36b9cc; }
+
+/* ===== Controller item card ===== */
+.controller-card .header {
+    display: flex; align-items: center;
+}
+.type-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1.25rem; flex: 0 0 48px;
+}
+.type-icon.speedradar    { background: linear-gradient(45deg, #4e73df, #224abe); }
+.type-icon.beaufortmeter { background: linear-gradient(45deg, #1cc88a, #17a2b8); }
+.type-icon.weatherstation{ background: linear-gradient(45deg, #f6c23e, #e0a800); color:#1f2937; }
+.type-icon.aicamera      { background: linear-gradient(45deg, #e74a3b, #c0392b); }
+.type-icon.default       { background: linear-gradient(45deg, #858796, #6c757d); }
+
+.controller-title {
+    margin: 0 0 4px 0;
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #111827;
+}
+.controller-subtle {
+    color: #6b7280; font-size: .9rem;
+}
+
+/* ===== Status dot ===== */
+.status-dot {
+    width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+    margin-right: 6px;
+}
+.status-online  { background-color: #28a745; box-shadow: 0 0 0 6px rgba(40,167,69,.08); }
+.status-offline { background-color: #dc3545; box-shadow: 0 0 0 6px rgba(220,53,69,.08); }
+
+/* ===== Empty state ===== */
 .empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: #858796;
+    text-align: center; padding: 48px 16px; color: #6b7280;
+    border: 2px dashed #e5e7eb; border-radius: 14px; background: #fff;
 }
-
 .empty-state i {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
+    font-size: 40px; margin-bottom: 10px; opacity: .6;
 }
 
-.action-buttons .btn {
-    margin: 0 0.25rem;
-    border-radius: 0.35rem;
+/* ===== Admin section ===== */
+.admin-section {
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #ffe5f7 100%);
+    border: 1px solid rgba(231, 74, 59, 0.15);
+    box-shadow: 0 10px 24px rgba(231,74,59,.08);
+}
+.admin-section .admin-inner {
+    background: #fff; border-radius: 12px; padding: 14px; border: 1px solid #f1f2f6;
 }
 
-/* Modal backdrop fallback styles */
-.modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1040;
-    width: 100vw;
-    height: 100vh;
-    background-color: #000;
-}
+/* ===== Buttons ===== */
+.btn-soft { border-radius: 10px; }
+.action-buttons .btn { margin: 0 .25rem .25rem 0; border-radius: 10px; }
 
-.modal-backdrop.fade {
-    opacity: 0;
-}
+/* ===== Modal (fallback-compatible) ===== */
+.modal-backdrop { position: fixed; inset: 0; z-index: 1040; background: rgba(0,0,0,.5); }
+.modal { position: fixed; inset: 0; z-index: 1050; display: none; }
+.modal.show { display: block !important; }
+.modal-dialog { margin: 2rem auto; max-width: 520px; }
+.modal-content { border-radius: 14px; border: 1px solid #e5e7eb; box-shadow: 0 16px 40px rgba(2,6,23,.25); }
+.modal-header { border-bottom-color: #f1f5f9; }
+.modal-footer { border-top-color: #f1f5f9; }
 
-.modal-backdrop.show {
-    opacity: 0.5;
-}
+/* Utility */
+.badge-soft { border-radius: 999px; padding: .35rem .6rem; }
+.badge-unbound { background: #fff3cd; color: #7a5a00; border: 1px solid #ffe69c; }
+.badge-owner   { background: #e8fff3; color: #0f5132; border: 1px solid #badbcc; }
 
-.modal.show {
-    display: block !important;
-}
-
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1050;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-}
-
-.modal-dialog {
-    position: relative;
-    width: auto;
-    margin: 1.75rem;
-    pointer-events: none;
-}
-
-.modal.show .modal-dialog {
-    transform: translate(0, 0);
-}
-
-.modal-content {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    pointer-events: auto;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 0.3rem;
-    outline: 0;
-}
-
-@media (min-width: 576px) {
-    .modal-dialog {
-        max-width: 500px;
-        margin: 1.75rem auto;
-    }
+@media (max-width: 767.98px) {
+    .page-header { padding: 18px 16px; border-radius: 12px; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Page Header -->
+<div class="container-fluid py-4 page-wrap">
+
+    <!-- Header -->
     <div class="page-header">
-        <div class="row align-items-center">
-            <div class="col">
-                <h1 class="h2 mb-2">
-                    <i class="fas fa-microchip me-3"></i>Controller Management
-                </h1>
-                <p class="mb-0 opacity-75">Manage and monitor your IoT controllers</p>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1"><i class="fas fa-microchip me-2"></i>Controller Management</h1>
+                <p class="mb-0">Manage and monitor your IoT controllers</p>
             </div>
-            <div class="col-auto">
-                <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#bindControllerModal">
+            <div>
+                <button class="btn btn-light btn-lg btn-soft" data-bs-toggle="modal" data-bs-target="#bindControllerModal">
                     <i class="fas fa-plus me-2"></i>Add Controller
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card primary h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Controllers</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ controllers|length + (unbound_controllers|length if current_user.is_admin else 0) }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-microchip fa-2x text-gray-300"></i>
+    <!-- Stats -->
+    <div class="row g-3 mb-3">
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-soft stats-card primary h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-uppercase small text-primary mb-1">Total Controllers</div>
+                        <div class="h5 mb-0 fw-bold text-dark">
+                            {{ controllers|length + (unbound_controllers|length if current_user.is_admin else 0) }}
                         </div>
                     </div>
+                    <i class="fas fa-microchip fa-2x text-muted"></i>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card success h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Online</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ controllers|selectattr('is_online')|list|length }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-wifi fa-2x text-gray-300"></i>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-soft stats-card success h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-uppercase small text-success mb-1">Online</div>
+                        <div class="h5 mb-0 fw-bold text-dark">
+                            {{ controllers|selectattr('is_online')|list|length }}
                         </div>
                     </div>
+                    <i class="fas fa-wifi fa-2x text-muted"></i>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card warning h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">My Controllers</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ controllers|length }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-cog fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-soft stats-card warning h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-uppercase small text-warning mb-1">My Controllers</div>
+                        <div class="h5 mb-0 fw-bold text-dark">{{ controllers|length }}</div>
                     </div>
+                    <i class="fas fa-user-cog fa-2x text-muted"></i>
                 </div>
             </div>
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card info h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                {% if current_user.is_admin %}Unbound{% else %}Configured{% endif %}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {% if current_user.is_admin %}
-                                    {{ unbound_controllers|length }}
-                                {% else %}
-                                    {{ controllers|selectattr('latitude')|selectattr('longitude')|list|length }}
-                                {% endif %}
-                            </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card card-soft stats-card info h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-uppercase small text-info mb-1">
+                            {% if current_user.is_admin %}Unbound{% else %}Configured{% endif %}
                         </div>
-                        <div class="col-auto">
+                        <div class="h5 mb-0 fw-bold text-dark">
                             {% if current_user.is_admin %}
-                                <i class="fas fa-unlink fa-2x text-gray-300"></i>
+                                {{ unbound_controllers|length }}
                             {% else %}
-                                <i class="fas fa-map-marker-alt fa-2x text-gray-300"></i>
+                                {{ controllers|selectattr('latitude')|selectattr('longitude')|list|length }}
                             {% endif %}
                         </div>
                     </div>
+                    {% if current_user.is_admin %}
+                        <i class="fas fa-unlink fa-2x text-muted"></i>
+                    {% else %}
+                        <i class="fas fa-map-marker-alt fa-2x text-muted"></i>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
     {% if current_user.is_admin and unbound_controllers %}
-    <!-- Admin Section - Unbound Controllers -->
+    <!-- Admin: Unbound -->
     <div class="admin-section">
-        <div class="row align-items-center mb-3">
-            <div class="col">
-                <h4 class="mb-0">
-                    <i class="fas fa-shield-alt me-2"></i>Admin: Unbound Controllers
-                </h4>
-                <p class="mb-0 opacity-75">Controllers waiting to be assigned to users</p>
+        <div class="admin-inner">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h4 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Admin: Unbound Controllers</h4>
+                    <small class="text-muted">Controllers waiting to be assigned to users</small>
+                </div>
+                <span class="badge badge-soft badge-unbound fs-6">{{ unbound_controllers|length }} Unbound</span>
             </div>
-            <div class="col-auto">
-                <span class="badge bg-warning fs-6">{{ unbound_controllers|length }} Unbound</span>
+
+            <div class="row g-3">
+                {% for controller in unbound_controllers %}
+                <div class="col-lg-4 col-md-6">
+                    <div class="card card-soft controller-card h-100">
+                        <div class="card-body">
+                            <div class="header mb-3">
+                                <div class="type-icon {{ controller.controller_type }}">
+                                    {% if controller.controller_type == 'speedradar' %}<i class="fas fa-tachometer-alt"></i>
+                                    {% elif controller.controller_type == 'beaufortmeter' %}<i class="fas fa-wind"></i>
+                                    {% elif controller.controller_type == 'weatherstation' %}<i class="fas fa-cloud-sun"></i>
+                                    {% elif controller.controller_type == 'aicamera' %}<i class="fas fa-camera"></i>
+                                    {% else %}<i class="fas fa-microchip"></i>{% endif %}
+                                </div>
+                                <div class="ms-3 flex-grow-1">
+                                    <h6 class="controller-title">{{ controller.serial_number }}</h6>
+                                    <div class="d-flex align-items-center controller-subtle">
+                                        <span class="status-dot {{ 'status-online' if controller.is_online else 'status-offline' }}"></span>
+                                        {{ controller.controller_type.title() }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row text-center mb-3">
+                                <div class="col">
+                                    <small class="text-muted">Status</small>
+                                    <div class="fw-semibold">
+                                        {% if controller.is_online %}<span class="text-success">Online</span>
+                                        {% else %}<span class="text-danger">Offline</span>{% endif %}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <small class="text-muted">Last Seen</small>
+                                    <div class="fw-semibold">
+                                        {% if controller.last_seen %}{{ controller.last_seen.strftime('%m/%d') }}{% else %}Never{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form method="POST" action="{{ url_for('controllers.bind_controller') }}">
+                                <input type="hidden" name="serial_number" value="{{ controller.serial_number }}">
+                                <button type="submit" class="btn btn-outline-primary w-100 btn-soft">
+                                    <i class="fas fa-link me-2"></i>Bind to Me
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
-        
-        <div class="row">
-            {% for controller in unbound_controllers %}
-            <div class="col-lg-4 col-md-6 mb-3">
-                <div class="card controller-card h-100">
+    </div>
+    {% endif %}
+
+    <!-- My Controllers -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="fas fa-link text-success me-2"></i>My Controllers</h4>
+        {% if current_user.is_admin %}
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="viewAllControllers">
+            <label class="form-check-label" for="viewAllControllers">View All Controllers</label>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if controllers %}
+        <div class="row g-3" id="my-controllers">
+            {% for controller in controllers %}
+            <div class="col-lg-4 col-md-6">
+                <div class="card card-soft controller-card h-100">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="controller-type-icon {{ controller.controller_type }}">
-                                {% if controller.controller_type == 'speedradar' %}
-                                    <i class="fas fa-tachometer-alt"></i>
-                                {% elif controller.controller_type == 'beaufortmeter' %}
-                                    <i class="fas fa-wind"></i>
-                                {% elif controller.controller_type == 'weatherstation' %}
-                                    <i class="fas fa-cloud-sun"></i>
-                                {% elif controller.controller_type == 'aicamera' %}
-                                    <i class="fas fa-camera"></i>
-                                {% else %}
-                                    <i class="fas fa-microchip"></i>
-                                {% endif %}
+                        <div class="header mb-3">
+                            <div class="type-icon {{ controller.controller_type }}">
+                                {% if controller.controller_type == 'speedradar' %}<i class="fas fa-tachometer-alt"></i>
+                                {% elif controller.controller_type == 'beaufortmeter' %}<i class="fas fa-wind"></i>
+                                {% elif controller.controller_type == 'weatherstation' %}<i class="fas fa-cloud-sun"></i>
+                                {% elif controller.controller_type == 'aicamera' %}<i class="fas fa-camera"></i>
+                                {% else %}<i class="fas fa-microchip"></i>{% endif %}
                             </div>
                             <div class="ms-3 flex-grow-1">
-                                <h6 class="card-title mb-1">{{ controller.serial_number }}</h6>
-                                <div class="d-flex align-items-center">
-                                    <span class="controller-status-indicator {{ 'online' if controller.is_online else 'offline' }}"></span>
-                                    <span class="ms-2 text-muted">{{ controller.controller_type.title() }}</span>
+                                <h5 class="controller-title">{{ controller.name or controller.serial_number }}</h5>
+                                <div class="d-flex align-items-center controller-subtle">
+                                    <span class="status-dot {{ 'status-online' if controller.is_online else 'status-offline' }}"></span>
+                                    {{ controller.controller_type.title() }}
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row text-center mb-3">
                             <div class="col">
-                                <small class="text-muted">Status</small>
-                                <div class="fw-bold">
-                                    {% if controller.is_online %}
-                                        <span class="text-success">Online</span>
+                                <small class="text-muted">Serial</small>
+                                <div class="fw-semibold small">{{ controller.serial_number }}</div>
+                            </div>
+                            <div class="col">
+                                <small class="text-muted">Location</small>
+                                <div class="fw-semibold">
+                                    {% if controller.latitude and controller.longitude %}
+                                        <i class="fas fa-map-marker-alt text-success"></i>
                                     {% else %}
-                                        <span class="text-danger">Offline</span>
+                                        <i class="fas fa-map-marker-alt text-muted"></i>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="col">
                                 <small class="text-muted">Last Seen</small>
-                                <div class="fw-bold">
+                                <div class="fw-semibold small">
                                     {% if controller.last_seen %}
-                                        {{ controller.last_seen.strftime('%m/%d') }}
+                                        {{ controller.last_seen.strftime('%m/%d %H:%M') }}
                                     {% else %}
                                         Never
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
-                        
-                        <form method="POST" action="{{ url_for('controllers.bind_controller') }}">
-                            <input type="hidden" name="serial_number" value="{{ controller.serial_number }}">
-                            <button type="submit" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-link me-2"></i>Bind to Me
-                            </button>
-                        </form>
+
+                        <div class="action-buttons">
+                            <a href="{{ url_for('controllers.view_data', controller_id=controller.id) }}"
+                               class="btn btn-outline-primary btn-sm btn-soft">
+                                <i class="fas fa-chart-line"></i> Data
+                            </a>
+                            <a href="{{ url_for('controllers.edit_controller', controller_id=controller.id) }}"
+                               class="btn btn-outline-secondary btn-sm btn-soft">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <form method="POST" action="{{ url_for('controllers.unbind_controller', controller_id=controller.id) }}"
+                                  class="d-inline" onsubmit="return confirm('Are you sure you want to unbind this controller?')">
+                                <button type="submit" class="btn btn-outline-danger btn-sm btn-soft">
+                                    <i class="fas fa-unlink"></i> Unbind
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
-    </div>
-    {% endif %}
 
-    <!-- My Controllers Section -->
-    <div class="row">
-        <div class="col">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4>
-                    <i class="fas fa-link text-success me-2"></i>My Controllers
-                </h4>
-                {% if current_user.is_admin %}
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="viewAllControllers">
-                    <label class="form-check-label" for="viewAllControllers">
-                        View All Controllers
-                    </label>
-                </div>
-                {% endif %}
-            </div>
-
-            {% if controllers %}
-                <div class="row" id="my-controllers">
-                    {% for controller in controllers %}
-                    <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="card controller-card h-100">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center mb-3">
-                                    <div class="controller-type-icon {{ controller.controller_type }}">
-                                        {% if controller.controller_type == 'speedradar' %}
-                                            <i class="fas fa-tachometer-alt"></i>
-                                        {% elif controller.controller_type == 'beaufortmeter' %}
-                                            <i class="fas fa-wind"></i>
-                                        {% elif controller.controller_type == 'weatherstation' %}
-                                            <i class="fas fa-cloud-sun"></i>
-                                        {% elif controller.controller_type == 'aicamera' %}
-                                            <i class="fas fa-camera"></i>
-                                        {% else %}
-                                            <i class="fas fa-microchip"></i>
-                                        {% endif %}
-                                    </div>
-                                    <div class="ms-3 flex-grow-1">
-                                        <h5 class="card-title mb-1">{{ controller.name or controller.serial_number }}</h5>
-                                        <div class="d-flex align-items-center">
-                                            <span class="controller-status-indicator {{ 'online' if controller.is_online else 'offline' }}"></span>
-                                            <span class="ms-2 text-muted">{{ controller.controller_type.title() }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="row text-center mb-3">
-                                    <div class="col">
-                                        <small class="text-muted">Serial</small>
-                                        <div class="fw-bold small">{{ controller.serial_number }}</div>
-                                    </div>
-                                    <div class="col">
-                                        <small class="text-muted">Location</small>
-                                        <div class="fw-bold">
-                                            {% if controller.latitude and controller.longitude %}
-                                                <i class="fas fa-map-marker-alt text-success"></i>
-                                            {% else %}
-                                                <i class="fas fa-map-marker-alt text-muted"></i>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <small class="text-muted">Last Seen</small>
-                                        <div class="fw-bold small">
-                                            {% if controller.last_seen %}
-                                                {{ controller.last_seen.strftime('%m/%d %H:%M') }}
-                                            {% else %}
-                                                Never
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="action-buttons">
-                                    <a href="{{ url_for('controllers.view_data', controller_id=controller.id) }}" 
-                                       class="btn btn-outline-primary btn-sm">
-                                        <i class="fas fa-chart-line"></i> Data
-                                    </a>
-                                    <a href="{{ url_for('controllers.edit_controller', controller_id=controller.id) }}" 
-                                       class="btn btn-outline-secondary btn-sm">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
-                                    <form method="POST" action="{{ url_for('controllers.unbind_controller', controller_id=controller.id) }}" 
-                                          class="d-inline" onsubmit="return confirm('Are you sure you want to unbind this controller?')">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm">
-                                            <i class="fas fa-unlink"></i> Unbind
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                {% if current_user.is_admin %}
-                <!-- Hidden section for all controllers (admin view) -->
-                <div class="row d-none" id="all-controllers">
-                    <!-- This will be populated via AJAX when admin toggles the view -->
-                </div>
-                {% endif %}
-
-            {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-microchip"></i>
-                    <h5 class="text-muted">No Controllers Bound</h5>
-                    <p class="text-muted">Get started by binding your first controller using its serial number.</p>
-                    <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#bindControllerModal">
-                        <i class="fas fa-plus me-2"></i>Add Your First Controller
-                    </button>
-                </div>
-            {% endif %}
+        {% if current_user.is_admin %}
+        <div class="row g-3 d-none" id="all-controllers"></div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-microchip"></i>
+            <h5 class="text-muted">No Controllers Bound</h5>
+            <p class="mb-3">Get started by binding your first controller using its serial number.</p>
+            <button class="btn btn-primary btn-lg btn-soft" data-bs-toggle="modal" data-bs-target="#bindControllerModal">
+                <i class="fas fa-plus me-2"></i>Add Your First Controller
+            </button>
         </div>
-    </div>
+    {% endif %}
 </div>
 
 <!-- Bind Controller Modal -->
-<div class="modal fade" id="bindControllerModal" tabindex="-1" style="display: none !important;">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-plus me-2"></i>Bind New Controller
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST" action="{{ url_for('controllers.bind_controller') }}">
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Enter the serial number of a controller that has already reported to the server at least once.
-                    </div>
-                    <div class="mb-3">
-                        <label for="serial_number" class="form-label">Serial Number</label>
-                        <input type="text" class="form-control form-control-lg" id="serial_number" name="serial_number" 
-                               required placeholder="e.g., LX2025-001-ABCD" style="font-family: monospace;">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-link me-2"></i>Bind Controller
-                    </button>
-                </div>
-            </form>
+<div class="modal fade" id="bindControllerModal" tabindex="-1" style="display:none !important;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-plus me-2"></i>Bind New Controller</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="{{ url_for('controllers.bind_controller') }}">
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Enter the serial number of a controller that has already reported to the server at least once.
+          </div>
+          <div class="mb-3">
+            <label for="serial_number" class="form-label">Serial Number</label>
+            <input type="text" class="form-control form-control-lg" id="serial_number" name="serial_number"
+                   required placeholder="e.g., LX2025-001-ABCD" style="font-family: monospace;">
+          </div>
         </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light btn-soft" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-soft">
+            <i class="fas fa-link me-2"></i>Bind Controller
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Ensure modal is properly hidden initially
-    const modal = document.getElementById('bindControllerModal');
-    if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('show');
+    // Modal bootstrap / fallback
+    const modalEl = document.getElementById('bindControllerModal');
+    if (modalEl) {
+        modalEl.style.display = 'none';
+        modalEl.classList.remove('show');
     }
-    
-    // Add modal functionality if Bootstrap modal is not available
-    function initializeModalFallback() {
-        const modalElement = document.getElementById('bindControllerModal');
-        const modalTriggers = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#bindControllerModal"]');
-        const modalCloseTriggers = document.querySelectorAll('[data-bs-dismiss="modal"]');
-        
-        // Function to show modal
-        function showModal() {
-            modalElement.style.display = 'block';
-            modalElement.classList.add('show');
+
+    function fallbackModal() {
+        const el = document.getElementById('bindControllerModal');
+        const triggers = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#bindControllerModal"]');
+        const closers = el.querySelectorAll('[data-bs-dismiss="modal"], .btn-close');
+
+        const show = () => {
+            el.style.display = 'block';
+            el.classList.add('show');
             document.body.classList.add('modal-open');
-            
-            // Create backdrop
             const backdrop = document.createElement('div');
             backdrop.className = 'modal-backdrop fade show';
             backdrop.id = 'modal-backdrop';
             document.body.appendChild(backdrop);
-            
-            // Close on backdrop click
-            backdrop.addEventListener('click', hideModal);
-        }
-        
-        // Function to hide modal
-        function hideModal() {
-            modalElement.style.display = 'none';
-            modalElement.classList.remove('show');
+            backdrop.addEventListener('click', hide);
+        };
+        const hide = () => {
+            el.style.display = 'none';
+            el.classList.remove('show');
             document.body.classList.remove('modal-open');
-            
-            // Remove backdrop
-            const backdrop = document.getElementById('modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
-        }
-        
-        // Add event listeners to trigger buttons
-        modalTriggers.forEach(trigger => {
-            trigger.addEventListener('click', function(e) {
-                e.preventDefault();
-                showModal();
-            });
-        });
-        
-        // Add event listeners to close buttons
-        modalCloseTriggers.forEach(trigger => {
-            trigger.addEventListener('click', function(e) {
-                e.preventDefault();
-                hideModal();
-            });
-        });
-        
-        // Close on escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modalElement.classList.contains('show')) {
-                hideModal();
-            }
-        });
+            const b = document.getElementById('modal-backdrop'); if (b) b.remove();
+        };
+
+        triggers.forEach(t => t.addEventListener('click', e => { e.preventDefault(); show(); }));
+        closers.forEach(c => c.addEventListener('click', e => { e.preventDefault(); hide(); }));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && el.classList.contains('show')) hide(); });
     }
-    
-    // Check if Bootstrap Modal is available
+
     if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
-        console.log('Bootstrap Modal is available');
-        // Initialize Bootstrap modal properly
-        const modalElement = document.getElementById('bindControllerModal');
-        if (modalElement) {
-            // Make sure modal is hidden initially
-            modalElement.style.display = 'none';
-            modalElement.classList.remove('show');
-            
-            // Create Bootstrap modal instance
-            const bootstrapModal = new window.bootstrap.Modal(modalElement);
-            
-            // Add event listeners to trigger buttons for Bootstrap
-            const modalTriggers = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#bindControllerModal"]');
-            modalTriggers.forEach(trigger => {
-                trigger.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    modalElement.style.display = '';  // Reset inline style to let Bootstrap handle it
-                    bootstrapModal.show();
-                });
-            });
-        }
+        const bsModal = new window.bootstrap.Modal(modalEl);
+        const triggers = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#bindControllerModal"]');
+        triggers.forEach(t => t.addEventListener('click', e => { e.preventDefault(); modalEl.style.display=''; bsModal.show(); }));
     } else {
-        console.log('Bootstrap Modal not available, using fallback');
-        initializeModalFallback();
+        fallbackModal();
     }
-    
+
     {% if current_user.is_admin %}
-    // Admin toggle for viewing all controllers
-    const viewAllToggle = document.getElementById('viewAllControllers');
-    const myControllersSection = document.getElementById('my-controllers');
-    const allControllersSection = document.getElementById('all-controllers');
-    
-    if (viewAllToggle) {
-        viewAllToggle.addEventListener('change', function() {
+    // Admin toggle: view all controllers
+    const viewAll = document.getElementById('viewAllControllers');
+    const mySec = document.getElementById('my-controllers');
+    const allSec = document.getElementById('all-controllers');
+
+    if (viewAll) {
+        viewAll.addEventListener('change', function() {
             if (this.checked) {
-                // Load all controllers
                 loadAllControllers();
-                myControllersSection.classList.add('d-none');
-                allControllersSection.classList.remove('d-none');
+                mySec.classList.add('d-none');
+                allSec.classList.remove('d-none');
             } else {
-                // Show only my controllers
-                myControllersSection.classList.remove('d-none');
-                allControllersSection.classList.add('d-none');
+                mySec.classList.remove('d-none');
+                allSec.classList.add('d-none');
             }
         });
     }
-    
+
+    function iconFor(type) {
+        const map = { speedradar:'tachometer-alt', beaufortmeter:'wind', weatherstation:'cloud-sun', aicamera:'camera' };
+        return map[type] || 'microchip';
+    }
+
+    function typeClass(type) {
+        const known = ['speedradar','beaufortmeter','weatherstation','aicamera'];
+        return known.includes(type) ? type : 'default';
+    }
+
+    function badge(owner){
+        if(!owner) return '<span class="badge badge-soft badge-unbound">Unbound</span>';
+        const name = owner.username || 'Owner';
+        return `<span class="badge badge-soft badge-owner">${name}</span>`;
+    }
+
+    function lastSeenStr(ts){
+        if(!ts) return 'Never';
+        try { return new Date(ts).toLocaleDateString(); } catch(e){ return '—'; }
+    }
+
     function loadAllControllers() {
-        // Make AJAX call to get all controllers
         fetch('/controllers/api/all')
-            .then(response => response.json())
-            .then(controllers => {
-                allControllersSection.innerHTML = '';
-                
-                if (controllers.length === 0) {
-                    allControllersSection.innerHTML = `
+            .then(r => r.json())
+            .then(items => {
+                allSec.innerHTML = '';
+                if (!items || !items.length) {
+                    allSec.innerHTML = `
                         <div class="col-12">
                             <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                No controllers found in the system.
+                                <i class="fas fa-info-circle me-2"></i>No controllers found in the system.
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                     return;
                 }
-                
-                controllers.forEach(controller => {
-                    const ownerBadge = controller.owner ? 
-                        `<span class="badge bg-success">${controller.owner.username}</span>` :
-                        `<span class="badge bg-warning">Unbound</span>`;
-                    
-                    const statusIndicator = controller.is_online ? 'online' : 'offline';
-                    const statusText = controller.is_online ? 'Online' : 'Offline';
-                    
-                    const lastSeen = controller.last_seen ? 
-                        new Date(controller.last_seen).toLocaleDateString() : 'Never';
-                    
-                    const cardHtml = `
-                        <div class="col-lg-4 col-md-6 mb-4">
-                            <div class="card controller-card h-100">
+
+                items.forEach(c => {
+                    const status = c.is_online ? 'Online' : 'Offline';
+                    const dotCls = c.is_online ? 'status-online' : 'status-offline';
+                    allSec.insertAdjacentHTML('beforeend', `
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card card-soft controller-card h-100">
                                 <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="controller-type-icon ${controller.controller_type}">
-                                            <i class="fas fa-${getControllerIcon(controller.controller_type)}"></i>
+                                    <div class="header mb-3">
+                                        <div class="type-icon ${typeClass(c.controller_type)}">
+                                            <i class="fas fa-${iconFor(c.controller_type)}"></i>
                                         </div>
                                         <div class="ms-3 flex-grow-1">
-                                            <h5 class="card-title mb-1">${controller.name || controller.serial_number}</h5>
-                                            <div class="d-flex align-items-center">
-                                                <span class="controller-status-indicator ${statusIndicator}"></span>
-                                                <span class="ms-2 text-muted">${controller.controller_type}</span>
+                                            <h5 class="controller-title">${c.name || c.serial_number}</h5>
+                                            <div class="d-flex align-items-center controller-subtle">
+                                                <span class="status-dot ${dotCls}"></span>
+                                                ${c.controller_type || 'Controller'}
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="row text-center mb-3">
                                         <div class="col">
                                             <small class="text-muted">Owner</small>
-                                            <div class="fw-bold">${ownerBadge}</div>
+                                            <div class="fw-semibold">${badge(c.owner)}</div>
                                         </div>
                                         <div class="col">
                                             <small class="text-muted">Status</small>
-                                            <div class="fw-bold">${statusText}</div>
+                                            <div class="fw-semibold">${status}</div>
                                         </div>
                                         <div class="col">
                                             <small class="text-muted">Last Seen</small>
-                                            <div class="fw-bold small">${lastSeen}</div>
+                                            <div class="fw-semibold small">${lastSeenStr(c.last_seen)}</div>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="action-buttons">
-                                        <a href="/controllers/${controller.id}/data" class="btn btn-outline-primary btn-sm">
+                                        <a href="/controllers/${c.id}/data" class="btn btn-outline-primary btn-sm btn-soft">
                                             <i class="fas fa-chart-line"></i> Data
                                         </a>
-                                        <a href="/controllers/${controller.id}/edit" class="btn btn-outline-secondary btn-sm">
+                                        <a href="/controllers/${c.id}/edit" class="btn btn-outline-secondary btn-sm btn-soft">
                                             <i class="fas fa-edit"></i> Edit
                                         </a>
-                                        ${controller.user_id ? `
-                                            <form method="POST" action="/controllers/${controller.id}/unbind_user" 
-                                                  class="d-inline" onsubmit="return confirm('Unbind from ${controller.owner ? controller.owner.username : 'user'}?')">
-                                                <button type="submit" class="btn btn-outline-warning btn-sm">
+                                        ${c.user_id ? `
+                                            <form method="POST" action="/controllers/${c.id}/unbind_user" class="d-inline"
+                                                onsubmit="return confirm('Unbind from ${c.owner ? c.owner.username : 'user'}?')">
+                                                <button type="submit" class="btn btn-outline-warning btn-sm btn-soft">
                                                     <i class="fas fa-user-times"></i> Unbind
                                                 </button>
-                                            </form>
-                                        ` : `
+                                            </form>` : `
                                             <form method="POST" action="/controllers/bind" class="d-inline">
-                                                <input type="hidden" name="serial_number" value="${controller.serial_number}">
-                                                <button type="submit" class="btn btn-outline-success btn-sm">
+                                                <input type="hidden" name="serial_number" value="${c.serial_number}">
+                                                <button type="submit" class="btn btn-outline-success btn-sm btn-soft">
                                                     <i class="fas fa-link"></i> Bind
                                                 </button>
-                                            </form>
-                                        `}
+                                            </form>`}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    `;
-                    
-                    allControllersSection.innerHTML += cardHtml;
+                    `);
                 });
             })
-            .catch(error => {
-                console.error('Error loading controllers:', error);
-                allControllersSection.innerHTML = `
-                    <div class="col-12">
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            Error loading controllers. Please try again.
-                        </div>
+            .catch(err => {
+                console.error('Error loading controllers:', err);
+                allSec.innerHTML = `
+                  <div class="col-12">
+                    <div class="alert alert-danger">
+                      <i class="fas fa-exclamation-triangle me-2"></i>Error loading controllers. Please try again.
                     </div>
-                `;
+                  </div>`;
             });
     }
-    
-    function getControllerIcon(type) {
-        const icons = {
-            'speedradar': 'tachometer-alt',
-            'beaufortmeter': 'wind', 
-            'weatherstation': 'cloud-sun',
-            'aicamera': 'camera'
-        };
-        return icons[type] || 'microchip';
-    }
     {% endif %}
-    
-    // Auto-refresh controller status every 30 seconds
-    setInterval(function() {
-        // Update status indicators
-        const indicators = document.querySelectorAll('.controller-status-indicator');
-        indicators.forEach(indicator => {
-            // Add a subtle pulse animation to online indicators
-            if (indicator.classList.contains('online')) {
-                indicator.style.animation = 'none';
-                setTimeout(() => {
-                    indicator.style.animation = 'pulse 2s infinite';
-                }, 10);
-            }
+
+    // Subtle pulse refresh for online dots (cosmetic)
+    setInterval(() => {
+        document.querySelectorAll('.status-online').forEach(dot => {
+            dot.style.transform = 'scale(1.15)';
+            dot.style.transition = 'transform .25s ease';
+            setTimeout(() => { dot.style.transform = 'scale(1)'; }, 260);
         });
     }, 30000);
 });
