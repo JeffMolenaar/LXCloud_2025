@@ -96,13 +96,21 @@ def stats_overview():
     })
 
 @api_bp.route('/map-data')
+@login_required
 def map_data():
     """Get map data for visualization from real controller database"""
-    # Query all controllers that have location data (latitude and longitude)
-    controllers = Controller.query.filter(
-        Controller.latitude.isnot(None),
-        Controller.longitude.isnot(None)
-    ).all()
+    # Query controllers that have location data based on user permissions
+    if current_user.is_admin:
+        controllers = Controller.query.filter(
+            Controller.latitude.isnot(None),
+            Controller.longitude.isnot(None)
+        ).all()
+    else:
+        controllers = Controller.query.filter(
+            Controller.user_id == current_user.id,
+            Controller.latitude.isnot(None),
+            Controller.longitude.isnot(None)
+        ).all()
     
     map_data = []
     for controller in controllers:
@@ -379,10 +387,14 @@ def get_controller_info(serial_number):
         return jsonify({'error': f'Failed to get controller info: {str(e)}'}), 500
 
 @api_bp.route('/controllers/list', methods=['GET'], strict_slashes=False)
+@login_required
 def list_all_controllers():
-    """List all controllers (for testing - no authentication required)"""
+    """List controllers based on user permissions"""
     try:
-        controllers = Controller.query.all()
+        if current_user.is_admin:
+            controllers = Controller.query.all()
+        else:
+            controllers = Controller.query.filter_by(user_id=current_user.id).all()
         
         controller_list = []
         for controller in controllers:
