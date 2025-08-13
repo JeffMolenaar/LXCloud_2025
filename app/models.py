@@ -68,7 +68,6 @@ class Controller(db.Model):
     data_points = db.relationship('ControllerData', backref='controller', lazy=True, cascade='all, delete-orphan')
     
     def to_dict(self):
-        from app.utils import utc_to_local
         return {
             'id': self.id,
             'serial_number': self.serial_number,
@@ -79,7 +78,6 @@ class Controller(db.Model):
             'longitude': self.longitude,
             'is_online': self.is_online,
             'last_seen': self.last_seen.isoformat() if self.last_seen else None,
-            'last_seen_local': utc_to_local(self.last_seen).isoformat() if self.last_seen else None,
             'created_at': self.created_at.isoformat()
         }
 

@@ -494,7 +494,7 @@
                 <p class="stat-label">Last Update</p>
                 <p class="stat-value" id="last-update">
                     {% if data_points %}
-                        {{ format_local_time(data_points[0].timestamp) }}
+                        {{ data_points[0].timestamp.strftime('%H:%M:%S') }}
                     {% else %}
                         No data
                     {% endif %}
@@ -535,8 +535,8 @@
                             {% for data_point in data_points %}
                             <tr>
                                 <td>
-                                    <div class="font-medium">{{ format_local_time(data_point.timestamp) }}</div>
-                                    <div class="text-muted text-sm">{{ format_local_date(data_point.timestamp) }}</div>
+                                    <div class="font-medium">{{ data_point.timestamp.strftime('%H:%M:%S') }}</div>
+                                    <div class="text-muted text-sm">{{ data_point.timestamp.strftime('%Y-%m-%d') }}</div>
                                 </td>
                                 <td>
                                     <div class="json-data">{{ data_point.get_data_dict() | tojson(indent=2) }}</div>
@@ -791,8 +791,7 @@ function updateDataTable(dataPoints) {
     }
     
     dataPoints.forEach(dataPoint => {
-        // Use local timestamp if available, otherwise fallback to UTC
-        const timestamp = dataPoint.timestamp_local ? new Date(dataPoint.timestamp_local) : new Date(dataPoint.timestamp);
+        const timestamp = new Date(dataPoint.timestamp);
         const row = document.createElement('tr');
         
         row.innerHTML = `
@@ -805,7 +804,7 @@ function updateDataTable(dataPoints) {
             </td>
             <td style="text-align: right;">
                 <button class="btn-modern btn-outline btn-sm" 
-                        onclick="viewDataDetails(${JSON.stringify(dataPoint.data).replace(/"/g, '&quot;')}, '${dataPoint.timestamp_local || dataPoint.timestamp}')">
+                        onclick="viewDataDetails(${JSON.stringify(dataPoint.data).replace(/"/g, '&quot;')}, '${dataPoint.timestamp}')">
                     <i class="fas fa-eye"></i>
                     <span class="sr-only">View details</span>
                 </button>
@@ -829,18 +828,13 @@ function updateDataStats(dataPoints) {
     document.getElementById('total-records').textContent = dataPoints.length;
     
     if (dataPoints.length > 0) {
-        // Use local timestamp if available, otherwise fallback to UTC
-        const lastUpdate = dataPoints[0].timestamp_local ? new Date(dataPoints[0].timestamp_local) : new Date(dataPoints[0].timestamp);
+        const lastUpdate = new Date(dataPoints[0].timestamp);
         document.getElementById('last-update').textContent = lastUpdate.toLocaleTimeString();
         
         // Calculate data rate (points per hour)
         if (dataPoints.length > 1) {
-            const firstTime = dataPoints[dataPoints.length - 1].timestamp_local ? 
-                new Date(dataPoints[dataPoints.length - 1].timestamp_local) : 
-                new Date(dataPoints[dataPoints.length - 1].timestamp);
-            const lastTime = dataPoints[0].timestamp_local ? 
-                new Date(dataPoints[0].timestamp_local) : 
-                new Date(dataPoints[0].timestamp);
+            const firstTime = new Date(dataPoints[dataPoints.length - 1].timestamp);
+            const lastTime = new Date(dataPoints[0].timestamp);
             const hoursDiff = (lastTime - firstTime) / (1000 * 60 * 60);
             const rate = hoursDiff > 0 ? Math.round(dataPoints.length / hoursDiff) : 0;
             document.getElementById('data-rate').textContent = `${rate}/hour`;
