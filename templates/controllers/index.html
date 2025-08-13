@@ -479,12 +479,11 @@
         <!-- Header -->
         <header class="page-header-modern">
             <div>
-                <h1><i class="fas fa-microchip icon-lg text-muted" aria-hidden="true"></i>Controller Management</h1>
                 <p>Manage your connected controllers</p>
             </div>
             <div class="d-flex gap-2">
                 <button class="btn-modern btn-primary" data-bs-toggle="modal" data-bs-target="#bindControllerModal">
-                    <i class="fas fa-plus icon-sm"></i>Bind Controller
+                    Bind Controller
                 </button>
             </div>
         </header>
@@ -507,7 +506,7 @@
 
         <!-- Admin: Unbound Controllers -->
         {% if current_user.is_admin and unbound_controllers %}
-        <section class="mb-6" aria-labelledby="unbound-title">
+        <section class="mb-6" aria-labelledby="unbound-title" style="margin-top: 6rem;">
             <div class="d-flex justify-content-between align-items-center">
                 <h2 id="unbound-title" class="text-lg font-medium">Unbound Controllers</h2>
             </div>
@@ -555,7 +554,7 @@
         {% endif %}
 
         <!-- My Controllers -->
-        <section class="mb-6" aria-labelledby="my-controllers-title">
+        <section class="mb-6" aria-labelledby="my-controllers-title" style="margin-top: 6rem;">
             <div class="d-flex justify-content-between align-items-center">
                 <h2 id="my-controllers-title" class="text-lg font-medium">My Controllers</h2>
             </div>
@@ -633,7 +632,7 @@
                     <p>Bind your first controller using the serial number to get started.</p>
                     <div class="mt-4">
                         <button class="btn-modern btn-primary" data-bs-toggle="modal" data-bs-target="#bindControllerModal">
-                            <i class="fas fa-plus icon-sm"></i>Bind Controller
+                            Bind Controller
                         </button>
                     </div>
                 </div>
@@ -666,7 +665,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn-modern btn-outline" data-bs-dismiss="modal">Cancel</button>
                 <button type="submit" form="bindControllerForm" class="btn-modern btn-primary">
-                    <i class="fas fa-link icon-sm"></i>Bind Controller
+                    Bind Controller
                 </button>
             </div>
         </div>
