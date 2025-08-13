@@ -2,244 +2,602 @@
 
 {% block title %}Controllers - LXCloud{% endblock %}
 
+{% block extra_css %}
+<style>
+.controller-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e3e6f0;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.controller-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.2);
+}
+
+.controller-status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s infinite;
+}
+
+.controller-status-indicator.online {
+    background-color: #1cc88a;
+}
+
+.controller-status-indicator.offline {
+    background-color: #e74a3b;
+    animation: none;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.controller-type-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.controller-type-icon.speedradar { background: linear-gradient(45deg, #4e73df, #224abe); }
+.controller-type-icon.beaufortmeter { background: linear-gradient(45deg, #1cc88a, #17a2b8); }
+.controller-type-icon.weatherstation { background: linear-gradient(45deg, #f6c23e, #e0a800); }
+.controller-type-icon.aicamera { background: linear-gradient(45deg, #e74a3b, #c0392b); }
+.controller-type-icon.default { background: linear-gradient(45deg, #858796, #6c757d); }
+
+.stats-card {
+    border-left: 4px solid;
+    background: white;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.stats-card.primary { border-left-color: #4e73df; }
+.stats-card.success { border-left-color: #1cc88a; }
+.stats-card.warning { border-left-color: #f6c23e; }
+.stats-card.info { border-left-color: #36b9cc; }
+
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: translate(30px, -30px);
+}
+
+.admin-section {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 2px solid rgba(231, 74, 59, 0.2);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #858796;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.action-buttons .btn {
+    margin: 0 0.25rem;
+    border-radius: 0.35rem;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col">
-            <h1 class="h3 mb-0">
-                <i class="fas fa-microchip text-primary"></i> 
-                Controller Management
-            </h1>
-            <p class="text-muted">Manage your connected controllers</p>
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bindControllerModal">
-                <i class="fas fa-plus"></i> Bind Controller
-            </button>
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="h2 mb-2">
+                    <i class="fas fa-microchip me-3"></i>Controller Management
+                </h1>
+                <p class="mb-0 opacity-75">Manage and monitor your IoT controllers</p>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#bindControllerModal">
+                    <i class="fas fa-plus me-2"></i>Add Controller
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Bind Controller Modal -->
-    <div class="modal fade" id="bindControllerModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Bind New Controller</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form method="POST" action="{{ url_for('controllers.bind_controller') }}">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="serial_number" class="form-label">Serial Number</label>
-                            <input type="text" class="form-control" id="serial_number" name="serial_number" 
-                                   required placeholder="Enter controller serial number">
-                            <div class="form-text">
-                                The controller must have reported to the server at least once before it can be bound.
-                            </div>
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card primary h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Controllers</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ controllers|length + (unbound_controllers|length if current_user.is_admin else 0) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-microchip fa-2x text-gray-300"></i>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Bind Controller</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card success h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Online</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ controllers|selectattr('is_online')|list|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-wifi fa-2x text-gray-300"></i>
+                        </div>
                     </div>
-                </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card warning h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">My Controllers</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ controllers|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-cog fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stats-card info h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                {% if current_user.is_admin %}Unbound{% else %}Configured{% endif %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if current_user.is_admin %}
+                                    {{ unbound_controllers|length }}
+                                {% else %}
+                                    {{ controllers|selectattr('latitude')|selectattr('longitude')|list|length }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            {% if current_user.is_admin %}
+                                <i class="fas fa-unlink fa-2x text-gray-300"></i>
+                            {% else %}
+                                <i class="fas fa-map-marker-alt fa-2x text-gray-300"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     {% if current_user.is_admin and unbound_controllers %}
-    <!-- Unbound Controllers (Admin Only) -->
-    <div class="row mb-4">
-        <div class="col">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-unlink text-warning"></i> 
-                        Unbound Controllers
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Serial Number</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Last Seen</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for controller in unbound_controllers %}
-                                <tr>
-                                    <td>{{ controller.serial_number }}</td>
-                                    <td>
-                                        <span class="badge bg-secondary">
-                                            {{ controller.controller_type.title() }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {% if controller.is_online %}
-                                            <span class="badge bg-success">Online</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Offline</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if controller.last_seen %}
-                                            {{ controller.last_seen.strftime('%Y-%m-%d %H:%M') }}
-                                        {% else %}
-                                            <span class="text-muted">Never</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <form method="POST" action="{{ url_for('controllers.bind_controller') }}" class="d-inline">
-                                            <input type="hidden" name="serial_number" value="{{ controller.serial_number }}">
-                                            <button type="submit" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-link"></i> Bind to Me
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+    <!-- Admin Section - Unbound Controllers -->
+    <div class="admin-section">
+        <div class="row align-items-center mb-3">
+            <div class="col">
+                <h4 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>Admin: Unbound Controllers
+                </h4>
+                <p class="mb-0 opacity-75">Controllers waiting to be assigned to users</p>
+            </div>
+            <div class="col-auto">
+                <span class="badge bg-warning fs-6">{{ unbound_controllers|length }} Unbound</span>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for controller in unbound_controllers %}
+            <div class="col-lg-4 col-md-6 mb-3">
+                <div class="card controller-card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="controller-type-icon {{ controller.controller_type }}">
+                                {% if controller.controller_type == 'speedradar' %}
+                                    <i class="fas fa-tachometer-alt"></i>
+                                {% elif controller.controller_type == 'beaufortmeter' %}
+                                    <i class="fas fa-wind"></i>
+                                {% elif controller.controller_type == 'weatherstation' %}
+                                    <i class="fas fa-cloud-sun"></i>
+                                {% elif controller.controller_type == 'aicamera' %}
+                                    <i class="fas fa-camera"></i>
+                                {% else %}
+                                    <i class="fas fa-microchip"></i>
+                                {% endif %}
+                            </div>
+                            <div class="ms-3 flex-grow-1">
+                                <h6 class="card-title mb-1">{{ controller.serial_number }}</h6>
+                                <div class="d-flex align-items-center">
+                                    <span class="controller-status-indicator {{ 'online' if controller.is_online else 'offline' }}"></span>
+                                    <span class="ms-2 text-muted">{{ controller.controller_type.title() }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center mb-3">
+                            <div class="col">
+                                <small class="text-muted">Status</small>
+                                <div class="fw-bold">
+                                    {% if controller.is_online %}
+                                        <span class="text-success">Online</span>
+                                    {% else %}
+                                        <span class="text-danger">Offline</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col">
+                                <small class="text-muted">Last Seen</small>
+                                <div class="fw-bold">
+                                    {% if controller.last_seen %}
+                                        {{ controller.last_seen.strftime('%m/%d') }}
+                                    {% else %}
+                                        Never
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="POST" action="{{ url_for('controllers.bind_controller') }}">
+                            <input type="hidden" name="serial_number" value="{{ controller.serial_number }}">
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-link me-2"></i>Bind to Me
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
     </div>
     {% endif %}
 
-    <!-- User's Controllers -->
+    <!-- My Controllers Section -->
     <div class="row">
         <div class="col">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-link text-success"></i> 
-                        My Controllers
-                    </h5>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>
+                    <i class="fas fa-link text-success me-2"></i>My Controllers
+                </h4>
+                {% if current_user.is_admin %}
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="viewAllControllers">
+                    <label class="form-check-label" for="viewAllControllers">
+                        View All Controllers
+                    </label>
                 </div>
-                <div class="card-body">
-                    {% if controllers %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Serial Number</th>
-                                        <th>Type</th>
-                                        <th>Status</th>
-                                        <th>Location</th>
-                                        <th>Last Seen</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for controller in controllers %}
-                                    <tr>
-                                        <td>
-                                            <strong>{{ controller.name or controller.serial_number }}</strong>
-                                        </td>
-                                        <td>
-                                            <code>{{ controller.serial_number }}</code>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info">
-                                                {{ controller.controller_type.title() }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {% if controller.is_online %}
-                                                <span class="badge bg-success">
-                                                    <i class="fas fa-circle"></i> Online
-                                                </span>
-                                            {% else %}
-                                                <span class="badge bg-danger">
-                                                    <i class="fas fa-circle"></i> Offline
-                                                </span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if controller.latitude and controller.longitude %}
-                                                <span class="text-success">
-                                                    <i class="fas fa-map-marker-alt"></i> Set
-                                                </span>
-                                            {% else %}
-                                                <span class="text-muted">
-                                                    <i class="fas fa-map-marker-alt"></i> Not set
-                                                </span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if controller.last_seen %}
-                                                {{ controller.last_seen.strftime('%Y-%m-%d %H:%M') }}
-                                            {% else %}
-                                                <span class="text-muted">Never</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ url_for('controllers.view_data', controller_id=controller.id) }}" 
-                                                   class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-chart-line"></i>
-                                                </a>
-                                                <a href="{{ url_for('controllers.edit_controller', controller_id=controller.id) }}" 
-                                                   class="btn btn-sm btn-outline-secondary">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form method="POST" action="{{ url_for('controllers.unbind_controller', controller_id=controller.id) }}" 
-                                                      class="d-inline" onsubmit="return confirm('Are you sure you want to unbind this controller?')">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                        <i class="fas fa-unlink"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-microchip fa-4x text-muted mb-3"></i>
-                            <h5 class="text-muted">No Controllers Bound</h5>
-                            <p class="text-muted">Bind your first controller using the serial number to get started.</p>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bindControllerModal">
-                                <i class="fas fa-plus"></i> Bind Your First Controller
-                            </button>
-                        </div>
-                    {% endif %}
-                </div>
+                {% endif %}
             </div>
+
+            {% if controllers %}
+                <div class="row" id="my-controllers">
+                    {% for controller in controllers %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card controller-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="controller-type-icon {{ controller.controller_type }}">
+                                        {% if controller.controller_type == 'speedradar' %}
+                                            <i class="fas fa-tachometer-alt"></i>
+                                        {% elif controller.controller_type == 'beaufortmeter' %}
+                                            <i class="fas fa-wind"></i>
+                                        {% elif controller.controller_type == 'weatherstation' %}
+                                            <i class="fas fa-cloud-sun"></i>
+                                        {% elif controller.controller_type == 'aicamera' %}
+                                            <i class="fas fa-camera"></i>
+                                        {% else %}
+                                            <i class="fas fa-microchip"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ms-3 flex-grow-1">
+                                        <h5 class="card-title mb-1">{{ controller.name or controller.serial_number }}</h5>
+                                        <div class="d-flex align-items-center">
+                                            <span class="controller-status-indicator {{ 'online' if controller.is_online else 'offline' }}"></span>
+                                            <span class="ms-2 text-muted">{{ controller.controller_type.title() }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row text-center mb-3">
+                                    <div class="col">
+                                        <small class="text-muted">Serial</small>
+                                        <div class="fw-bold small">{{ controller.serial_number }}</div>
+                                    </div>
+                                    <div class="col">
+                                        <small class="text-muted">Location</small>
+                                        <div class="fw-bold">
+                                            {% if controller.latitude and controller.longitude %}
+                                                <i class="fas fa-map-marker-alt text-success"></i>
+                                            {% else %}
+                                                <i class="fas fa-map-marker-alt text-muted"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <small class="text-muted">Last Seen</small>
+                                        <div class="fw-bold small">
+                                            {% if controller.last_seen %}
+                                                {{ controller.last_seen.strftime('%m/%d %H:%M') }}
+                                            {% else %}
+                                                Never
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('controllers.view_data', controller_id=controller.id) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-chart-line"></i> Data
+                                    </a>
+                                    <a href="{{ url_for('controllers.edit_controller', controller_id=controller.id) }}" 
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <form method="POST" action="{{ url_for('controllers.unbind_controller', controller_id=controller.id) }}" 
+                                          class="d-inline" onsubmit="return confirm('Are you sure you want to unbind this controller?')">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="fas fa-unlink"></i> Unbind
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if current_user.is_admin %}
+                <!-- Hidden section for all controllers (admin view) -->
+                <div class="row d-none" id="all-controllers">
+                    <!-- This will be populated via AJAX when admin toggles the view -->
+                </div>
+                {% endif %}
+
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-microchip"></i>
+                    <h5 class="text-muted">No Controllers Bound</h5>
+                    <p class="text-muted">Get started by binding your first controller using its serial number.</p>
+                    <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#bindControllerModal">
+                        <i class="fas fa-plus me-2"></i>Add Your First Controller
+                    </button>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<style>
-.table td {
-    vertical-align: middle;
-}
+<!-- Bind Controller Modal -->
+<div class="modal fade" id="bindControllerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Bind New Controller
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('controllers.bind_controller') }}">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Enter the serial number of a controller that has already reported to the server at least once.
+                    </div>
+                    <div class="mb-3">
+                        <label for="serial_number" class="form-label">Serial Number</label>
+                        <input type="text" class="form-control form-control-lg" id="serial_number" name="serial_number" 
+                               required placeholder="e.g., LX2025-001-ABCD" style="font-family: monospace;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-link me-2"></i>Bind Controller
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-.btn-group .btn {
-    border-radius: 0;
-}
+{% endblock %}
 
-.btn-group .btn:first-child {
-    border-top-left-radius: 0.375rem;
-    border-bottom-left-radius: 0.375rem;
-}
-
-.btn-group .btn:last-child {
-    border-top-right-radius: 0.375rem;
-    border-bottom-right-radius: 0.375rem;
-}
-
-.badge {
-    font-size: 0.75em;
-}
-</style>
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if current_user.is_admin %}
+    // Admin toggle for viewing all controllers
+    const viewAllToggle = document.getElementById('viewAllControllers');
+    const myControllersSection = document.getElementById('my-controllers');
+    const allControllersSection = document.getElementById('all-controllers');
+    
+    if (viewAllToggle) {
+        viewAllToggle.addEventListener('change', function() {
+            if (this.checked) {
+                // Load all controllers
+                loadAllControllers();
+                myControllersSection.classList.add('d-none');
+                allControllersSection.classList.remove('d-none');
+            } else {
+                // Show only my controllers
+                myControllersSection.classList.remove('d-none');
+                allControllersSection.classList.add('d-none');
+            }
+        });
+    }
+    
+    function loadAllControllers() {
+        // Make AJAX call to get all controllers
+        fetch('/controllers/api/all')
+            .then(response => response.json())
+            .then(controllers => {
+                allControllersSection.innerHTML = '';
+                
+                if (controllers.length === 0) {
+                    allControllersSection.innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No controllers found in the system.
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                controllers.forEach(controller => {
+                    const ownerBadge = controller.owner ? 
+                        `<span class="badge bg-success">${controller.owner.username}</span>` :
+                        `<span class="badge bg-warning">Unbound</span>`;
+                    
+                    const statusIndicator = controller.is_online ? 'online' : 'offline';
+                    const statusText = controller.is_online ? 'Online' : 'Offline';
+                    
+                    const lastSeen = controller.last_seen ? 
+                        new Date(controller.last_seen).toLocaleDateString() : 'Never';
+                    
+                    const cardHtml = `
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="card controller-card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="controller-type-icon ${controller.controller_type}">
+                                            <i class="fas fa-${getControllerIcon(controller.controller_type)}"></i>
+                                        </div>
+                                        <div class="ms-3 flex-grow-1">
+                                            <h5 class="card-title mb-1">${controller.name || controller.serial_number}</h5>
+                                            <div class="d-flex align-items-center">
+                                                <span class="controller-status-indicator ${statusIndicator}"></span>
+                                                <span class="ms-2 text-muted">${controller.controller_type}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row text-center mb-3">
+                                        <div class="col">
+                                            <small class="text-muted">Owner</small>
+                                            <div class="fw-bold">${ownerBadge}</div>
+                                        </div>
+                                        <div class="col">
+                                            <small class="text-muted">Status</small>
+                                            <div class="fw-bold">${statusText}</div>
+                                        </div>
+                                        <div class="col">
+                                            <small class="text-muted">Last Seen</small>
+                                            <div class="fw-bold small">${lastSeen}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="action-buttons">
+                                        <a href="/controllers/${controller.id}/data" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-chart-line"></i> Data
+                                        </a>
+                                        <a href="/controllers/${controller.id}/edit" class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        ${controller.user_id ? `
+                                            <form method="POST" action="/controllers/${controller.id}/unbind_user" 
+                                                  class="d-inline" onsubmit="return confirm('Unbind from ${controller.owner ? controller.owner.username : 'user'}?')">
+                                                <button type="submit" class="btn btn-outline-warning btn-sm">
+                                                    <i class="fas fa-user-times"></i> Unbind
+                                                </button>
+                                            </form>
+                                        ` : `
+                                            <form method="POST" action="/controllers/bind" class="d-inline">
+                                                <input type="hidden" name="serial_number" value="${controller.serial_number}">
+                                                <button type="submit" class="btn btn-outline-success btn-sm">
+                                                    <i class="fas fa-link"></i> Bind
+                                                </button>
+                                            </form>
+                                        `}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    allControllersSection.innerHTML += cardHtml;
+                });
+            })
+            .catch(error => {
+                console.error('Error loading controllers:', error);
+                allControllersSection.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error loading controllers. Please try again.
+                        </div>
+                    </div>
+                `;
+            });
+    }
+    
+    function getControllerIcon(type) {
+        const icons = {
+            'speedradar': 'tachometer-alt',
+            'beaufortmeter': 'wind', 
+            'weatherstation': 'cloud-sun',
+            'aicamera': 'camera'
+        };
+        return icons[type] || 'microchip';
+    }
+    {% endif %}
+    
+    // Auto-refresh controller status every 30 seconds
+    setInterval(function() {
+        // Update status indicators
+        const indicators = document.querySelectorAll('.controller-status-indicator');
+        indicators.forEach(indicator => {
+            // Add a subtle pulse animation to online indicators
+            if (indicator.classList.contains('online')) {
+                indicator.style.animation = 'none';
+                setTimeout(() => {
+                    indicator.style.animation = 'pulse 2s infinite';
+                }, 10);
+            }
+        });
+    }, 30000);
+});
+</script>
 {% endblock %}

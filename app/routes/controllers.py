@@ -107,26 +107,55 @@ def view_data(controller_id):
                          controller=controller,
                          data_points=data_points)
 
-@controllers_bp.route('/<int:controller_id>/data/api')
+@controllers_bp.route('/api/all')
 @login_required
-def api_data(controller_id):
-    controller = Controller.query.get_or_404(controller_id)
+def api_all_controllers():
+    """API endpoint for admin to get all controllers"""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
     
-    # Check permissions
-    if not current_user.is_admin and controller.user_id != current_user.id:
-        return jsonify({'error': 'Permission denied'}), 403
-    
-    # Get recent data points
-    limit = request.args.get('limit', 50, type=int)
-    data_points = ControllerData.query.filter_by(controller_id=controller_id)\
-        .order_by(ControllerData.timestamp.desc())\
-        .limit(limit).all()
-    
+    all_controllers = Controller.query.all()
     result = []
-    for dp in data_points:
-        result.append({
-            'timestamp': dp.timestamp.isoformat(),
-            'data': dp.get_data_dict()
-        })
+    
+    for controller in all_controllers:
+        controller_data = controller.to_dict()
+        controller_data['owner'] = None
+        if controller.user_id:
+            from app.models import User
+            user = User.query.get(controller.user_id)
+            if user:
+                controller_data['owner'] = {
+                    'id': user.id,
+                    'username': user.username,
+                    'full_name': user.full_name
+                }
+        result.append(controller_data)
     
     return jsonify(result)
+
+@controllers_bp.route('/<int:controller_id>/unbind_user', methods=['POST'])
+@login_required  
+def unbind_from_user(controller_id):
+    """Admin function to unbind controller from any user"""
+    if not current_user.is_admin:
+        flash('Admin access required', 'error')
+        return redirect(url_for('controllers.index'))
+    
+    controller = Controller.query.get_or_404(controller_id)
+    
+    # Store previous owner for flash message
+    previous_owner = None
+    if controller.user_id:
+        from app.models import User
+        user = User.query.get(controller.user_id)
+        previous_owner = user.username if user else f"User {controller.user_id}"
+    
+    controller.user_id = None
+    db.session.commit()
+    
+    if previous_owner:
+        flash(f'Controller {controller.serial_number} unbound from {previous_owner}', 'success')
+    else:
+        flash(f'Controller {controller.serial_number} was already unbound', 'info')
+    
+    return redirect(url_for('controllers.index'))
