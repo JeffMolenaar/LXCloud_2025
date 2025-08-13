@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 from app.models import db, Controller, ControllerData, User
+from config.config import Config
 from datetime import datetime, timedelta
 import json
 
@@ -95,6 +96,23 @@ def stats_overview():
         'unbound_controllers': unbound_controllers
     })
 
+@api_bp.route('/system/status')
+@login_required
+def system_status():
+    """Get system status including background services (admin only)"""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
+    
+    # Import here to avoid circular imports
+    from app.mqtt_service import mqtt_service
+    from app.controller_status_service import controller_status_service
+    
+    return jsonify({
+        'mqtt_service': mqtt_service.get_status(),
+        'controller_status_service': controller_status_service.get_status(),
+        'version': Config.get_version()
+    })
+
 @api_bp.route('/map-data')
 @login_required
 def map_data():
@@ -157,8 +175,7 @@ def register_controller():
         if existing_controller:
             # Update existing controller
             existing_controller.controller_type = controller_type
-            existing_controller.is_online = True
-            existing_controller.last_seen = datetime.utcnow()
+            existing_controller.update_status()
             
             # Update location if provided
             latitude = data.get('latitude')
@@ -181,10 +198,9 @@ def register_controller():
         controller = Controller(
             serial_number=serial_number,
             controller_type=controller_type,
-            name=data.get('name', serial_number),
-            is_online=True,
-            last_seen=datetime.utcnow()
+            name=data.get('name', serial_number)
         )
+        controller.update_status()
         
         # Set location if provided
         latitude = data.get('latitude')
@@ -231,8 +247,7 @@ def update_controller_data(serial_number):
             return jsonify({'error': 'Controller not found. Register the controller first.'}), 404
         
         # Update controller status
-        controller.is_online = True
-        controller.last_seen = datetime.utcnow()
+        controller.update_status()
         
         # Update location if provided in data
         latitude = data.get('latitude')

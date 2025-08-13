@@ -80,6 +80,21 @@ class Controller(db.Model):
             'last_seen': self.last_seen.isoformat() if self.last_seen else None,
             'created_at': self.created_at.isoformat()
         }
+    
+    def is_stale(self, timeout_seconds=300):
+        """Check if controller should be considered offline based on last_seen time"""
+        if not self.last_seen:
+            return True
+        
+        from datetime import datetime, timedelta
+        cutoff_time = datetime.utcnow() - timedelta(seconds=timeout_seconds)
+        return self.last_seen < cutoff_time
+    
+    def update_status(self):
+        """Update controller status to online and set last_seen to now"""
+        from datetime import datetime
+        self.is_online = True
+        self.last_seen = datetime.utcnow()
 
 class ControllerData(db.Model):
     __tablename__ = 'controller_data'

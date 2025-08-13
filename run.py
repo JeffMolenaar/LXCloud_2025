@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import create_app
 from app.mqtt_service import mqtt_service
+from app.controller_status_service import controller_status_service
 
 # Create Flask application instance
 app = create_app()
@@ -27,10 +28,23 @@ def init_mqtt():
         print(f"MQTT service initialization failed: {e}")
         print("Application will continue without MQTT functionality")
 
+def init_controller_status_service():
+    """Initialize controller status service with error handling"""
+    try:
+        controller_status_service.init_app(app)
+        controller_status_service.start()
+        print("Controller status service initialization completed")
+    except Exception as e:
+        print(f"Controller status service initialization failed: {e}")
+        print("Application will continue without automatic status management")
+
 def main():
     """Main function for development server"""
     # Initialize MQTT service
     init_mqtt()
+    
+    # Initialize controller status service
+    init_controller_status_service()
     
     # Get configuration
     debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
@@ -52,6 +66,8 @@ def main():
 if __name__ != '__main__':
     # Initialize MQTT service for production
     init_mqtt()
+    # Initialize controller status service for production
+    init_controller_status_service()
 
 if __name__ == '__main__':
     main()
