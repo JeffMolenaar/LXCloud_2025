@@ -22,6 +22,10 @@ class Config:
     MQTT_PASSWORD = os.environ.get('MQTT_PASSWORD') or ''
     MQTT_TOPIC_PREFIX = os.environ.get('MQTT_TOPIC_PREFIX') or 'lxcloud'
     
+    # Controller Status Management
+    CONTROLLER_OFFLINE_TIMEOUT = int(os.environ.get('CONTROLLER_OFFLINE_TIMEOUT') or 300)  # 5 minutes in seconds
+    CONTROLLER_STATUS_CHECK_INTERVAL = int(os.environ.get('CONTROLLER_STATUS_CHECK_INTERVAL') or 60)  # 1 minute in seconds
+    
     # File uploads
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size

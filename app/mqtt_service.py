@@ -154,8 +154,7 @@ class MQTTService:
             
             # Update controller info
             controller.controller_type = controller_type
-            controller.is_online = True
-            controller.last_seen = datetime.utcnow()
+            controller.update_status()
             
             # Update location if provided
             if latitude is not None and longitude is not None:
