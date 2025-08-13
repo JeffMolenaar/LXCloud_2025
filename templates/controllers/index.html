@@ -553,11 +553,11 @@
 </main>
 
 <!-- Bind Controller Modal -->
-<div class="modal fade modal-modern" id="bindControllerModal" tabindex="-1" style="display:none !important;">
+<div class="modal fade modal-modern" id="bindControllerModal" tabindex="-1" aria-labelledby="bindControllerModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Bind New Controller</h5>
+                <h5 class="modal-title" id="bindControllerModalLabel">Bind New Controller</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -587,46 +587,23 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Modal bootstrap / fallback
-    const modalEl = document.getElementById('bindControllerModal');
-    if (modalEl) {
-        modalEl.style.display = 'none';
-        modalEl.classList.remove('show');
-    }
-
-    function fallbackModal() {
-        const el = document.getElementById('bindControllerModal');
-        const triggers = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#bindControllerModal"]');
-        const closers = el.querySelectorAll('[data-bs-dismiss="modal"], .btn-close');
-
-        const show = () => {
-            el.style.display = 'block';
-            el.classList.add('show');
-            document.body.classList.add('modal-open');
-            const backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show';
-            backdrop.id = 'modal-backdrop';
-            document.body.appendChild(backdrop);
-            backdrop.addEventListener('click', hide);
-        };
-        const hide = () => {
-            el.style.display = 'none';
-            el.classList.remove('show');
-            document.body.classList.remove('modal-open');
-            const b = document.getElementById('modal-backdrop'); if (b) b.remove();
-        };
-
-        triggers.forEach(t => t.addEventListener('click', e => { e.preventDefault(); show(); }));
-        closers.forEach(c => c.addEventListener('click', e => { e.preventDefault(); hide(); }));
-        document.addEventListener('keydown', e => { if (e.key === 'Escape' && el.classList.contains('show')) hide(); });
-    }
-
-    if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
-        const bsModal = new window.bootstrap.Modal(modalEl);
-        const triggers = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#bindControllerModal"]');
-        triggers.forEach(t => t.addEventListener('click', e => { e.preventDefault(); modalEl.style.display=''; bsModal.show(); }));
+    // Initialize Bootstrap modal
+    const bindModalEl = document.getElementById('bindControllerModal');
+    let bindModal = null;
+    
+    if (bindModalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        bindModal = new bootstrap.Modal(bindModalEl);
+        
+        // Handle all bind controller button clicks
+        const bindButtons = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#bindControllerModal"]');
+        bindButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                bindModal.show();
+            });
+        });
     } else {
-        fallbackModal();
+        console.warn('Bootstrap not found, modal functionality may not work properly');
     }
 
     // Handle form submission for bind controller
