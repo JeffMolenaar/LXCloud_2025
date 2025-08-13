@@ -114,6 +114,70 @@
     margin: 0 0.25rem;
     border-radius: 0.35rem;
 }
+
+/* Modal backdrop fallback styles */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1040;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
+}
+
+.modal-backdrop.fade {
+    opacity: 0;
+}
+
+.modal-backdrop.show {
+    opacity: 0.5;
+}
+
+.modal.show {
+    display: block !important;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1050;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+
+.modal-dialog {
+    position: relative;
+    width: auto;
+    margin: 1.75rem;
+    pointer-events: none;
+}
+
+.modal.show .modal-dialog {
+    transform: translate(0, 0);
+}
+
+.modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 0.3rem;
+    outline: 0;
+}
+
+@media (min-width: 576px) {
+    .modal-dialog {
+        max-width: 500px;
+        margin: 1.75rem auto;
+    }
+}
 </style>
 {% endblock %}
 
@@ -409,14 +473,14 @@
 </div>
 
 <!-- Bind Controller Modal -->
-<div class="modal fade" id="bindControllerModal" tabindex="-1">
+<div class="modal fade" id="bindControllerModal" tabindex="-1" style="display: none !important;">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="fas fa-plus me-2"></i>Bind New Controller
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" action="{{ url_for('controllers.bind_controller') }}">
                 <div class="modal-body">
@@ -446,6 +510,100 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Ensure modal is properly hidden initially
+    const modal = document.getElementById('bindControllerModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+    }
+    
+    // Add modal functionality if Bootstrap modal is not available
+    function initializeModalFallback() {
+        const modalElement = document.getElementById('bindControllerModal');
+        const modalTriggers = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#bindControllerModal"]');
+        const modalCloseTriggers = document.querySelectorAll('[data-bs-dismiss="modal"]');
+        
+        // Function to show modal
+        function showModal() {
+            modalElement.style.display = 'block';
+            modalElement.classList.add('show');
+            document.body.classList.add('modal-open');
+            
+            // Create backdrop
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.id = 'modal-backdrop';
+            document.body.appendChild(backdrop);
+            
+            // Close on backdrop click
+            backdrop.addEventListener('click', hideModal);
+        }
+        
+        // Function to hide modal
+        function hideModal() {
+            modalElement.style.display = 'none';
+            modalElement.classList.remove('show');
+            document.body.classList.remove('modal-open');
+            
+            // Remove backdrop
+            const backdrop = document.getElementById('modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        }
+        
+        // Add event listeners to trigger buttons
+        modalTriggers.forEach(trigger => {
+            trigger.addEventListener('click', function(e) {
+                e.preventDefault();
+                showModal();
+            });
+        });
+        
+        // Add event listeners to close buttons
+        modalCloseTriggers.forEach(trigger => {
+            trigger.addEventListener('click', function(e) {
+                e.preventDefault();
+                hideModal();
+            });
+        });
+        
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modalElement.classList.contains('show')) {
+                hideModal();
+            }
+        });
+    }
+    
+    // Check if Bootstrap Modal is available
+    if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
+        console.log('Bootstrap Modal is available');
+        // Initialize Bootstrap modal properly
+        const modalElement = document.getElementById('bindControllerModal');
+        if (modalElement) {
+            // Make sure modal is hidden initially
+            modalElement.style.display = 'none';
+            modalElement.classList.remove('show');
+            
+            // Create Bootstrap modal instance
+            const bootstrapModal = new window.bootstrap.Modal(modalElement);
+            
+            // Add event listeners to trigger buttons for Bootstrap
+            const modalTriggers = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#bindControllerModal"]');
+            modalTriggers.forEach(trigger => {
+                trigger.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    modalElement.style.display = '';  // Reset inline style to let Bootstrap handle it
+                    bootstrapModal.show();
+                });
+            });
+        }
+    } else {
+        console.log('Bootstrap Modal not available, using fallback');
+        initializeModalFallback();
+    }
+    
     {% if current_user.is_admin %}
     // Admin toggle for viewing all controllers
     const viewAllToggle = document.getElementById('viewAllControllers');
