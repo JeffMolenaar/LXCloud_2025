@@ -95,6 +95,30 @@ def stats_overview():
         'unbound_controllers': unbound_controllers
     })
 
+@api_bp.route('/map-data')
+def map_data():
+    """Get map data for visualization from real controller database"""
+    # Query all controllers that have location data (latitude and longitude)
+    controllers = Controller.query.filter(
+        Controller.latitude.isnot(None),
+        Controller.longitude.isnot(None)
+    ).all()
+    
+    map_data = []
+    for controller in controllers:
+        map_data.append({
+            "id": controller.id,
+            "name": controller.name or controller.serial_number,
+            "serial_number": controller.serial_number,
+            "latitude": controller.latitude,
+            "longitude": controller.longitude,
+            "is_online": controller.is_online,
+            "type": controller.controller_type,
+            "last_seen": controller.last_seen.isoformat() if controller.last_seen else None
+        })
+    
+    return jsonify(map_data)
+
 # Controller API Endpoints (for controller devices to communicate)
 
 @api_bp.route('/controllers/register', methods=['POST'], strict_slashes=False)
