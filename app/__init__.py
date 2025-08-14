@@ -148,6 +148,14 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
     
+    # Add template filter for local datetime formatting
+    @app.template_filter('format_local_datetime')
+    def format_local_datetime(datetime_obj):
+        """Format datetime object for local display"""
+        if datetime_obj:
+            return datetime_obj.strftime('%m/%d %H:%M')
+        return 'Never'
+
     # Add context processor for version and UI customizations
     @app.context_processor
     def inject_config():
@@ -168,7 +176,8 @@ def create_app():
         
         return dict(
             version=Config.get_version(),
-            ui_customizations=ui_customizations
+            ui_customizations=ui_customizations,
+            format_local_datetime=format_local_datetime
         )
     
     # Register blueprints
