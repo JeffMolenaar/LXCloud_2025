@@ -38,6 +38,13 @@ venv.bak/
 *.db
 *.sqlite3
 
+# Database configuration (production)
+database.conf
+
+# Database backups
+*.sql
+lxcloud_backup_*.sql
+
 # Logs
 logs/
 *.log

@@ -109,24 +109,15 @@ def create_app():
     database_uri = mysql_uri
     try:
         print("Testing database connectivity...")
-        import pymysql
-        # Parse the MySQL URI to get connection parameters
-        import re
-        match = re.match(r'mysql\+pymysql://([^:]+):([^@]+)@([^/]+)/(.+)', mysql_uri)
-        if match:
-            user, password, host, database = match.groups()
-            # Test connection
-            conn = pymysql.connect(
-                host=host,
-                user=user,
-                password=password,
-                database=database,
-                connect_timeout=5
-            )
-            conn.close()
-            print("MySQL database connection successful")
+        from config.database_config import get_database_config
+        db_config = get_database_config()
+        
+        if db_config.test_connection():
+            print("MariaDB/MySQL database connection successful")
+        else:
+            raise Exception("Database connection test failed")
     except Exception as e:
-        print(f"MySQL connection failed: {e}")
+        print(f"MariaDB/MySQL connection failed: {e}")
         print("Falling back to SQLite database")
         database_uri = sqlite_uri
     
