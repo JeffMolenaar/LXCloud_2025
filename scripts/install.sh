@@ -47,13 +47,12 @@ echo -e "${GREEN}Starting LXCloud installation...${NC}"
 echo -e "${BLUE}Updating system packages...${NC}"
 apt update && apt upgrade -y
 
-# Install required packages
+# Install required packages (excluding MariaDB - handled by database_install.sh)
 echo -e "${BLUE}Installing required packages...${NC}"
 apt install -y \
     python3 \
     python3-pip \
     python3-venv \
-    mariadb-server \
     mosquitto \
     mosquitto-clients \
     nginx \
@@ -79,6 +78,11 @@ chown "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
 echo -e "${BLUE}Copying application files...${NC}"
 cp -r . "$INSTALL_DIR/"
 chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
+
+# Make database installation script executable
+if [[ -f "$INSTALL_DIR/database_install.sh" ]]; then
+    chmod +x "$INSTALL_DIR/database_install.sh"
+fi
 
 # Verify critical files were copied correctly
 echo -e "${BLUE}Verifying installation...${NC}"
@@ -115,12 +119,20 @@ sudo -u "$SERVICE_USER" python3 -m venv "$INSTALL_DIR/venv"
 sudo -u "$SERVICE_USER" "$INSTALL_DIR/venv/bin/pip" install --upgrade pip
 sudo -u "$SERVICE_USER" "$INSTALL_DIR/venv/bin/pip" install -r "$INSTALL_DIR/requirements.txt"
 
-# Configure MariaDB
-echo -e "${BLUE}Configuring MariaDB...${NC}"
-mysql -e "CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-mysql -e "CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASSWORD';"
-mysql -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';"
-mysql -e "FLUSH PRIVILEGES;"
+# Install and configure MariaDB using the database installation script
+echo -e "${BLUE}Installing and configuring MariaDB...${NC}"
+if [[ -f "$INSTALL_DIR/database_install.sh" ]]; then
+    # Use the comprehensive database installation script
+    chmod +x "$INSTALL_DIR/database_install.sh"
+    "$INSTALL_DIR/database_install.sh" --db-name "$DB_NAME" --db-user "$DB_USER" --db-password "$DB_PASSWORD" --auto-confirm
+else
+    # Fallback to manual MariaDB configuration if script not found
+    echo -e "${YELLOW}database_install.sh not found, using fallback configuration...${NC}"
+    mysql -e "CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    mysql -e "CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASSWORD';"
+    mysql -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';"
+    mysql -e "FLUSH PRIVILEGES;"
+fi
 
 # Configure Mosquitto MQTT
 echo -e "${BLUE}Configuring Mosquitto MQTT...${NC}"
@@ -134,15 +146,24 @@ EOF
 systemctl restart mosquitto
 systemctl enable mosquitto
 
-# Create environment file
+# Create database configuration file
+echo -e "${BLUE}Creating database configuration...${NC}"
+cat > "$INSTALL_DIR/database.conf" << EOF
+[database]
+host = localhost
+port = 3306
+user = $DB_USER
+password = $DB_PASSWORD
+database = $DB_NAME
+charset = utf8mb4
+EOF
+
+chown "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR/database.conf"
+chmod 600 "$INSTALL_DIR/database.conf"
+
+# Create environment file (for non-database configurations)
 echo -e "${BLUE}Creating environment configuration...${NC}"
 cat > "$INSTALL_DIR/.env" << EOF
-# Database Configuration
-DB_HOST=localhost
-DB_USER=$DB_USER
-DB_PASSWORD=$DB_PASSWORD
-DB_NAME=$DB_NAME
-
 # MQTT Configuration
 MQTT_BROKER_HOST=localhost
 MQTT_BROKER_PORT=1883
@@ -242,10 +263,16 @@ ufw allow 1883/tcp # MQTT
 mkdir -p /var/log/lxcloud
 chown "$SERVICE_USER:$SERVICE_USER" /var/log/lxcloud
 
-# Initialize database
-echo -e "${BLUE}Initializing database...${NC}"
+# Initialize database using the database utilities
+echo -e "${BLUE}Initializing database schema...${NC}"
 cd "$INSTALL_DIR"
-sudo -u "$SERVICE_USER" -H bash -c "source venv/bin/activate && python -c 'from app import create_app; create_app()'"
+if [[ -f "database_utils.py" ]]; then
+    # Use the database utilities for initialization
+    sudo -u "$SERVICE_USER" -H bash -c "source venv/bin/activate && python database_utils.py init"
+else
+    # Fallback to manual initialization
+    sudo -u "$SERVICE_USER" -H bash -c "source venv/bin/activate && python -c 'from app import create_app; create_app()'"
+fi
 
 # Start services
 echo -e "${BLUE}Starting services...${NC}"
@@ -283,6 +310,12 @@ echo -e "${BLUE}Database credentials:${NC}"
 echo -e "  Database: $DB_NAME"
 echo -e "  Username: $DB_USER"
 echo -e "  Password: $DB_PASSWORD"
+echo -e "  Config file: ${GREEN}$INSTALL_DIR/database.conf${NC}"
+echo
+echo -e "${BLUE}Database management:${NC}"
+echo -e "  Test connection: ${GREEN}cd $INSTALL_DIR && python database_utils.py test${NC}"
+echo -e "  Show config:     ${GREEN}cd $INSTALL_DIR && python database_utils.py config${NC}"
+echo -e "  Create backup:   ${GREEN}cd $INSTALL_DIR && python database_utils.py backup${NC}"
 echo
 echo -e "${BLUE}Useful commands:${NC}"
 echo -e "  Check status: ${GREEN}systemctl status lxcloud${NC}"
