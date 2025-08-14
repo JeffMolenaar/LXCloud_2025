@@ -1,18 +1,21 @@
 import os
 from dotenv import load_dotenv
+from .database_config import get_database_config
 
 load_dotenv()
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     
-    # Database
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') or \
-                             f'mysql+pymysql://{os.environ.get("DB_USER", "lxcloud")}:{os.environ.get("DB_PASSWORD", "lxcloud123")}@{os.environ.get("DB_HOST", "localhost")}/{os.environ.get("DB_NAME", "lxcloud")}'
+    # Database - Use centralized database configuration
+    _db_config = get_database_config()
+    
+    # Primary database URI (MariaDB/MySQL)
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') or _db_config.get_sqlalchemy_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # SQLite fallback database path
-    SQLITE_FALLBACK_URI = os.environ.get('SQLITE_FALLBACK_URI') or 'sqlite:///lxcloud_fallback.db'
+    SQLITE_FALLBACK_URI = os.environ.get('SQLITE_FALLBACK_URI') or _db_config.get_sqlite_fallback_uri()
     
     # MQTT
     MQTT_ENABLED = os.environ.get('MQTT_ENABLED', 'true').lower() == 'true'

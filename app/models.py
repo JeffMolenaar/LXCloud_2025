@@ -62,6 +62,7 @@ class Controller(db.Model):
     longitude = db.Column(db.Float, nullable=True)
     is_online = db.Column(db.Boolean, default=False)
     last_seen = db.Column(db.DateTime, nullable=True)
+    timeout_seconds = db.Column(db.Integer, nullable=True)  # Per-controller timeout in seconds
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -78,16 +79,22 @@ class Controller(db.Model):
             'longitude': self.longitude,
             'is_online': self.is_online,
             'last_seen': self.last_seen.isoformat() if self.last_seen else None,
+            'timeout_seconds': self.timeout_seconds,
             'created_at': self.created_at.isoformat()
         }
     
-    def is_stale(self, timeout_seconds=300):
-        """Check if controller should be considered offline based on last_seen time"""
+    def is_stale(self, default_timeout_seconds=300):
+        """Check if controller should be considered offline based on last_seen time
+        
+        Uses the controller's individual timeout_seconds if set, otherwise uses default_timeout_seconds
+        """
         if not self.last_seen:
             return True
         
         from datetime import datetime, timedelta
-        cutoff_time = datetime.utcnow() - timedelta(seconds=timeout_seconds)
+        # Use controller's individual timeout if set, otherwise use the provided default
+        timeout_to_use = self.timeout_seconds if self.timeout_seconds is not None else default_timeout_seconds
+        cutoff_time = datetime.utcnow() - timedelta(seconds=timeout_to_use)
         return self.last_seen < cutoff_time
     
     def update_status(self):

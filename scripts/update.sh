@@ -86,6 +86,11 @@ if [[ -f "$INSTALL_DIR/.env" ]]; then
     cp "$INSTALL_DIR/.env" ".env"
 fi
 
+# Preserve database configuration
+if [[ -f "$INSTALL_DIR/database.conf" ]]; then
+    cp "$INSTALL_DIR/database.conf" "database.conf"
+fi
+
 # Preserve uploads directory
 if [[ -d "$INSTALL_DIR/static/uploads" ]]; then
     cp -r "$INSTALL_DIR/static/uploads" "static/"
@@ -107,10 +112,20 @@ echo -e "${BLUE}Updating Python dependencies...${NC}"
 sudo -u "$SERVICE_USER" "$INSTALL_DIR/venv/bin/pip" install --upgrade pip
 sudo -u "$SERVICE_USER" "$INSTALL_DIR/venv/bin/pip" install -r "$INSTALL_DIR/requirements.txt"
 
-# Run database migrations (if any)
+# Run database migrations and updates
 echo -e "${BLUE}Updating database schema...${NC}"
 cd "$INSTALL_DIR"
-sudo -u "$SERVICE_USER" -H bash -c "source venv/bin/activate && python -c 'from app import create_app; create_app()'" || true
+if [[ -f "database_utils.py" ]]; then
+    # Use the database utilities for schema updates
+    echo -e "${BLUE}Testing database connection...${NC}"
+    sudo -u "$SERVICE_USER" -H bash -c "source venv/bin/activate && python database_utils.py test" || true
+    
+    echo -e "${BLUE}Applying database schema updates...${NC}"
+    sudo -u "$SERVICE_USER" -H bash -c "source venv/bin/activate && python database_utils.py init" || true
+else
+    # Fallback to manual database initialization
+    sudo -u "$SERVICE_USER" -H bash -c "source venv/bin/activate && python -c 'from app import create_app; create_app()'" || true
+fi
 
 # Start LXCloud service
 echo -e "${BLUE}Starting LXCloud service...${NC}"
@@ -122,6 +137,13 @@ sleep 5
 # Check service status
 if systemctl is-active --quiet lxcloud; then
     echo -e "${GREEN}✓ LXCloud service is running${NC}"
+    
+    # Show database configuration status
+    echo -e "${BLUE}Checking database configuration...${NC}"
+    if [[ -f "$INSTALL_DIR/database_utils.py" ]]; then
+        cd "$INSTALL_DIR"
+        sudo -u "$SERVICE_USER" -H bash -c "source venv/bin/activate && python database_utils.py config" 2>/dev/null || true
+    fi
     
     # Clean up temporary directory
     rm -rf "$TEMP_DIR"

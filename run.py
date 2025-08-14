@@ -32,11 +32,21 @@ def init_controller_status_service():
     """Initialize controller status service with error handling"""
     try:
         controller_status_service.init_app(app)
-        controller_status_service.start()
-        print("Controller status service initialization completed")
+        success = controller_status_service.start()
+        if success:
+            print("✅ Controller status service initialization completed")
+        else:
+            print("❌ Controller status service failed to start properly")
+            print("⚠️ Controllers may not be automatically marked offline!")
+            print("💡 Tip: Check the logs and restart the application if needed")
+        return success
     except Exception as e:
-        print(f"Controller status service initialization failed: {e}")
-        print("Application will continue without automatic status management")
+        print(f"❌ Controller status service initialization failed: {e}")
+        print("⚠️ Application will continue without automatic status management")
+        print("🔧 This means controllers will not be automatically marked offline when they stop reporting")
+        import traceback
+        traceback.print_exc()
+        return False
 
 def main():
     """Main function for development server"""

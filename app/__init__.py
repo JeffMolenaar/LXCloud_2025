@@ -109,24 +109,15 @@ def create_app():
     database_uri = mysql_uri
     try:
         print("Testing database connectivity...")
-        import pymysql
-        # Parse the MySQL URI to get connection parameters
-        import re
-        match = re.match(r'mysql\+pymysql://([^:]+):([^@]+)@([^/]+)/(.+)', mysql_uri)
-        if match:
-            user, password, host, database = match.groups()
-            # Test connection
-            conn = pymysql.connect(
-                host=host,
-                user=user,
-                password=password,
-                database=database,
-                connect_timeout=5
-            )
-            conn.close()
-            print("MySQL database connection successful")
+        from config.database_config import get_database_config
+        db_config = get_database_config()
+        
+        if db_config.test_connection():
+            print("MariaDB/MySQL database connection successful")
+        else:
+            raise Exception("Database connection test failed")
     except Exception as e:
-        print(f"MySQL connection failed: {e}")
+        print(f"MariaDB/MySQL connection failed: {e}")
         print("Falling back to SQLite database")
         database_uri = sqlite_uri
     
@@ -148,6 +139,14 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
     
+    # Add template filter for local datetime formatting
+    @app.template_filter('format_local_datetime')
+    def format_local_datetime(datetime_obj):
+        """Format datetime object for local display"""
+        if datetime_obj:
+            return datetime_obj.strftime('%m/%d %H:%M')
+        return 'Never'
+
     # Add context processor for version and UI customizations
     @app.context_processor
     def inject_config():
@@ -168,7 +167,8 @@ def create_app():
         
         return dict(
             version=Config.get_version(),
-            ui_customizations=ui_customizations
+            ui_customizations=ui_customizations,
+            format_local_datetime=format_local_datetime
         )
     
     # Register blueprints
@@ -297,6 +297,36 @@ def create_app():
                         print("Logo filename column added successfully")
             except Exception as e:
                 print(f"Could not add logo_filename column (might already exist): {e}")
+            
+            # Add migration for timeout_seconds column if it doesn't exist
+            try:
+                # Try to add the column if it doesn't exist
+                with db.engine.connect() as conn:
+                    # Check if column exists first - handle both SQLite and MySQL
+                    try:
+                        if database_uri.startswith('sqlite'):
+                            # SQLite: Use PRAGMA table_info
+                            result = conn.execute(db.text("PRAGMA table_info(controllers)"))
+                            columns = [row[1] for row in result.fetchall()]
+                        else:
+                            # MySQL: Use INFORMATION_SCHEMA
+                            database_name = database_uri.split('/')[-1]
+                            result = conn.execute(db.text(
+                                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
+                                "WHERE TABLE_SCHEMA = :db_name AND TABLE_NAME = 'controllers'"
+                            ), {"db_name": database_name})
+                            columns = [row[0] for row in result.fetchall()]
+                    except Exception as e:
+                        print(f"Could not check for timeout_seconds column: {e}")
+                        columns = []
+                    
+                    if 'timeout_seconds' not in columns:
+                        print("Adding timeout_seconds column to controllers table...")
+                        conn.execute(db.text("ALTER TABLE controllers ADD COLUMN timeout_seconds INTEGER"))
+                        conn.commit()
+                        print("Timeout seconds column added successfully")
+            except Exception as e:
+                print(f"Could not add timeout_seconds column (might already exist): {e}")
             
             print("Database initialized successfully")
             
