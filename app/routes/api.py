@@ -187,6 +187,18 @@ def register_controller():
                 except (ValueError, TypeError):
                     return jsonify({'error': 'Invalid latitude or longitude values'}), 400
             
+            # Update timeout if provided
+            timeout_seconds = data.get('timeout_seconds')
+            if timeout_seconds is not None:
+                try:
+                    timeout_val = int(timeout_seconds)
+                    if timeout_val > 0:
+                        existing_controller.timeout_seconds = timeout_val
+                    else:
+                        return jsonify({'error': 'timeout_seconds must be a positive integer'}), 400
+                except (ValueError, TypeError):
+                    return jsonify({'error': 'Invalid timeout_seconds value'}), 400
+            
             db.session.commit()
             
             return jsonify({
@@ -211,6 +223,18 @@ def register_controller():
                 controller.longitude = float(longitude)
             except (ValueError, TypeError):
                 return jsonify({'error': 'Invalid latitude or longitude values'}), 400
+        
+        # Set timeout if provided
+        timeout_seconds = data.get('timeout_seconds')
+        if timeout_seconds is not None:
+            try:
+                timeout_val = int(timeout_seconds)
+                if timeout_val > 0:
+                    controller.timeout_seconds = timeout_val
+                else:
+                    return jsonify({'error': 'timeout_seconds must be a positive integer'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Invalid timeout_seconds value'}), 400
         
         db.session.add(controller)
         db.session.commit()
@@ -363,6 +387,21 @@ def modify_controller(serial_number):
             except (ValueError, TypeError):
                 return jsonify({'error': 'Invalid latitude or longitude values'}), 400
         
+        if 'timeout_seconds' in data:
+            timeout_seconds = data['timeout_seconds']
+            if timeout_seconds is not None:
+                try:
+                    timeout_val = int(timeout_seconds)
+                    if timeout_val > 0:
+                        controller.timeout_seconds = timeout_val
+                    else:
+                        return jsonify({'error': 'timeout_seconds must be a positive integer'}), 400
+                except (ValueError, TypeError):
+                    return jsonify({'error': 'Invalid timeout_seconds value'}), 400
+            else:
+                # Allow setting timeout_seconds to null to use global default
+                controller.timeout_seconds = None
+        
         # Update status (marks as online and updates last_seen)
         controller.update_status()
         
@@ -440,7 +479,7 @@ def register_controller_get():
         'message': 'You are trying to GET the registration endpoint. Use POST instead.',
         'correct_method': 'POST',
         'correct_url': correct_url,
-        'curl_example': f'curl -X POST {correct_url} -H "Content-Type: application/json" -d \'{{"serial_number": "250100.1.0625", "type": "speedradar", "name": "250100.1.0625", "latitude": 51.913071, "longitude": 5.713852}}\'',
+        'curl_example': f'curl -X POST {correct_url} -H "Content-Type: application/json" -d \'{{"serial_number": "250100.1.0625", "type": "speedradar", "name": "250100.1.0625", "latitude": 51.913071, "longitude": 5.713852, "timeout_seconds": 300}}\'',
         'required_headers': {
             'Content-Type': 'application/json'
         },
@@ -449,7 +488,8 @@ def register_controller_get():
             'type': 'speedradar',
             'name': '250100.1.0625',
             'latitude': 51.913071,
-            'longitude': 5.713852
+            'longitude': 5.713852,
+            'timeout_seconds': 300
         }
     }), 405
 
@@ -479,7 +519,8 @@ def method_not_allowed(error):
                     'type': 'speedradar',
                     'name': '250100.1.0625',
                     'latitude': 51.913071,
-                    'longitude': 5.713852
+                    'longitude': 5.713852,
+                    'timeout_seconds': 300
                 }
             }
         }), 405
@@ -582,7 +623,7 @@ def debug_endpoint():
         'curl_example': {
             'command': curl_command,
             'headers': '-H "Content-Type: application/json"',
-            'data': '-d \'{"serial_number": "250100.1.0625", "type": "speedradar", "name": "250100.1.0625", "latitude": 51.913071, "longitude": 5.713852}\'',
-            'full_example': curl_command + ' -H "Content-Type: application/json" -d \'{"serial_number": "250100.1.0625", "type": "speedradar", "name": "250100.1.0625", "latitude": 51.913071, "longitude": 5.713852}\''
+            'data': '-d \'{"serial_number": "250100.1.0625", "type": "speedradar", "name": "250100.1.0625", "latitude": 51.913071, "longitude": 5.713852, "timeout_seconds": 300}\'',
+            'full_example': curl_command + ' -H "Content-Type: application/json" -d \'{"serial_number": "250100.1.0625", "type": "speedradar", "name": "250100.1.0625", "latitude": 51.913071, "longitude": 5.713852, "timeout_seconds": 300}\''
         }
     }), 200

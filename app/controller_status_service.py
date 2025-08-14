@@ -64,18 +64,20 @@ class ControllerStatusService:
         """Check all controllers and update their online/offline status"""
         try:
             # Find controllers that should be marked offline
-            # (currently online but are stale according to our timeout)
-            stale_controllers = Controller.query.filter(
+            # (currently online but are stale according to their individual or global timeout)
+            online_controllers = Controller.query.filter(
                 Controller.is_online == True
             ).all()
             
             # Filter for actually stale controllers and mark them offline
             controllers_updated = 0
-            for controller in stale_controllers:
+            for controller in online_controllers:
+                # Use the controller's individual timeout, or fall back to global default
                 if controller.is_stale(Config.CONTROLLER_OFFLINE_TIMEOUT):
                     controller.is_online = False
                     controllers_updated += 1
-                    print(f"Controller {controller.serial_number} marked offline (last seen: {controller.last_seen})")
+                    timeout_used = controller.timeout_seconds if controller.timeout_seconds is not None else Config.CONTROLLER_OFFLINE_TIMEOUT
+                    print(f"Controller {controller.serial_number} marked offline (last seen: {controller.last_seen}, timeout: {timeout_used}s)")
             
             if controllers_updated > 0:
                 db.session.commit()
