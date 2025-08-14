@@ -363,8 +363,8 @@ def modify_controller(serial_number):
             except (ValueError, TypeError):
                 return jsonify({'error': 'Invalid latitude or longitude values'}), 400
         
-        # Update last seen
-        controller.last_seen = datetime.utcnow()
+        # Update status (marks as online and updates last_seen)
+        controller.update_status()
         
         db.session.commit()
         
