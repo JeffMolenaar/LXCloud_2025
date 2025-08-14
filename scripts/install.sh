@@ -124,7 +124,7 @@ echo -e "${BLUE}Installing and configuring MariaDB...${NC}"
 if [[ -f "$INSTALL_DIR/database_install.sh" ]]; then
     # Use the comprehensive database installation script
     chmod +x "$INSTALL_DIR/database_install.sh"
-    "$INSTALL_DIR/database_install.sh" --db-name "$DB_NAME" --db-user "$DB_USER" --db-password "$DB_PASSWORD" --auto-confirm
+    "$INSTALL_DIR/database_install.sh" --db-name "$DB_NAME" --db-user "$DB_USER" --db-password "$DB_PASSWORD"
 else
     # Fallback to manual MariaDB configuration if script not found
     echo -e "${YELLOW}database_install.sh not found, using fallback configuration...${NC}"
