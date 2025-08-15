@@ -116,31 +116,48 @@ install_mariadb_arch() {
 secure_mariadb() {
     log "Securing MariaDB installation..."
     
-    # Generate a random root password if not provided
+    # Prompt for root password if not provided
     if [[ -z "$ROOT_PASSWORD" ]]; then
-        ROOT_PASSWORD=$(openssl rand -base64 32)
-        log "Generated random root password: $ROOT_PASSWORD"
+        echo -n "Enter MariaDB root password (press Enter for no password): "
+        read -s ROOT_PASSWORD
+        echo
+        if [[ -z "$ROOT_PASSWORD" ]]; then
+            log "No root password provided, will attempt connection without password"
+        else
+            log "Using provided root password"
+        fi
     fi
     
-    # Set root password and secure installation
-    sudo mysql -e "
-        UPDATE mysql.user SET Password=PASSWORD('$ROOT_PASSWORD') WHERE User='root';
-        DELETE FROM mysql.user WHERE User='';
-        DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-        DROP DATABASE IF EXISTS test;
-        DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
-        FLUSH PRIVILEGES;
-    " 2>/dev/null || {
-        # If the above fails (newer MariaDB versions), try this approach
+    # Set root password and secure installation if password was provided
+    if [[ -n "$ROOT_PASSWORD" ]]; then
         sudo mysql -e "
-            ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOT_PASSWORD';
+            UPDATE mysql.user SET Password=PASSWORD('$ROOT_PASSWORD') WHERE User='root';
             DELETE FROM mysql.user WHERE User='';
             DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
             DROP DATABASE IF EXISTS test;
             DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
             FLUSH PRIVILEGES;
-        " 2>/dev/null || log_warning "Could not set root password automatically. Please run mysql_secure_installation manually."
-    }
+        " 2>/dev/null || {
+            # If the above fails (newer MariaDB versions), try this approach
+            sudo mysql -e "
+                ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOT_PASSWORD';
+                DELETE FROM mysql.user WHERE User='';
+                DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+                DROP DATABASE IF EXISTS test;
+                DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+                FLUSH PRIVILEGES;
+            " 2>/dev/null || log_warning "Could not set root password automatically. Please run mysql_secure_installation manually."
+        }
+    else
+        # Just secure the installation without setting a password
+        sudo mysql -e "
+            DELETE FROM mysql.user WHERE User='';
+            DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+            DROP DATABASE IF EXISTS test;
+            DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+            FLUSH PRIVILEGES;
+        " 2>/dev/null || log_warning "Could not secure MariaDB automatically. Please run mysql_secure_installation manually."
+    fi
     
     log_success "MariaDB installation secured"
 }
@@ -397,7 +414,7 @@ show_help() {
     echo "  --db-password PASS      Database password (default: lxcloud)"
     echo "  --db-host HOST          Database host (default: localhost)"
     echo "  --db-port PORT          Database port (default: 3306)"
-    echo "  --root-password PASS    MariaDB root password (auto-generated if not provided)"
+    echo "  --root-password PASS    MariaDB root password (will be prompted if not provided)"
     echo "  --skip-install          Skip MariaDB installation (configure existing installation)"
     echo "  --skip-secure           Skip MariaDB security configuration"
     echo "  --skip-python           Skip Python dependencies installation"
