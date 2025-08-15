@@ -151,21 +151,35 @@ create_lxcloud_database() {
     
     # Create database and user
     if [[ -n "$ROOT_PASSWORD" ]]; then
-        mysql -u root -p"$ROOT_PASSWORD" -e "
+        log "Using root password to create database and user..."
+        local create_output
+        create_output=$(mysql -u root -p"$ROOT_PASSWORD" -e "
             CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
             CREATE USER IF NOT EXISTS '$DB_USER'@'$DB_HOST' IDENTIFIED BY '$DB_PASSWORD';
             GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'$DB_HOST';
             FLUSH PRIVILEGES;
-        "
+        " 2>&1)
+        local create_status=$?
+        
+        if [[ $create_status -ne 0 ]]; then
+            log_error "Failed to create database with root password"
+            log_error "Error output: $create_output"
+            return 1
+        fi
     else
         # Try without password (for fresh installations)
-        mysql -u root -e "
+        log "Attempting to create database without root password..."
+        local create_output
+        create_output=$(mysql -u root -e "
             CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
             CREATE USER IF NOT EXISTS '$DB_USER'@'$DB_HOST' IDENTIFIED BY '$DB_PASSWORD';
             GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'$DB_HOST';
             FLUSH PRIVILEGES;
-        " 2>/dev/null || {
-            log_error "Could not create database. Please ensure MariaDB is running and accessible."
+        " 2>&1)
+        local create_status=$?
+        
+        if [[ $create_status -ne 0 ]]; then
+            log_error "Could not create database. Error output: $create_output"
             log "You may need to run: sudo mysql_secure_installation"
             log "Then manually create the database and user:"
             log "  CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
@@ -173,7 +187,7 @@ create_lxcloud_database() {
             log "  GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'$DB_HOST';"
             log "  FLUSH PRIVILEGES;"
             return 1
-        }
+        fi
     fi
     
     log_success "Database '$DB_NAME' and user '$DB_USER' created successfully"
@@ -183,11 +197,26 @@ create_lxcloud_database() {
 test_database_connection() {
     log "Testing database connection..."
     
-    if mysql -u "$DB_USER" -p"$DB_PASSWORD" -h "$DB_HOST" -P "$DB_PORT" -D "$DB_NAME" -e "SELECT 1;" >/dev/null 2>&1; then
+    # Test connection with detailed error output
+    local connection_output
+    connection_output=$(mysql -u "$DB_USER" -p"$DB_PASSWORD" -h "$DB_HOST" -P "$DB_PORT" -D "$DB_NAME" -e "SELECT 1;" 2>&1)
+    local connection_status=$?
+    
+    if [[ $connection_status -eq 0 ]]; then
         log_success "Database connection successful"
         return 0
     else
         log_error "Database connection failed"
+        log_error "Connection details: mysql -u $DB_USER -h $DB_HOST -P $DB_PORT -D $DB_NAME"
+        log_error "Error output: $connection_output"
+        
+        # Additional troubleshooting information
+        log "Troubleshooting steps:"
+        log "1. Verify MariaDB is running: sudo systemctl status mariadb"
+        log "2. Check if database exists: mysql -u root -e 'SHOW DATABASES;'"
+        log "3. Check if user exists: mysql -u root -e 'SELECT User, Host FROM mysql.user WHERE User=\"$DB_USER\";'"
+        log "4. Test manual connection: mysql -u $DB_USER -p -h $DB_HOST -P $DB_PORT"
+        
         return 1
     fi
 }
