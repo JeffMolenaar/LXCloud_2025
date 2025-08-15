@@ -17,7 +17,7 @@ INSTALL_DIR="/opt/LXCloud"
 SERVICE_USER="lxcloud"
 DB_NAME="lxcloud"
 DB_USER="lxcloud"
-DB_PASSWORD=$(openssl rand -base64 32)
+DB_PASSWORD="lxcloud"
 
 echo -e "${BLUE}================================${NC}"
 echo -e "${BLUE}  LXCloud Installation Script   ${NC}"

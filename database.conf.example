@@ -6,7 +6,7 @@
 host = localhost
 port = 3306
 user = lxcloud
-password = lxcloud123
+password = lxcloud
 database = lxcloud
 
 # Connection settings

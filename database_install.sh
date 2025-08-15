@@ -8,7 +8,7 @@ set -e  # Exit on any error
 # Configuration variables
 DB_NAME="lxcloud"
 DB_USER="lxcloud"
-DB_PASSWORD="lxcloud123"
+DB_PASSWORD="lxcloud"
 DB_HOST="localhost"
 DB_PORT="3306"
 ROOT_PASSWORD=""
@@ -394,7 +394,7 @@ show_help() {
     echo "  -h, --help              Show this help message"
     echo "  --db-name NAME          Database name (default: lxcloud)"
     echo "  --db-user USER          Database user (default: lxcloud)"
-    echo "  --db-password PASS      Database password (default: lxcloud123)"
+    echo "  --db-password PASS      Database password (default: lxcloud)"
     echo "  --db-host HOST          Database host (default: localhost)"
     echo "  --db-port PORT          Database port (default: 3306)"
     echo "  --root-password PASS    MariaDB root password (auto-generated if not provided)"
