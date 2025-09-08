@@ -1,0 +1,31 @@
+# Kotlin/Gradle
+build/
+.gradle/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test outputs
+test-output/
+
+# Local configuration
+local.properties
+
+# Dependency cache
+.kotlin/
