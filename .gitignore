@@ -22,6 +22,24 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.docstates
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.userprefs
+*_ReSharper.*
+*.DotSettings.user
+.vs/
+packages/
+artifacts/
+
 # Virtual environments
 venv/
 env/
