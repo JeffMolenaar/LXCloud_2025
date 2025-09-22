@@ -392,6 +392,7 @@ let draggedElement = null;
 /* ======= Map state (OpenLayers) ======= */
 let olMap = null;
 let vectorSource = null;
+let clusterSource = null;
 let vectorLayer = null;
 let popupOverlay = null;
 const featuresById = {};  // id -> ol.Feature
@@ -627,9 +628,17 @@ function initializeMap() {
     if (!olMap) {
         const center = ol.proj.fromLonLat([4.9041, 52.3676]); // Amsterdam
         vectorSource = new ol.source.Vector();
-        vectorLayer  = new ol.layer.Vector({
-            source: vectorSource,
-            style: defaultFeatureStyle
+        
+        // Create cluster source with configurable distance
+        clusterSource = new ol.source.Cluster({
+            distance: 40, // Minimum distance between markers to cluster (in pixels)
+            minDistance: 20, // Minimum distance to maintain between clusters
+            source: vectorSource
+        });
+        
+        vectorLayer = new ol.layer.Vector({
+            source: clusterSource,
+            style: clusterStyleFunction
         });
 
         olMap = new ol.Map({
@@ -647,13 +656,35 @@ function initializeMap() {
         popupOverlay = new ol.Overlay({ element: popup, offset: [0, -10], positioning: 'bottom-center', stopEvent: true });
         olMap.addOverlay(popupOverlay);
 
-        // Click to show popup
+        // Click to show popup - now handles both individual markers and clusters
         olMap.on('singleclick', function (evt) {
             const feature = olMap.forEachFeatureAtPixel(evt.pixel, f => f);
             if (feature) {
-                const c = feature.get('controller');
-                popup.innerHTML = buildPopupHtml(c);
-                popupOverlay.setPosition(evt.coordinate);
+                const features = feature.get('features') || [feature];
+                
+                if (features.length === 1) {
+                    // Single marker - show popup
+                    const c = features[0].get('controller');
+                    popup.innerHTML = buildPopupHtml(c);
+                    popupOverlay.setPosition(evt.coordinate);
+                } else {
+                    // Cluster - zoom in to expand it
+                    const view = olMap.getView();
+                    const currentZoom = view.getZoom();
+                    const maxZoom = view.getMaxZoom() || 18;
+                    
+                    if (currentZoom < maxZoom) {
+                        view.animate({
+                            center: evt.coordinate,
+                            zoom: Math.min(currentZoom + 2, maxZoom),
+                            duration: 300
+                        });
+                    } else {
+                        // At max zoom, show cluster popup with list of controllers
+                        popup.innerHTML = buildClusterPopupHtml(features);
+                        popupOverlay.setPosition(evt.coordinate);
+                    }
+                }
             } else {
                 popupOverlay.setPosition(undefined);
             }
@@ -796,6 +827,55 @@ function defaultFeatureStyle(feature) {
   return getIconStyleForController(c);
 }
 
+/* ---- Cluster style function ---- */
+function clusterStyleFunction(feature) {
+  const features = feature.get('features');
+  const size = features.length;
+  
+  if (size === 1) {
+    // Single marker - use normal style
+    return defaultFeatureStyle(features[0]);
+  }
+  
+  // Multiple markers - create cluster style
+  const onlineCount = features.filter(f => f.get('controller')?.is_online).length;
+  const offlineCount = size - onlineCount;
+  
+  // Determine cluster color based on online/offline ratio
+  let clusterColor;
+  if (offlineCount === 0) {
+    clusterColor = '#28a745'; // All online - green
+  } else if (onlineCount === 0) {
+    clusterColor = '#dc3545'; // All offline - red
+  } else {
+    clusterColor = '#ffc107'; // Mixed - yellow/orange
+  }
+  
+  // Scale cluster size based on number of markers (with reasonable limits)
+  const radius = Math.min(Math.max(15 + Math.log(size) * 5, 20), 40);
+  
+  // Create cluster circle style
+  return new ol.style.Style({
+    image: new ol.style.Circle({
+      radius: radius,
+      fill: new ol.style.Fill({
+        color: clusterColor
+      }),
+      stroke: new ol.style.Stroke({
+        color: darkenColor(clusterColor, 0.3),
+        width: 2
+      })
+    }),
+    text: new ol.style.Text({
+      text: size.toString(),
+      fill: new ol.style.Fill({
+        color: '#ffffff'
+      }),
+      font: 'bold 14px sans-serif'
+    })
+  });
+}
+
 function startMapAutoRefresh() {
     if (window.__olRefreshTimer) return;
     window.__olRefreshTimer = setInterval(() => refreshMapData(false), REFRESH_MS);
@@ -857,7 +937,6 @@ function refreshMapData(fitOnFirstLoad = false) {
                 updated++;
             } else {
                 const feat = new ol.Feature({ geometry: new ol.geom.Point(coord3857), controller: item });
-                feat.setStyle(defaultFeatureStyle(feat));
                 vectorSource.addFeature(feat);
                 featuresById[key] = feat;
                 added++;
@@ -924,6 +1003,90 @@ function buildPopupHtml(c) {
         </div>
     `;
 }
+
+function buildClusterPopupHtml(features) {
+    const controllers = features.map(f => f.get('controller')).filter(c => c);
+    const onlineCount = controllers.filter(c => c.is_online).length;
+    const offlineCount = controllers.length - onlineCount;
+    
+    // Group controllers by type for better display
+    const byType = {};
+    controllers.forEach(c => {
+        const type = (c.type || c.controller_type || 'default');
+        if (!byType[type]) byType[type] = [];
+        byType[type].push(c);
+    });
+    
+    let html = `
+        <div class="cluster-popup" style="max-width: 300px; max-height: 400px; overflow-y: auto;">
+            <h6 style="margin:0 0 8px 0; color:#333; font-weight:600;">
+                <i class="fas fa-layer-group"></i> Cluster (${controllers.length} controllers)
+            </h6>
+            <div style="margin-bottom: 12px; display: flex; gap: 12px; font-size: 13px;">
+                <span style="color: #28a745;">
+                    <i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>
+                    ${onlineCount} online
+                </span>
+                <span style="color: #dc3545;">
+                    <i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>
+                    ${offlineCount} offline
+                </span>
+            </div>
+            <div style="border-top: 1px solid #eee; padding-top: 8px;">`;
+    
+    // Show controllers grouped by type (limit to avoid huge popups)
+    const maxToShow = 10;
+    let shown = 0;
+    
+    for (const [type, typeControllers] of Object.entries(byType)) {
+        if (shown >= maxToShow) break;
+        
+        const capType = type.charAt(0).toUpperCase() + type.slice(1);
+        html += `<div style="margin-bottom: 8px;">
+                    <strong style="font-size: 12px; color: #666;">${escapeHtml(capType)}:</strong>`;
+        
+        for (const c of typeControllers.slice(0, Math.min(3, maxToShow - shown))) {
+            const name = c.name || c.serial_number || 'Unnamed';
+            const online = !!c.is_online;
+            const statusColor = online ? '#28a745' : '#dc3545';
+            const id = c.id ?? c.controller_id ?? '';
+            
+            html += `<div style="padding: 2px 0; font-size: 12px; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="display: flex; align-items: center;">
+                            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;background:${statusColor};"></span>
+                            ${escapeHtml(name)}
+                        </span>
+                        ${id ? `<a href="/controllers/${id}/data" style="color: #007bff; font-size: 11px; text-decoration: none;" title="View Data"><i class="fas fa-chart-line"></i></a>` : ''}
+                     </div>`;
+            shown++;
+        }
+        
+        if (typeControllers.length > 3) {
+            html += `<div style="font-size: 11px; color: #888; font-style: italic;">
+                        ...and ${typeControllers.length - 3} more
+                     </div>`;
+        }
+        
+        html += `</div>`;
+    }
+    
+    if (controllers.length > maxToShow) {
+        html += `<div style="font-size: 11px; color: #888; font-style: italic; text-align: center; margin-top: 8px;">
+                    ...and ${controllers.length - maxToShow} more controllers
+                 </div>`;
+    }
+    
+    html += `
+            </div>
+            <div style="text-align: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee;">
+                <small style="color: #666; font-size: 11px;">
+                    <i class="fas fa-mouse-pointer"></i> Click to zoom in for individual markers
+                </small>
+            </div>
+        </div>
+    `;
+    
+    return html;
 
 /* -------- helpers -------- */
 function unwrapArray(payload) {
