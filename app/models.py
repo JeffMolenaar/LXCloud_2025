@@ -128,6 +128,7 @@ class UICustomization(db.Model):
     custom_css = db.Column(db.Text, nullable=True)
     header_config = db.Column(db.Text, nullable=True)  # JSON
     footer_config = db.Column(db.Text, nullable=True)  # JSON
+    marker_config = db.Column(db.Text, nullable=True)  # JSON for marker configurations
     logo_filename = db.Column(db.String(255), nullable=True)  # Store uploaded logo filename
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -148,6 +149,15 @@ class UICustomization(db.Model):
     
     def set_footer_config(self, config_dict):
         self.footer_config = json.dumps(config_dict)
+    
+    def get_marker_config(self):
+        try:
+            return json.loads(self.marker_config) if self.marker_config else {}
+        except:
+            return {}
+    
+    def set_marker_config(self, config_dict):
+        self.marker_config = json.dumps(config_dict)
 
 class Addon(db.Model):
     __tablename__ = 'addons'

@@ -175,6 +175,114 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Marker Configuration (Dashboard only) -->
+                                {% if page == 'dashboard' %}
+                                <div class="mb-4">
+                                    <h6 class="mb-3">
+                                        <i class="fas fa-map-marker-alt text-warning"></i> Controller Marker Configuration
+                                    </h6>
+                                    <p class="text-muted mb-3">Customize markers for each controller type with different styles for online and offline states.</p>
+                                    
+                                    {% set marker_config = customization.get_marker_config() %}
+                                    {% set controller_types = [
+                                        ('speedradar', 'Speed Radar', 'fas fa-tachometer-alt'),
+                                        ('beaufortmeter', 'Beaufort Meter', 'fas fa-wind'),
+                                        ('weatherstation', 'Weather Station', 'fas fa-cloud-sun'),
+                                        ('aicamera', 'AI Camera', 'fas fa-camera'),
+                                        ('default', 'Default', 'fas fa-microchip')
+                                    ] %}
+                                    
+                                    <div class="row">
+                                        {% for controller_type, display_name, default_icon in controller_types %}
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card border-light">
+                                                <div class="card-header bg-light">
+                                                    <h6 class="mb-0">
+                                                        <i class="{{ default_icon }}"></i> {{ display_name }}
+                                                    </h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <!-- Online Marker -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label text-success">
+                                                            <i class="fas fa-circle"></i> Online Marker
+                                                        </label>
+                                                        <div class="row">
+                                                            <div class="col-4">
+                                                                <label for="marker_{{ controller_type }}_online_icon_{{ page }}" class="form-label small">Icon</label>
+                                                                <input type="text" class="form-control form-control-sm" 
+                                                                       id="marker_{{ controller_type }}_online_icon_{{ page }}" 
+                                                                       name="marker_{{ controller_type }}_online_icon" 
+                                                                       value="{{ marker_config.get(controller_type, {}).get('online', {}).get('icon', default_icon) }}"
+                                                                       placeholder="{{ default_icon }}">
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <label for="marker_{{ controller_type }}_online_color_{{ page }}" class="form-label small">Color</label>
+                                                                <input type="color" class="form-control form-control-color form-control-sm" 
+                                                                       id="marker_{{ controller_type }}_online_color_{{ page }}" 
+                                                                       name="marker_{{ controller_type }}_online_color" 
+                                                                       value="{{ marker_config.get(controller_type, {}).get('online', {}).get('color', '#28a745') }}">
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <label for="marker_{{ controller_type }}_online_size_{{ page }}" class="form-label small">Size</label>
+                                                                <input type="number" class="form-control form-control-sm" 
+                                                                       id="marker_{{ controller_type }}_online_size_{{ page }}" 
+                                                                       name="marker_{{ controller_type }}_online_size" 
+                                                                       value="{{ marker_config.get(controller_type, {}).get('online', {}).get('size', '30') }}"
+                                                                       min="20" max="50" placeholder="30">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Offline Marker -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label text-danger">
+                                                            <i class="fas fa-circle"></i> Offline Marker
+                                                        </label>
+                                                        <div class="row">
+                                                            <div class="col-4">
+                                                                <label for="marker_{{ controller_type }}_offline_icon_{{ page }}" class="form-label small">Icon</label>
+                                                                <input type="text" class="form-control form-control-sm" 
+                                                                       id="marker_{{ controller_type }}_offline_icon_{{ page }}" 
+                                                                       name="marker_{{ controller_type }}_offline_icon" 
+                                                                       value="{{ marker_config.get(controller_type, {}).get('offline', {}).get('icon', default_icon) }}"
+                                                                       placeholder="{{ default_icon }}">
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <label for="marker_{{ controller_type }}_offline_color_{{ page }}" class="form-label small">Color</label>
+                                                                <input type="color" class="form-control form-control-color form-control-sm" 
+                                                                       id="marker_{{ controller_type }}_offline_color_{{ page }}" 
+                                                                       name="marker_{{ controller_type }}_offline_color" 
+                                                                       value="{{ marker_config.get(controller_type, {}).get('offline', {}).get('color', '#dc3545') }}">
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <label for="marker_{{ controller_type }}_offline_size_{{ page }}" class="form-label small">Size</label>
+                                                                <input type="number" class="form-control form-control-sm" 
+                                                                       id="marker_{{ controller_type }}_offline_size_{{ page }}" 
+                                                                       name="marker_{{ controller_type }}_offline_size" 
+                                                                       value="{{ marker_config.get(controller_type, {}).get('offline', {}).get('size', '30') }}"
+                                                                       min="20" max="50" placeholder="30">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-info-circle"></i> Usage Tips</h6>
+                                        <ul class="mb-0">
+                                            <li>Use Font Awesome icon classes (e.g., fas fa-camera, fas fa-wind)</li>
+                                            <li>Colors can be hex values or CSS color names</li>
+                                            <li>Size range: 20-50 pixels for optimal display</li>
+                                            <li>Changes apply to the dashboard map markers</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
                                 <!-- Custom CSS -->
                                 <div class="mb-3">
                                     <label for="custom_css_{{ page }}" class="form-label">

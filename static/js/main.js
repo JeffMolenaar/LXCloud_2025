@@ -286,36 +286,74 @@ function initializeMap(elementId, options = {}) {
     return map;
 }
 
-function createControllerMarker(controller, map) {
-    const markerIcons = {
-        speedradar: L.divIcon({
-            html: '<i class="fas fa-tachometer-alt"></i>',
-            iconSize: [30, 30],
-            className: 'custom-div-icon custom-marker-speedradar'
-        }),
-        beaufortmeter: L.divIcon({
-            html: '<i class="fas fa-wind"></i>',
-            iconSize: [30, 30],
-            className: 'custom-div-icon custom-marker-beaufortmeter'
-        }),
-        weatherstation: L.divIcon({
-            html: '<i class="fas fa-cloud-sun"></i>',
-            iconSize: [30, 30],
-            className: 'custom-div-icon custom-marker-weatherstation'
-        }),
-        aicamera: L.divIcon({
-            html: '<i class="fas fa-camera"></i>',
-            iconSize: [30, 30],
-            className: 'custom-div-icon custom-marker-aicamera'
-        }),
-        default: L.divIcon({
-            html: '<i class="fas fa-microchip"></i>',
-            iconSize: [30, 30],
-            className: 'custom-div-icon custom-marker-default'
-        })
+// Global marker configuration
+let markerConfig = null;
+
+// Load marker configuration from server
+async function loadMarkerConfig() {
+    try {
+        const response = await fetch('/admin/api/marker-config');
+        if (response.ok) {
+            markerConfig = await response.json();
+            console.log('Marker configuration loaded:', markerConfig);
+        } else {
+            console.warn('Failed to load marker configuration, using defaults');
+            markerConfig = getDefaultMarkerConfig();
+        }
+    } catch (error) {
+        console.warn('Error loading marker configuration:', error);
+        markerConfig = getDefaultMarkerConfig();
+    }
+}
+
+// Default marker configuration
+function getDefaultMarkerConfig() {
+    return {
+        speedradar: {
+            online: { icon: 'fas fa-tachometer-alt', color: '#17a2b8', size: '30' },
+            offline: { icon: 'fas fa-tachometer-alt', color: '#dc3545', size: '30' }
+        },
+        beaufortmeter: {
+            online: { icon: 'fas fa-wind', color: '#28a745', size: '30' },
+            offline: { icon: 'fas fa-wind', color: '#dc3545', size: '30' }
+        },
+        weatherstation: {
+            online: { icon: 'fas fa-cloud-sun', color: '#ffc107', size: '30' },
+            offline: { icon: 'fas fa-cloud-sun', color: '#dc3545', size: '30' }
+        },
+        aicamera: {
+            online: { icon: 'fas fa-camera', color: '#dc3545', size: '30' },
+            offline: { icon: 'fas fa-camera', color: '#6c757d', size: '30' }
+        },
+        default: {
+            online: { icon: 'fas fa-microchip', color: '#6c757d', size: '30' },
+            offline: { icon: 'fas fa-microchip', color: '#dc3545', size: '30' }
+        }
     };
+}
+
+function createControllerMarker(controller, map) {
+    // Ensure marker config is loaded
+    if (!markerConfig) {
+        markerConfig = getDefaultMarkerConfig();
+    }
     
-    const icon = markerIcons[controller.type] || markerIcons.default;
+    const controllerType = controller.type || 'default';
+    const isOnline = controller.is_online;
+    const state = isOnline ? 'online' : 'offline';
+    
+    // Get marker configuration for this controller type and state
+    const typeConfig = markerConfig[controllerType] || markerConfig.default;
+    const stateConfig = typeConfig[state];
+    
+    const iconSize = parseInt(stateConfig.size) || 30;
+    const icon = L.divIcon({
+        html: `<i class="${stateConfig.icon}" style="color: ${stateConfig.color};"></i>`,
+        iconSize: [iconSize, iconSize],
+        className: `custom-div-icon custom-marker-${controllerType}-${state}`,
+        iconAnchor: [iconSize / 2, iconSize / 2]
+    });
+    
     const marker = L.marker([controller.latitude, controller.longitude], { icon: icon }).addTo(map);
     
     // Create popup content
@@ -374,5 +412,7 @@ window.LXCloud = {
     createControllerMarker,
     formatDateTime,
     formatControllerType,
-    refreshDashboardData
+    refreshDashboardData,
+    loadMarkerConfig,
+    getDefaultMarkerConfig
 };
