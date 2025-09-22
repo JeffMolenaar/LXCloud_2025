@@ -347,12 +347,26 @@ function createControllerMarker(controller, map) {
     const stateConfig = typeConfig[state];
     
     const iconSize = parseInt(stateConfig.size) || 30;
-    const icon = L.divIcon({
-        html: `<i class="${stateConfig.icon}" style="color: ${stateConfig.color};"></i>`,
-        iconSize: [iconSize, iconSize],
-        className: `custom-div-icon custom-marker-${controllerType}-${state}`,
-        iconAnchor: [iconSize / 2, iconSize / 2]
-    });
+    
+    let icon;
+    // Check if custom icon is available
+    if (stateConfig.custom_icon) {
+        // Use custom uploaded PNG icon
+        icon = L.divIcon({
+            html: `<img src="/static/uploads/${stateConfig.custom_icon}" style="width: ${iconSize}px; height: ${iconSize}px; object-fit: contain;">`,
+            iconSize: [iconSize, iconSize],
+            className: `custom-div-icon custom-marker-${controllerType}-${state}`,
+            iconAnchor: [iconSize / 2, iconSize / 2]
+        });
+    } else {
+        // Use Font Awesome icon
+        icon = L.divIcon({
+            html: `<i class="${stateConfig.icon}" style="color: ${stateConfig.color};"></i>`,
+            iconSize: [iconSize, iconSize],
+            className: `custom-div-icon custom-marker-${controllerType}-${state}`,
+            iconAnchor: [iconSize / 2, iconSize / 2]
+        });
+    }
     
     const marker = L.marker([controller.latitude, controller.longitude], { icon: icon }).addTo(map);
     
