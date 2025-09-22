@@ -84,97 +84,136 @@ def delete_user(user_id):
 @login_required
 @admin_required
 def ui_customization():
-    pages = ['dashboard', 'login', 'controllers', 'profile']
-    customizations = {}
-    
-    for page in pages:
-        customization = UICustomization.query.filter_by(page_name=page).first()
-        if not customization:
-            customization = UICustomization(page_name=page)
-            db.session.add(customization)
-        customizations[page] = customization
-    
-    db.session.commit()
-    return render_template('admin/ui_customization.html', customizations=customizations)
+    try:
+        pages = ['dashboard', 'login', 'controllers', 'profile']
+        customizations = {}
+        
+        for page in pages:
+            customization = UICustomization.query.filter_by(page_name=page).first()
+            if not customization:
+                customization = UICustomization(page_name=page)
+                db.session.add(customization)
+            customizations[page] = customization
+        
+        db.session.commit()
+        return render_template('admin/ui_customization.html', customizations=customizations)
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in ui_customization: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Error loading UI customization: {str(e)}', 'error')
+        return redirect(url_for('admin.index'))
 
 @admin_bp.route('/ui-customization/<page_name>', methods=['POST'])
 @login_required
 @admin_required
 def save_ui_customization(page_name):
-    customization = UICustomization.query.filter_by(page_name=page_name).first()
-    if not customization:
-        customization = UICustomization(page_name=page_name)
-        db.session.add(customization)
-    
-    customization.custom_css = request.form.get('custom_css', '')
-    
-    # Handle logo upload
-    if 'logo_file' in request.files:
-        logo_file = request.files['logo_file']
-        if logo_file and logo_file.filename:
-            # Ensure uploads directory exists
-            upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'static', 'uploads')
-            os.makedirs(upload_dir, exist_ok=True)
-            
-            # Secure the filename and save
-            filename = secure_filename(logo_file.filename)
-            # Add timestamp to avoid conflicts
-            name, ext = os.path.splitext(filename)
-            filename = f"logo_{page_name}_{name}{ext}"
-            file_path = os.path.join(upload_dir, filename)
-            
-            try:
-                logo_file.save(file_path)
-                customization.logo_filename = filename
-                flash(f'Logo uploaded successfully for {page_name}', 'success')
-            except Exception as e:
-                flash(f'Error uploading logo: {str(e)}', 'error')
-    
-    # Header configuration
-    header_config = {
-        'height': request.form.get('header_height', '60px'),
-        'logo_text': request.form.get('header_logo_text', 'LXCloud'),
-        'background_color': request.form.get('header_bg_color', '#2c3e50'),
-        'text_color': request.form.get('header_text_color', '#ffffff'),
-        'logo_left_padding': request.form.get('logo_left_padding', '15px'),
-        'logo_menu_spacing': request.form.get('logo_menu_spacing', '30px'),
-        'user_button_right_padding': request.form.get('user_button_right_padding', '15px'),
-        'use_custom_logo': customization.logo_filename is not None
-    }
-    customization.set_header_config(header_config)
-    
-    # Footer configuration
-    footer_config = {
-        'height': request.form.get('footer_height', '40px'),
-        'text': request.form.get('footer_text', '© 2025 LXCloud'),
-        'background_color': request.form.get('footer_bg_color', '#34495e'),
-        'text_color': request.form.get('footer_text_color', '#ffffff')
-    }
-    customization.set_footer_config(footer_config)
-    
-    # Marker configuration
-    controller_types = ['speedradar', 'beaufortmeter', 'weatherstation', 'aicamera', 'default']
-    marker_config = {}
-    
-    for controller_type in controller_types:
-        marker_config[controller_type] = {
-            'online': {
-                'icon': request.form.get(f'marker_{controller_type}_online_icon', 'fas fa-microchip'),
-                'color': request.form.get(f'marker_{controller_type}_online_color', '#28a745'),
-                'size': request.form.get(f'marker_{controller_type}_online_size', '30')
-            },
-            'offline': {
-                'icon': request.form.get(f'marker_{controller_type}_offline_icon', 'fas fa-microchip'),
-                'color': request.form.get(f'marker_{controller_type}_offline_color', '#dc3545'),
-                'size': request.form.get(f'marker_{controller_type}_offline_size', '30')
+    try:
+        # Validate page_name
+        valid_pages = ['dashboard', 'login', 'controllers', 'profile']
+        if page_name not in valid_pages:
+            flash(f'Invalid page name: {page_name}', 'error')
+            return redirect(url_for('admin.ui_customization'))
+        
+        customization = UICustomization.query.filter_by(page_name=page_name).first()
+        if not customization:
+            customization = UICustomization(page_name=page_name)
+            db.session.add(customization)
+        
+        customization.custom_css = request.form.get('custom_css', '')
+        
+        # Handle logo upload
+        if 'logo_file' in request.files:
+            logo_file = request.files['logo_file']
+            if logo_file and logo_file.filename:
+                try:
+                    # Ensure uploads directory exists
+                    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'static', 'uploads')
+                    os.makedirs(upload_dir, exist_ok=True)
+                    
+                    # Secure the filename and save
+                    filename = secure_filename(logo_file.filename)
+                    if not filename:
+                        flash('Invalid filename for logo upload', 'error')
+                    else:
+                        # Add timestamp to avoid conflicts
+                        name, ext = os.path.splitext(filename)
+                        filename = f"logo_{page_name}_{name}{ext}"
+                        file_path = os.path.join(upload_dir, filename)
+                        
+                        logo_file.save(file_path)
+                        customization.logo_filename = filename
+                        flash(f'Logo uploaded successfully for {page_name}', 'success')
+                except Exception as e:
+                    print(f"Error uploading logo: {str(e)}")
+                    flash(f'Error uploading logo: {str(e)}', 'error')
+        
+        # Header configuration
+        try:
+            header_config = {
+                'height': request.form.get('header_height', '60px'),
+                'logo_text': request.form.get('header_logo_text', 'LXCloud'),
+                'background_color': request.form.get('header_bg_color', '#2c3e50'),
+                'text_color': request.form.get('header_text_color', '#ffffff'),
+                'logo_left_padding': request.form.get('logo_left_padding', '15px'),
+                'logo_menu_spacing': request.form.get('logo_menu_spacing', '30px'),
+                'user_button_right_padding': request.form.get('user_button_right_padding', '15px'),
+                'use_custom_logo': customization.logo_filename is not None
             }
-        }
-    
-    customization.set_marker_config(marker_config)
-    
-    db.session.commit()
-    flash(f'UI customization for {page_name} saved successfully', 'success')
-    return redirect(url_for('admin.ui_customization'))
+            customization.set_header_config(header_config)
+        except Exception as e:
+            print(f"Error setting header config: {str(e)}")
+            flash(f'Error saving header configuration: {str(e)}', 'error')
+        
+        # Footer configuration
+        try:
+            footer_config = {
+                'height': request.form.get('footer_height', '40px'),
+                'text': request.form.get('footer_text', '© 2025 LXCloud'),
+                'background_color': request.form.get('footer_bg_color', '#34495e'),
+                'text_color': request.form.get('footer_text_color', '#ffffff')
+            }
+            customization.set_footer_config(footer_config)
+        except Exception as e:
+            print(f"Error setting footer config: {str(e)}")
+            flash(f'Error saving footer configuration: {str(e)}', 'error')
+        
+        # Marker configuration
+        try:
+            controller_types = ['speedradar', 'beaufortmeter', 'weatherstation', 'aicamera', 'default']
+            marker_config = {}
+            
+            for controller_type in controller_types:
+                marker_config[controller_type] = {
+                    'online': {
+                        'icon': request.form.get(f'marker_{controller_type}_online_icon', 'fas fa-microchip'),
+                        'color': request.form.get(f'marker_{controller_type}_online_color', '#28a745'),
+                        'size': request.form.get(f'marker_{controller_type}_online_size', '30')
+                    },
+                    'offline': {
+                        'icon': request.form.get(f'marker_{controller_type}_offline_icon', 'fas fa-microchip'),
+                        'color': request.form.get(f'marker_{controller_type}_offline_color', '#dc3545'),
+                        'size': request.form.get(f'marker_{controller_type}_offline_size', '30')
+                    }
+                }
+            
+            customization.set_marker_config(marker_config)
+        except Exception as e:
+            print(f"Error setting marker config: {str(e)}")
+            flash(f'Error saving marker configuration: {str(e)}', 'error')
+        
+        db.session.commit()
+        flash(f'UI customization for {page_name} saved successfully', 'success')
+        return redirect(url_for('admin.ui_customization'))
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error in save_ui_customization for {page_name}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Error saving UI customization: {str(e)}', 'error')
+        return redirect(url_for('admin.ui_customization'))
 
 @admin_bp.route('/addons')
 @login_required
