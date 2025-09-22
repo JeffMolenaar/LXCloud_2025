@@ -691,11 +691,26 @@ async function loadDashboardMarkerConfig() {
 
 function getDefaultDashboardMarkerConfig() {
     return {
-        speedradar: { online: { color: '#17a2b8' }, offline: { color: '#dc3545' } },
-        beaufortmeter: { online: { color: '#28a745' }, offline: { color: '#dc3545' } },
-        weatherstation: { online: { color: '#ffc107' }, offline: { color: '#dc3545' } },
-        aicamera: { online: { color: '#dc3545' }, offline: { color: '#6c757d' } },
-        default: { online: { color: '#6c757d' }, offline: { color: '#dc3545' } }
+        speedradar: { 
+            online: { color: '#17a2b8', size: '30' }, 
+            offline: { color: '#dc3545', size: '30' } 
+        },
+        beaufortmeter: { 
+            online: { color: '#28a745', size: '30' }, 
+            offline: { color: '#dc3545', size: '30' } 
+        },
+        weatherstation: { 
+            online: { color: '#ffc107', size: '30' }, 
+            offline: { color: '#dc3545', size: '30' } 
+        },
+        aicamera: { 
+            online: { color: '#dc3545', size: '30' }, 
+            offline: { color: '#6c757d', size: '30' } 
+        },
+        default: { 
+            online: { color: '#6c757d', size: '30' }, 
+            offline: { color: '#dc3545', size: '30' } 
+        }
     };
 }
 
@@ -725,6 +740,23 @@ function getIconStyleForController(c) {
   // Get color configuration for this controller type and state
   const typeConfig = dashboardMarkerConfig[controllerType] || dashboardMarkerConfig.default;
   const stateConfig = typeConfig[state];
+  
+  // Check if custom icon is available
+  if (stateConfig.custom_icon) {
+    // Use custom uploaded PNG icon
+    const iconSize = parseInt(stateConfig.size) || 30;
+    return new ol.style.Style({
+      image: new ol.style.Icon({
+        src: `/static/uploads/${stateConfig.custom_icon}`,
+        anchor: [0.5, 0.5],         // center the icon on the coordinate
+        anchorXUnits: 'fraction',
+        anchorYUnits: 'fraction',
+        size: [iconSize, iconSize]
+      })
+    });
+  }
+  
+  // Fall back to SVG pin marker
   const fill = stateConfig.color || (online ? '#28a745' : '#dc3545');
   
   // Calculate stroke color (darker version of fill)
