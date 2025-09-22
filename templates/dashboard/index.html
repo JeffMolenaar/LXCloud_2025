@@ -661,17 +661,75 @@ function initializeMap() {
     }
 
     setMapStatus('Loading data…', 'info');
+    
+    // Load marker configuration
+    loadDashboardMarkerConfig();
+    
     refreshMapData(true);
     startMapAutoRefresh();
     setTimeout(() => olMap && olMap.updateSize(), 100);
 }
 
+/* ---- Marker Configuration ---- */
+let dashboardMarkerConfig = null;
+
+async function loadDashboardMarkerConfig() {
+    try {
+        const response = await fetch('/admin/api/marker-config');
+        if (response.ok) {
+            dashboardMarkerConfig = await response.json();
+            console.log('Dashboard marker configuration loaded:', dashboardMarkerConfig);
+        } else {
+            console.warn('Failed to load marker configuration, using defaults');
+            dashboardMarkerConfig = getDefaultDashboardMarkerConfig();
+        }
+    } catch (error) {
+        console.warn('Error loading marker configuration:', error);
+        dashboardMarkerConfig = getDefaultDashboardMarkerConfig();
+    }
+}
+
+function getDefaultDashboardMarkerConfig() {
+    return {
+        speedradar: { online: { color: '#17a2b8' }, offline: { color: '#dc3545' } },
+        beaufortmeter: { online: { color: '#28a745' }, offline: { color: '#dc3545' } },
+        weatherstation: { online: { color: '#ffc107' }, offline: { color: '#dc3545' } },
+        aicamera: { online: { color: '#dc3545' }, offline: { color: '#6c757d' } },
+        default: { online: { color: '#6c757d' }, offline: { color: '#dc3545' } }
+    };
+}
+
+function darkenColor(color, factor) {
+    // Simple color darkening function for hex colors
+    if (color.startsWith('#')) {
+        const hex = color.slice(1);
+        const r = Math.floor(parseInt(hex.substr(0, 2), 16) * (1 - factor));
+        const g = Math.floor(parseInt(hex.substr(2, 2), 16) * (1 - factor));
+        const b = Math.floor(parseInt(hex.substr(4, 2), 16) * (1 - factor));
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
+    return color;
+}
+
 /* ---- Map marker style: maps-like pin (green/red) ---- */
 function getIconStyleForController(c) {
+  // Ensure marker config is loaded
+  if (!dashboardMarkerConfig) {
+    dashboardMarkerConfig = getDefaultDashboardMarkerConfig();
+  }
+  
   const online = !!c?.is_online;
-  const fill   = online ? '#28a745' : '#dc3545';   // body color
-  const stroke = online ? '#166F2D' : '#912029';   // border color
-  const dot    = '#ffffff';                        // inner dot
+  const controllerType = (c?.type || c?.controller_type || 'default').toLowerCase();
+  const state = online ? 'online' : 'offline';
+  
+  // Get color configuration for this controller type and state
+  const typeConfig = dashboardMarkerConfig[controllerType] || dashboardMarkerConfig.default;
+  const stateConfig = typeConfig[state];
+  const fill = stateConfig.color || (online ? '#28a745' : '#dc3545');
+  
+  // Calculate stroke color (darker version of fill)
+  const stroke = darkenColor(fill, 0.3);
+  const dot = '#ffffff';                        // inner dot
 
   const svg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">

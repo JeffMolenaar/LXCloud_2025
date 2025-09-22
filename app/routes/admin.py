@@ -152,6 +152,26 @@ def save_ui_customization(page_name):
     }
     customization.set_footer_config(footer_config)
     
+    # Marker configuration
+    controller_types = ['speedradar', 'beaufortmeter', 'weatherstation', 'aicamera', 'default']
+    marker_config = {}
+    
+    for controller_type in controller_types:
+        marker_config[controller_type] = {
+            'online': {
+                'icon': request.form.get(f'marker_{controller_type}_online_icon', 'fas fa-microchip'),
+                'color': request.form.get(f'marker_{controller_type}_online_color', '#28a745'),
+                'size': request.form.get(f'marker_{controller_type}_online_size', '30')
+            },
+            'offline': {
+                'icon': request.form.get(f'marker_{controller_type}_offline_icon', 'fas fa-microchip'),
+                'color': request.form.get(f'marker_{controller_type}_offline_color', '#dc3545'),
+                'size': request.form.get(f'marker_{controller_type}_offline_size', '30')
+            }
+        }
+    
+    customization.set_marker_config(marker_config)
+    
     db.session.commit()
     flash(f'UI customization for {page_name} saved successfully', 'success')
     return redirect(url_for('admin.ui_customization'))
@@ -212,3 +232,41 @@ def delete_addon(addon_id):
     db.session.commit()
     flash(f'Addon {name} has been deleted', 'success')
     return redirect(url_for('admin.addons'))
+
+@admin_bp.route('/api/marker-config')
+def get_marker_config():
+    """API endpoint to get marker configuration for dashboard"""
+    dashboard_customization = UICustomization.query.filter_by(page_name='dashboard').first()
+    
+    if dashboard_customization:
+        marker_config = dashboard_customization.get_marker_config()
+    else:
+        # Default configuration
+        marker_config = {}
+    
+    # Ensure we have default values for all controller types
+    controller_types = ['speedradar', 'beaufortmeter', 'weatherstation', 'aicamera', 'default']
+    default_icons = {
+        'speedradar': 'fas fa-tachometer-alt',
+        'beaufortmeter': 'fas fa-wind',
+        'weatherstation': 'fas fa-cloud-sun',
+        'aicamera': 'fas fa-camera',
+        'default': 'fas fa-microchip'
+    }
+    
+    for controller_type in controller_types:
+        if controller_type not in marker_config:
+            marker_config[controller_type] = {
+                'online': {
+                    'icon': default_icons[controller_type],
+                    'color': '#28a745',
+                    'size': '30'
+                },
+                'offline': {
+                    'icon': default_icons[controller_type],
+                    'color': '#dc3545',
+                    'size': '30'
+                }
+            }
+    
+    return jsonify(marker_config)
