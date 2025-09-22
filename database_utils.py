@@ -252,6 +252,93 @@ def restore_database(backup_file):
         return False
 
 
+def migrate_database():
+    """Apply database migrations to existing database"""
+    print("🔄 Applying Database Migrations")
+    print("=" * 40)
+    
+    try:
+        from app import create_app
+        from app.models import db
+        
+        app = create_app()
+        with app.app_context():
+            print("Checking for required database migrations...")
+            
+            # Check if marker_config column exists in ui_customization table
+            migration_needed = False
+            
+            try:
+                # Try to describe the ui_customization table
+                from sqlalchemy import text
+                
+                # Check if table exists first
+                table_check = db.session.execute(text("SHOW TABLES LIKE 'ui_customization'"))
+                if not table_check.fetchone():
+                    print("ℹ️  ui_customization table does not exist, creating full schema...")
+                    db.create_all()
+                    print("✅ Database schema created successfully!")
+                    return True
+                
+                # Check if marker_config column exists
+                column_check = db.session.execute(text("DESCRIBE ui_customization"))
+                columns = [row[0] for row in column_check.fetchall()]
+                
+                if 'marker_config' not in columns:
+                    print("🔍 Found missing column: marker_config in ui_customization table")
+                    migration_needed = True
+                else:
+                    print("✅ marker_config column already exists")
+                
+                if migration_needed:
+                    print("📝 Adding marker_config column to ui_customization table...")
+                    db.session.execute(text("ALTER TABLE ui_customization ADD COLUMN marker_config TEXT"))
+                    db.session.commit()
+                    print("✅ Successfully added marker_config column!")
+                else:
+                    print("ℹ️  No migrations needed - database is up to date")
+                
+                return True
+                
+            except Exception as e:
+                # Handle SQLite or other database types
+                if "no such table" in str(e).lower() or "doesn't exist" in str(e).lower():
+                    print("ℹ️  Database tables don't exist, creating full schema...")
+                    db.create_all()
+                    print("✅ Database schema created successfully!")
+                    return True
+                else:
+                    # For SQLite, check using different method
+                    try:
+                        from sqlalchemy import inspect
+                        inspector = inspect(db.engine)
+                        
+                        if 'ui_customization' not in inspector.get_table_names():
+                            print("ℹ️  ui_customization table does not exist, creating full schema...")
+                            db.create_all()
+                            print("✅ Database schema created successfully!")
+                            return True
+                        
+                        columns = [col['name'] for col in inspector.get_columns('ui_customization')]
+                        if 'marker_config' not in columns:
+                            print("🔍 Found missing column: marker_config in ui_customization table")
+                            db.session.execute(text("ALTER TABLE ui_customization ADD COLUMN marker_config TEXT"))
+                            db.session.commit()
+                            print("✅ Successfully added marker_config column!")
+                        else:
+                            print("✅ marker_config column already exists")
+                        
+                        return True
+                        
+                    except Exception as inner_e:
+                        print(f"❌ Migration failed: {inner_e}")
+                        return False
+                        
+    except Exception as e:
+        print(f"❌ Migration failed: {e}")
+        return False
+
+
 def show_help():
     """Show help information"""
     print("LXCloud Database Utility")
@@ -264,6 +351,7 @@ def show_help():
     print("  config            Show database configuration")
     print("  create            Create database and user (requires admin access)")
     print("  init              Initialize database schema")
+    print("  migrate           Apply database migrations to existing database")
     print("  backup            Create database backup")
     print("  restore <file>    Restore database from backup file")
     print("  help              Show this help message")
@@ -271,6 +359,7 @@ def show_help():
     print("Examples:")
     print("  python database_utils.py test")
     print("  python database_utils.py create")
+    print("  python database_utils.py migrate")
     print("  python database_utils.py backup")
     print("  python database_utils.py restore lxcloud_backup_20250101_120000.sql")
     print()
@@ -294,6 +383,9 @@ def main():
         sys.exit(0 if success else 1)
     elif command == 'init':
         success = initialize_schema()
+        sys.exit(0 if success else 1)
+    elif command == 'migrate':
+        success = migrate_database()
         sys.exit(0 if success else 1)
     elif command == 'backup':
         success = backup_database()

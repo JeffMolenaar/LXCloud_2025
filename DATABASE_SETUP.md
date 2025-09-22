@@ -186,6 +186,43 @@ python database_utils.py restore lxcloud_backup_20250101_120000.sql
 python database_utils.py create
 ```
 
+## Database Migrations
+
+LXCloud includes database migration utilities to handle schema updates for existing databases.
+
+### Fixing UI Customization Error
+
+If you encounter the error `Unknown column 'ui_customization.marker_config'`, this means your database is missing a required column. To fix this:
+
+```bash
+# Option 1: Use the dedicated migration script (recommended)
+python migrate_marker_config.py
+
+# Option 2: Use the general migration command
+python database_utils.py migrate
+```
+
+The migration script will:
+- Check if the `marker_config` column exists in the `ui_customization` table
+- Add the column if it's missing
+- Verify the migration was successful
+- Test the functionality
+
+### Manual Migration (if scripts fail)
+
+If the automated migration fails, you can manually add the column:
+
+```sql
+-- Connect to your database
+mysql -u lxcloud -p lxcloud
+
+-- Add the missing column
+ALTER TABLE ui_customization ADD COLUMN marker_config TEXT;
+
+-- Verify the column was added
+DESCRIBE ui_customization;
+```
+
 ## Troubleshooting
 
 ### Connection Issues
