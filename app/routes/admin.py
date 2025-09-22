@@ -182,21 +182,74 @@ def save_ui_customization(page_name):
         # Marker configuration
         try:
             controller_types = ['speedradar', 'beaufortmeter', 'weatherstation', 'aicamera', 'default']
-            marker_config = {}
+            marker_config = customization.get_marker_config()  # Get existing config to preserve uploaded icons
             
             for controller_type in controller_types:
-                marker_config[controller_type] = {
-                    'online': {
-                        'icon': request.form.get(f'marker_{controller_type}_online_icon', 'fas fa-microchip'),
-                        'color': request.form.get(f'marker_{controller_type}_online_color', '#28a745'),
-                        'size': request.form.get(f'marker_{controller_type}_online_size', '30')
-                    },
-                    'offline': {
-                        'icon': request.form.get(f'marker_{controller_type}_offline_icon', 'fas fa-microchip'),
-                        'color': request.form.get(f'marker_{controller_type}_offline_color', '#dc3545'),
-                        'size': request.form.get(f'marker_{controller_type}_offline_size', '30')
-                    }
-                }
+                # Initialize if not exists
+                if controller_type not in marker_config:
+                    marker_config[controller_type] = {'online': {}, 'offline': {}}
+                
+                # Handle icon uploads for online state
+                online_icon_file = request.files.get(f'marker_{controller_type}_online_icon_file')
+                if online_icon_file and online_icon_file.filename:
+                    try:
+                        # Ensure uploads directory exists
+                        upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'static', 'uploads')
+                        os.makedirs(upload_dir, exist_ok=True)
+                        
+                        # Secure the filename and save
+                        filename = secure_filename(online_icon_file.filename)
+                        if filename and filename.lower().endswith('.png'):
+                            # Add timestamp and controller type to avoid conflicts
+                            name, ext = os.path.splitext(filename)
+                            icon_filename = f"marker_{controller_type}_online_{name}{ext}"
+                            file_path = os.path.join(upload_dir, icon_filename)
+                            
+                            online_icon_file.save(file_path)
+                            marker_config[controller_type]['online']['custom_icon'] = icon_filename
+                            flash(f'Online icon uploaded successfully for {controller_type}', 'success')
+                        else:
+                            flash(f'Invalid file type for {controller_type} online icon. Only PNG files are allowed.', 'error')
+                    except Exception as e:
+                        print(f"Error uploading online icon for {controller_type}: {str(e)}")
+                        flash(f'Error uploading online icon for {controller_type}: {str(e)}', 'error')
+                
+                # Handle icon uploads for offline state
+                offline_icon_file = request.files.get(f'marker_{controller_type}_offline_icon_file')
+                if offline_icon_file and offline_icon_file.filename:
+                    try:
+                        # Ensure uploads directory exists
+                        upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'static', 'uploads')
+                        os.makedirs(upload_dir, exist_ok=True)
+                        
+                        # Secure the filename and save
+                        filename = secure_filename(offline_icon_file.filename)
+                        if filename and filename.lower().endswith('.png'):
+                            # Add timestamp and controller type to avoid conflicts
+                            name, ext = os.path.splitext(filename)
+                            icon_filename = f"marker_{controller_type}_offline_{name}{ext}"
+                            file_path = os.path.join(upload_dir, icon_filename)
+                            
+                            offline_icon_file.save(file_path)
+                            marker_config[controller_type]['offline']['custom_icon'] = icon_filename
+                            flash(f'Offline icon uploaded successfully for {controller_type}', 'success')
+                        else:
+                            flash(f'Invalid file type for {controller_type} offline icon. Only PNG files are allowed.', 'error')
+                    except Exception as e:
+                        print(f"Error uploading offline icon for {controller_type}: {str(e)}")
+                        flash(f'Error uploading offline icon for {controller_type}: {str(e)}', 'error')
+                
+                # Update marker configuration with form data
+                marker_config[controller_type]['online'].update({
+                    'icon': request.form.get(f'marker_{controller_type}_online_icon', 'fas fa-microchip'),
+                    'color': request.form.get(f'marker_{controller_type}_online_color', '#28a745'),
+                    'size': request.form.get(f'marker_{controller_type}_online_size', '30')
+                })
+                marker_config[controller_type]['offline'].update({
+                    'icon': request.form.get(f'marker_{controller_type}_offline_icon', 'fas fa-microchip'),
+                    'color': request.form.get(f'marker_{controller_type}_offline_color', '#dc3545'),
+                    'size': request.form.get(f'marker_{controller_type}_offline_size', '30')
+                })
             
             customization.set_marker_config(marker_config)
         except Exception as e:
