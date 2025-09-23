@@ -180,10 +180,28 @@
     .available-cards h6 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary); }
     .card-option { display: flex; align-items: center; margin-bottom: 0.5rem; padding: 0.25rem 0; }
     .card-option input[type="checkbox"] { margin-right: 0.5rem; width: 16px; height: 16px; }
-    .card-option label { font-size: 0.85rem; color: var(--text-primary); cursor: pointer; margin: 0; }
+    .card-option label { font-size: 0.85rem; color: var(--text-primary); cursor: pointer; margin: 0; flex: 1; }
+    
+    /* Card Order Controls */
+    .card-order-controls { display: flex; align-items: center; gap: 0.25rem; }
+    .card-order-input { width: 40px; height: 24px; font-size: 0.75rem; text-align: center; border: 1px solid var(--border-light); border-radius: 4px; }
+    .card-order-btn { background: none; border: 1px solid var(--border-light); border-radius: 4px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; cursor: pointer; }
+    .card-order-btn:hover { background: var(--bg-secondary); }
 
     .card-management-actions { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-light); display: flex; gap: 0.5rem; }
     .card-management-actions .btn { flex: 1; font-size: 0.8rem; }
+
+    /* Mobile Card Management Panel */
+    @media (max-width: 768px) {
+        .card-management-panel {
+            position: fixed; top: 80px; left: 1rem; right: 1rem; width: auto;
+            max-height: 60vh;
+        }
+        
+        .edit-mode-toggle {
+            top: 80px; right: 1rem; left: auto;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -208,38 +226,65 @@
                     <div class="card-option" data-card-id="welcome">
                         <input type="checkbox" id="card-welcome" checked onchange="toggleCard('welcome')">
                         <label for="card-welcome">Welcome Card</label>
-                    </div>
-                    <div class="card-option" data-card-id="total-controllers">
-                        <input type="checkbox" id="card-total-controllers" checked onchange="toggleCard('total-controllers')">
-                        <label for="card-total-controllers">Total Controllers</label>
-                    </div>
-                    <div class="card-option" data-card-id="online-controllers">
-                        <input type="checkbox" id="card-online-controllers" checked onchange="toggleCard('online-controllers')">
-                        <label for="card-online-controllers">Online Controllers</label>
-                    </div>
-                    <div class="card-option" data-card-id="offline-controllers">
-                        <input type="checkbox" id="card-offline-controllers" checked onchange="toggleCard('offline-controllers')">
-                        <label for="card-offline-controllers">Offline Controllers</label>
-                    </div>
-                    <div class="card-option" data-card-id="system-version">
-                        <input type="checkbox" id="card-system-version" checked onchange="toggleCard('system-version')">
-                        <label for="card-system-version">System Version</label>
+                        <div class="card-order-controls">
+                            <input type="number" class="card-order-input" value="1" min="1" max="9" onchange="updateCardOrder('welcome', this.value)">
+                        </div>
                     </div>
                     <div class="card-option" data-card-id="map">
                         <input type="checkbox" id="card-map" checked onchange="toggleCard('map')">
                         <label for="card-map">Controller Map</label>
+                        <div class="card-order-controls">
+                            <input type="number" class="card-order-input" value="2" min="1" max="9" onchange="updateCardOrder('map', this.value)">
+                        </div>
+                    </div>
+                    <div class="card-option" data-card-id="total-controllers">
+                        <input type="checkbox" id="card-total-controllers" checked onchange="toggleCard('total-controllers')">
+                        <label for="card-total-controllers">Total Controllers</label>
+                        <div class="card-order-controls">
+                            <input type="number" class="card-order-input" value="3" min="1" max="9" onchange="updateCardOrder('total-controllers', this.value)">
+                        </div>
+                    </div>
+                    <div class="card-option" data-card-id="online-controllers">
+                        <input type="checkbox" id="card-online-controllers" checked onchange="toggleCard('online-controllers')">
+                        <label for="card-online-controllers">Online Controllers</label>
+                        <div class="card-order-controls">
+                            <input type="number" class="card-order-input" value="4" min="1" max="9" onchange="updateCardOrder('online-controllers', this.value)">
+                        </div>
+                    </div>
+                    <div class="card-option" data-card-id="offline-controllers">
+                        <input type="checkbox" id="card-offline-controllers" checked onchange="toggleCard('offline-controllers')">
+                        <label for="card-offline-controllers">Offline Controllers</label>
+                        <div class="card-order-controls">
+                            <input type="number" class="card-order-input" value="5" min="1" max="9" onchange="updateCardOrder('offline-controllers', this.value)">
+                        </div>
+                    </div>
+                    <div class="card-option" data-card-id="system-version">
+                        <input type="checkbox" id="card-system-version" checked onchange="toggleCard('system-version')">
+                        <label for="card-system-version">System Version</label>
+                        <div class="card-order-controls">
+                            <input type="number" class="card-order-input" value="6" min="1" max="9" onchange="updateCardOrder('system-version', this.value)">
+                        </div>
                     </div>
                     <div class="card-option" data-card-id="controller-list">
                         <input type="checkbox" id="card-controller-list" checked onchange="toggleCard('controller-list')">
                         <label for="card-controller-list">Controller List</label>
+                        <div class="card-order-controls">
+                            <input type="number" class="card-order-input" value="7" min="1" max="9" onchange="updateCardOrder('controller-list', this.value)">
+                        </div>
                     </div>
                     <div class="card-option" data-card-id="quick-actions">
                         <input type="checkbox" id="card-quick-actions" checked onchange="toggleCard('quick-actions')">
                         <label for="card-quick-actions">Quick Actions</label>
+                        <div class="card-order-controls">
+                            <input type="number" class="card-order-input" value="8" min="1" max="9" onchange="updateCardOrder('quick-actions', this.value)">
+                        </div>
                     </div>
                     <div class="card-option" data-card-id="system-status">
                         <input type="checkbox" id="card-system-status" checked onchange="toggleCard('system-status')">
                         <label for="card-system-status">System Status</label>
+                        <div class="card-order-controls">
+                            <input type="number" class="card-order-input" value="9" min="1" max="9" onchange="updateCardOrder('system-status', this.value)">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -445,6 +490,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     removeDuplicateCards();
     initializeDragAndDrop();
     loadLayoutFromStorage();
+    updateOrderInputs(); // Initialize order inputs
 
     try { await ensureOpenLayers(); }
     catch (e) { console.error(e); setMapStatus('Map library failed to load.', 'error'); return; }
@@ -502,6 +548,75 @@ function updateCardCheckboxes() {
     document.querySelectorAll('.grid-item').forEach(item => {
         const cb = document.getElementById(`card-${item.dataset.cardId}`);
         if (cb) cb.checked = item.style.display !== 'none';
+    });
+}
+
+function updateCardOrder(cardId, order) {
+    const orderValue = parseInt(order);
+    if (isNaN(orderValue) || orderValue < 1 || orderValue > 9) return;
+    
+    // Update the stored order
+    const cardOrders = getCardOrders();
+    cardOrders[cardId] = orderValue;
+    localStorage.setItem('dashboardCardOrders', JSON.stringify(cardOrders));
+    
+    // Reorder the cards immediately
+    reorderCards();
+    saveLayoutToStorage();
+}
+
+function getCardOrders() {
+    const stored = localStorage.getItem('dashboardCardOrders');
+    if (stored) {
+        try {
+            return JSON.parse(stored);
+        } catch (e) {
+            console.warn('Failed to parse card orders:', e);
+        }
+    }
+    
+    // Default order
+    return {
+        'welcome': 1,
+        'map': 2,
+        'total-controllers': 3,
+        'online-controllers': 4,
+        'offline-controllers': 5,
+        'system-version': 6,
+        'controller-list': 7,
+        'quick-actions': 8,
+        'system-status': 9
+    };
+}
+
+function reorderCards() {
+    const cardOrders = getCardOrders();
+    const grid = document.getElementById('dashboardGrid');
+    const cards = Array.from(document.querySelectorAll('.grid-item[data-card-id]'));
+    
+    // Sort cards by their order values
+    cards.sort((a, b) => {
+        const orderA = cardOrders[a.dataset.cardId] || 999;
+        const orderB = cardOrders[b.dataset.cardId] || 999;
+        return orderA - orderB;
+    });
+    
+    // Reappend in correct order
+    cards.forEach(card => {
+        grid.appendChild(card);
+    });
+    
+    // Update the order inputs in the panel
+    updateOrderInputs();
+}
+
+function updateOrderInputs() {
+    const cardOrders = getCardOrders();
+    Object.keys(cardOrders).forEach(cardId => {
+        const input = document.querySelector(`[data-card-id="${cardId}"] .card-order-input`);
+        if (input) {
+            input.value = cardOrders[cardId];
+        }
     });
 }
 
@@ -621,7 +736,11 @@ function saveLayoutToStorage() {
 
 function loadLayoutFromStorage() {
     const saved = localStorage.getItem('dashboardLayout');
-    if (!saved) return;
+    if (!saved) {
+        // Load default card orders and reorder
+        reorderCards();
+        return;
+    }
     try {
         const layout = JSON.parse(saved).sort((a,b)=>a.order-b.order);
         const grid = document.getElementById('dashboardGrid');
@@ -637,10 +756,15 @@ function loadLayoutFromStorage() {
             grid.appendChild(el);
         });
         if (editMode) updateCardCheckboxes();
+        
+        // Also load and apply card orders
+        reorderCards();
+        
         setTimeout(initializeMap, 200);
     } catch (e) {
         console.warn('Failed to load dashboard layout:', e);
         localStorage.removeItem('dashboardLayout');
+        reorderCards();
     }
 }
 
@@ -1129,7 +1253,11 @@ function updateStatistics(data) {
 }
 
 /* === reset / shortcuts === */
-function resetLayout() { localStorage.removeItem('dashboardLayout'); location.reload(); }
+function resetLayout() { 
+    localStorage.removeItem('dashboardLayout'); 
+    localStorage.removeItem('dashboardCardOrders');
+    location.reload(); 
+}
 
 // Expand cluster function for popup button
 function expandCluster() {

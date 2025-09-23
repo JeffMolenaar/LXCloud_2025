@@ -730,6 +730,11 @@ code {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
+/* Only show mobile menu when navbar is expanded */
+.navbar-collapse:not(.show) .mobile-menu {
+    display: none;
+}
+
 .mobile-menu-header {
     padding: 1.5rem 2rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -1570,6 +1575,96 @@ footer {
     padding: var(--space-6) 0;
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
+}
+
+/* Mobile Header Responsive Layout */
+@media (max-width: 991.98px) {
+    .modern-navbar .container-fluid {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    /* Center the logo on mobile */
+    .navbar-brand-container {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-right: 0;
+        z-index: 1;
+    }
+    
+    /* Position burger menu on the right */
+    .modern-toggler {
+        margin-left: auto;
+        order: 3;
+        z-index: 2;
+    }
+    
+    /* Hide desktop navigation menu */
+    .navbar-menu {
+        display: none !important;
+    }
+    
+    /* Hide desktop user section */
+    .navbar-user {
+        display: none !important;
+    }
+    
+    /* Scale down brand on mobile */
+    .modern-brand {
+        padding: 0.5rem 1rem;
+    }
+    
+    .brand-icon {
+        width: 32px;
+        height: 32px;
+        margin-right: 0.75rem;
+        font-size: 1rem;
+    }
+    
+    .brand-name {
+        font-size: 1.125rem;
+    }
+    
+    .brand-tagline {
+        font-size: 0.625rem;
+    }
+}
+
+/* Mobile Menu Responsive Adjustments */
+@media (max-width: 576px) {
+    .modern-navbar .container-fluid {
+        padding: 0 1rem;
+    }
+    
+    .modern-brand {
+        padding: 0.375rem 0.75rem;
+    }
+    
+    .brand-icon {
+        width: 28px;
+        height: 28px;
+        margin-right: 0.5rem;
+    }
+    
+    .brand-name {
+        font-size: 1rem;
+    }
+    
+    .brand-tagline {
+        display: none; /* Hide tagline on very small screens */
+    }
+    
+    .modern-toggler {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .toggler-line {
+        width: 16px;
+    }
 }
 
 /* Responsive utilities */
