@@ -286,9 +286,23 @@ def create_app():
             try:
                 # Try to add the column if it doesn't exist
                 with db.engine.connect() as conn:
-                    # Check if column exists first
-                    result = conn.execute(db.text("PRAGMA table_info(ui_customization)"))
-                    columns = [row[1] for row in result.fetchall()]
+                    # Check if column exists first - handle both SQLite and MySQL
+                    try:
+                        if database_uri.startswith('sqlite'):
+                            # SQLite: Use PRAGMA table_info
+                            result = conn.execute(db.text("PRAGMA table_info(ui_customization)"))
+                            columns = [row[1] for row in result.fetchall()]
+                        else:
+                            # MySQL: Use INFORMATION_SCHEMA
+                            database_name = database_uri.split('/')[-1]
+                            result = conn.execute(db.text(
+                                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
+                                "WHERE TABLE_SCHEMA = :db_name AND TABLE_NAME = 'ui_customization'"
+                            ), {"db_name": database_name})
+                            columns = [row[0] for row in result.fetchall()]
+                    except Exception as e:
+                        print(f"Could not check for logo_filename column: {e}")
+                        columns = []
                     
                     if 'logo_filename' not in columns:
                         print("Adding logo_filename column to ui_customization table...")
@@ -318,13 +332,28 @@ def create_app():
                             columns = [row[0] for row in result.fetchall()]
                     except Exception as e:
                         print(f"Could not check for timeout_seconds column: {e}")
-                        columns = []
+                        # When column check fails, don't assume column doesn't exist
+                        # Try to add it anyway and handle the duplicate error gracefully
+                        columns = None
                     
-                    if 'timeout_seconds' not in columns:
+                    # Only try to add column if we're sure it doesn't exist
+                    if columns is not None and 'timeout_seconds' not in columns:
                         print("Adding timeout_seconds column to controllers table...")
                         conn.execute(db.text("ALTER TABLE controllers ADD COLUMN timeout_seconds INTEGER"))
                         conn.commit()
                         print("Timeout seconds column added successfully")
+                    elif columns is None:
+                        # Column check failed, try to add column with better error handling
+                        print("Column check failed, attempting to add timeout_seconds column...")
+                        try:
+                            conn.execute(db.text("ALTER TABLE controllers ADD COLUMN timeout_seconds INTEGER"))
+                            conn.commit()
+                            print("Timeout seconds column added successfully")
+                        except Exception as add_error:
+                            if "duplicate" in str(add_error).lower() or "already exists" in str(add_error).lower():
+                                print("Timeout seconds column already exists (detected during add attempt)")
+                            else:
+                                raise add_error
             except Exception as e:
                 print(f"Could not add timeout_seconds column (might already exist): {e}")
             
