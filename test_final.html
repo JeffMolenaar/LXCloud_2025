@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LXCloud Mobile Test</title>
+    <style>
+        /* Copy relevant styles from the main project */
+        .modern-navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .modern-toggler {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .toggler-line {
+            width: 20px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu {
+            background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(31, 41, 55, 0.98));
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 1rem;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .navbar-collapse:not(.show) .mobile-menu {
+            display: none;
+        }
+
+        .mobile-nav-items {
+            list-style: none;
+            margin: 0;
+            padding: 1rem 0;
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.85);
+            padding: 1rem 2rem;
+            font-weight: 500;
+        }
+
+        .mobile-nav-link i {
+            margin-right: 1rem;
+            width: 20px;
+        }
+
+        /* Dashboard Grid Simulation */
+        .dashboard-container {
+            min-height: calc(100vh - 120px);
+            background: #f8f9fa;
+            padding: 0;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-auto-rows: 100px;
+            gap: 1rem;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .grid-item {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-small { grid-column: span 3; grid-row: span 2; }
+        .card-medium { grid-column: span 4; grid-row: span 3; }
+        .card-large { grid-column: span 6; grid-row: span 4; }
+
+        /* Edit Mode Toggle */
+        .edit-mode-toggle {
+            position: fixed;
+            top: 80px;
+            right: 30px;
+            z-index: 1001;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 20px;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+            transition: all 0.3s ease;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                padding: 1rem;
+                padding-top: 2rem;
+                gap: 1rem;
+            }
+            
+            .edit-mode-toggle {
+                display: none; /* Hidden on mobile - available in burger menu */
+            }
+        }
+
+        /* Test styling */
+        .test-info {
+            background: #e3f2fd;
+            padding: 1rem;
+            margin: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg modern-navbar">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" href="#">LXCloud</a>
+            
+            <button class="navbar-toggler modern-toggler d-lg-none" type="button" onclick="toggleMobileMenu()">
+                <span class="toggler-line"></span>
+                <span class="toggler-line"></span>
+                <span class="toggler-line"></span>
+            </button>
+        </div>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="mobile-menu d-lg-none">
+                <ul class="mobile-nav-items">
+                    <li><a class="mobile-nav-link" href="#"><i class="fas fa-home"></i>Dashboard</a></li>
+                    <li><a class="mobile-nav-link" href="#"><i class="fas fa-microchip"></i>Controllers</a></li>
+                    <li><a class="mobile-nav-link" href="#" onclick="toggleEditMode(); return false;">
+                        <i class="fas fa-edit"></i><span id="mobileEditModeText">Edit Layout</span>
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="test-info">
+        <h4>Mobile Navigation Test</h4>
+        <p><strong>Test Items:</strong></p>
+        <ul>
+            <li>✅ Burger menu click should show mobile menu</li>
+            <li>✅ Edit Layout button integrated into mobile menu</li>
+            <li>✅ Edit Layout button hidden on mobile (fixed position)</li>
+            <li>✅ Card grid has proper spacing from header</li>
+        </ul>
+        <p><strong>Current state:</strong> <span id="status">Menu collapsed</span></p>
+        <p><strong>Edit mode:</strong> <span id="editStatus">Disabled</span></p>
+    </div>
+
+    <div class="dashboard-container">
+        <button class="edit-mode-toggle" id="editModeToggle" onclick="toggleEditMode()">
+            <i class="fas fa-edit"></i> <span id="editModeText">Edit Layout</span>
+        </button>
+
+        <div class="dashboard-grid" id="dashboardGrid">
+            <div class="grid-item card-small" style="background: #e3f2fd;">
+                <div style="padding: 1rem;">
+                    <h6>Small Card</h6>
+                    <p>Testing grid spacing</p>
+                </div>
+            </div>
+            <div class="grid-item card-medium" style="background: #f3e5f5;">
+                <div style="padding: 1rem;">
+                    <h6>Medium Card</h6>
+                    <p>Check margin from header</p>
+                </div>
+            </div>
+            <div class="grid-item card-large" style="background: #e8f5e8;">
+                <div style="padding: 1rem;">
+                    <h6>Large Card (Map)</h6>
+                    <p>This simulates the map card that should be resizable in height</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let editMode = false;
+
+        function toggleMobileMenu() {
+            const navbarNav = document.getElementById('navbarNav');
+            const status = document.getElementById('status');
+            
+            if (navbarNav.classList.contains('show')) {
+                navbarNav.classList.remove('show');
+                status.textContent = 'Menu collapsed';
+            } else {
+                navbarNav.classList.add('show');
+                status.textContent = 'Menu expanded';
+            }
+        }
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            const toggle = document.getElementById('editModeToggle');
+            const text = document.getElementById('editModeText');
+            const mobileText = document.getElementById('mobileEditModeText');
+            const grid = document.getElementById('dashboardGrid');
+            const status = document.getElementById('editStatus');
+
+            if (editMode) {
+                if (toggle) toggle.classList.add('active');
+                if (text) text.textContent = 'Exit Edit';
+                if (mobileText) mobileText.textContent = 'Exit Edit';
+                if (grid) grid.classList.add('edit-mode');
+                status.textContent = 'Enabled';
+            } else {
+                if (toggle) toggle.classList.remove('active');
+                if (text) text.textContent = 'Edit Layout';
+                if (mobileText) mobileText.textContent = 'Edit Layout';
+                if (grid) grid.classList.remove('edit-mode');
+                status.textContent = 'Disabled';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -226,6 +226,16 @@
                         </a>
                     </li>
                     
+                    <!-- Edit Layout button - only show on dashboard page -->
+                    {% if request.endpoint == 'dashboard.index' %}
+                    <li class="mobile-nav-item">
+                        <a class="mobile-nav-link" href="#" onclick="toggleEditMode(); return false;">
+                            <i class="fas fa-edit"></i>
+                            <span id="mobileEditModeText">Edit Layout</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
                     {% if current_user.is_admin %}
                     <!-- Admin Dropdown -->
                     <li class="mobile-dropdown">
@@ -380,6 +390,23 @@
                 bootstrap.Collapse.getOrCreateInstance(mobileMenu).hide();
             }
         });
+        
+        // Ensure mobile menu toggler works properly (fallback)
+        const mobileToggler = document.querySelector('.navbar-toggler');
+        if (mobileToggler) {
+            mobileToggler.addEventListener('click', function(e) {
+                const target = document.querySelector(this.getAttribute('data-bs-target'));
+                if (target) {
+                    // Use Bootstrap's collapse functionality
+                    const collapse = bootstrap.Collapse.getOrCreateInstance(target);
+                    collapse.toggle();
+                    
+                    // Update aria-expanded attribute
+                    const isExpanded = target.classList.contains('show');
+                    this.setAttribute('aria-expanded', !isExpanded);
+                }
+            });
+        }
         
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
