@@ -391,6 +391,38 @@
             }
         });
         
+        // Auto-close mobile menu when clicking on navigation items
+        function closeMobileMenu() {
+            const mobileMenu = document.getElementById('navbarNav');
+            if (mobileMenu && mobileMenu.classList.contains('show')) {
+                bootstrap.Collapse.getOrCreateInstance(mobileMenu).hide();
+            }
+        }
+        
+        // Add click listeners to mobile menu items that navigate to other pages
+        document.querySelectorAll('.mobile-nav-link[href]:not([href="#"])').forEach(link => {
+            link.addEventListener('click', function(e) {
+                // Don't close for Edit Layout button (stays on same page)
+                if (!this.onclick || this.onclick.toString().indexOf('toggleEditMode') === -1) {
+                    closeMobileMenu();
+                }
+            });
+        });
+        
+        // Add click listeners to mobile dropdown items
+        document.querySelectorAll('.mobile-dropdown-items a[href]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                closeMobileMenu();
+            });
+        });
+        
+        // Add click listeners to mobile footer links that navigate
+        document.querySelectorAll('.mobile-footer-link[href]:not([onclick*="toggleTheme"])').forEach(link => {
+            link.addEventListener('click', function(e) {
+                closeMobileMenu();
+            });
+        });
+        
         // Ensure mobile menu toggler works properly (fallback)
         const mobileToggler = document.querySelector('.navbar-toggler');
         if (mobileToggler) {
