@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Menu Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Copy mobile menu styles */
+        .modern-navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .modern-toggler {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .toggler-line {
+            width: 20px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu {
+            background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(31, 41, 55, 0.98));
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 1rem;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        /* TEST: This might be causing the issue */
+        .navbar-collapse:not(.show) .mobile-menu {
+            display: none;
+        }
+
+        .mobile-nav-items {
+            list-style: none;
+            margin: 0;
+            padding: 1rem 0;
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.85);
+            padding: 1rem 2rem;
+            font-weight: 500;
+        }
+
+        .mobile-nav-link i {
+            margin-right: 1rem;
+            width: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg modern-navbar">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" href="#">LXCloud</a>
+            
+            <button class="navbar-toggler modern-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="toggler-line"></span>
+                <span class="toggler-line"></span>
+                <span class="toggler-line"></span>
+            </button>
+        </div>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="mobile-menu d-lg-none">
+                <ul class="mobile-nav-items">
+                    <li><a class="mobile-nav-link" href="#"><i class="fas fa-home"></i>Dashboard</a></li>
+                    <li><a class="mobile-nav-link" href="#"><i class="fas fa-microchip"></i>Controllers</a></li>
+                    <li><a class="mobile-nav-link" href="#"><i class="fas fa-edit"></i>Edit Layout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1>Mobile Menu Test</h1>
+        <p>Resize to mobile view and test the burger menu.</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
