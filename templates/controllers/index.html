@@ -356,6 +356,224 @@
     width: 1.75rem;
 }
 
+/* Mobile Card Layout - Alternative to table */
+.mobile-cards {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-cards {
+        display: block;
+    }
+    
+    .desktop-table {
+        display: none;
+    }
+    
+    .controller-card {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius) + 2px);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    }
+    
+    .controller-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+    
+    .controller-card-title {
+        font-weight: 500;
+        font-size: 1rem;
+        margin: 0;
+    }
+    
+    .controller-card-status {
+        flex-shrink: 0;
+        margin-left: 1rem;
+    }
+    
+    .controller-card-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .controller-card-detail {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .controller-card-detail-label {
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .controller-card-detail-value {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .controller-card-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .controller-card-actions .btn-modern {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .controller-card-actions .btn-modern .sr-only {
+        position: static;
+        width: auto;
+        height: auto;
+        padding: 0;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+        border: 0;
+        font-size: 0.75rem;
+    }
+}
+
+/* Responsive Improvements for Mobile */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .py-10 {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+    
+    /* Make header more mobile-friendly */
+    .page-header-modern {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .page-header-modern .d-flex {
+        justify-content: center;
+    }
+    
+    /* Stats grid adjustments for mobile */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        text-align: center;
+    }
+    
+    /* Section spacing on mobile */
+    section[style*="margin-top: 6rem"] {
+        margin-top: 3rem !important;
+    }
+    
+    /* Table responsive behavior */
+    .modern-table {
+        font-size: 0.875rem;
+    }
+    
+    .modern-table th,
+    .modern-table td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    /* Hide less important columns on very small screens */
+    .modern-table th:nth-child(3),
+    .modern-table td:nth-child(3),
+    .modern-table th:nth-child(5),
+    .modern-table td:nth-child(5),
+    .modern-table th:nth-child(6),
+    .modern-table td:nth-child(6) {
+        display: none;
+    }
+    
+    /* Make action buttons stack vertically on small screens */
+    .d-flex.justify-content-end.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .d-flex.justify-content-end.gap-2 .btn-modern {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Mobile-friendly modal */
+    .modal-dialog {
+        margin: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+    
+    /* Better touch targets for mobile */
+    .btn-modern {
+        min-height: 44px;
+        padding: 0.75rem 1rem;
+    }
+    
+    .btn-sm {
+        min-height: 40px;
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Extra small screens - show even fewer columns */
+    .modern-table th:nth-child(2),
+    .modern-table td:nth-child(2) {
+        display: none;
+    }
+    
+    /* Stack action buttons with icons only */
+    .d-flex.justify-content-end.gap-2 {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .d-flex.justify-content-end.gap-2 .btn-modern {
+        width: auto;
+        min-width: 44px;
+    }
+    
+    /* Hide button text, keep icons */
+    .d-flex.justify-content-end.gap-2 .btn-modern .sr-only {
+        position: static;
+        width: auto;
+        height: auto;
+        padding: 0;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+        border: 0;
+        font-size: 0.75rem;
+        margin-left: 0.25rem;
+    }
+}
+
 /* Responsive */
 @media (min-width: 640px) {
     .page-header-modern {
@@ -366,6 +584,22 @@
     
     .stats-grid {
         grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 769px) {
+    /* Restore full table on larger screens */
+    .modern-table th,
+    .modern-table td {
+        display: table-cell;
+    }
+    
+    .d-flex.justify-content-end.gap-2 {
+        flex-direction: row;
+    }
+    
+    .d-flex.justify-content-end.gap-2 .btn-modern {
+        width: auto;
     }
 }
 
@@ -561,7 +795,8 @@
             <div class="separator"></div>
             
             {% if controllers %}
-                <div class="overflow-auto" style="border-radius: calc(var(--radius) + 2px); border: 1px solid hsl(var(--border));">
+                <!-- Desktop Table View -->
+                <div class="desktop-table overflow-auto" style="border-radius: calc(var(--radius) + 2px); border: 1px solid hsl(var(--border));">
                     <table class="modern-table">
                         <thead>
                             <tr>
@@ -624,6 +859,71 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
+                
+                <!-- Mobile Card View -->
+                <div class="mobile-cards">
+                    {% for controller in controllers %}
+                    <div class="controller-card">
+                        <div class="controller-card-header">
+                            <h3 class="controller-card-title">{{ controller.name or controller.serial_number }}</h3>
+                            <div class="controller-card-status">
+                                <span class="status-pill {% if controller.is_online %}accent{% else %}danger{% endif %}">
+                                    <span class="status-pill-dot"></span>
+                                    {% if controller.is_online %}Online{% else %}Offline{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="controller-card-details">
+                            <div class="controller-card-detail">
+                                <div class="controller-card-detail-label">Serial</div>
+                                <div class="controller-card-detail-value">
+                                    <code class="font-mono text-sm">{{ controller.serial_number }}</code>
+                                </div>
+                            </div>
+                            <div class="controller-card-detail">
+                                <div class="controller-card-detail-label">Type</div>
+                                <div class="controller-card-detail-value" style="text-transform: capitalize;">
+                                    {{ controller.controller_type }}
+                                </div>
+                            </div>
+                            <div class="controller-card-detail">
+                                <div class="controller-card-detail-label">Location</div>
+                                <div class="controller-card-detail-value">
+                                    {% if controller.latitude and controller.longitude %}
+                                        <i class="fas fa-map-marker-alt icon-sm"></i> Set
+                                    {% else %}
+                                        <i class="fas fa-map-marker-alt icon-sm"></i> Not set
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="controller-card-detail">
+                                <div class="controller-card-detail-label">Last Seen</div>
+                                <div class="controller-card-detail-value">
+                                    {% if controller.last_seen %}{{ controller.last_seen.strftime('%m/%d %H:%M') }}{% else %}Never{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="controller-card-actions">
+                            <a href="{{ url_for('controllers.view_data', controller_id=controller.id) }}" class="btn-modern btn-outline btn-sm">
+                                <i class="fas fa-chart-line icon-sm"></i>
+                                <span class="sr-only">Data</span>
+                            </a>
+                            <a href="{{ url_for('controllers.edit_controller', controller_id=controller.id) }}" class="btn-modern btn-outline btn-sm">
+                                <i class="fas fa-edit icon-sm"></i>
+                                <span class="sr-only">Edit</span>
+                            </a>
+                            <form method="POST" action="{{ url_for('controllers.unbind_controller', controller_id=controller.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to unbind this controller?')" style="flex: 1;">
+                                <button type="submit" class="btn-modern btn-outline btn-sm" style="width: 100%;">
+                                    <i class="fas fa-unlink icon-sm"></i>
+                                    <span class="sr-only">Unbind</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             {% else %}
                 <div class="empty-state-modern">
