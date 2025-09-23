@@ -420,6 +420,11 @@
                 }
             }
             
+            // Special case: Always close for Edit Layout button
+            if (link.classList.contains('mobile-nav-link') && link.onclick && link.onclick.toString().indexOf('toggleEditMode') > -1) {
+                shouldClose = true;
+            }
+            
             // Close for dropdown items that navigate
             if (link.closest('.mobile-dropdown-items')) {
                 shouldClose = true;
