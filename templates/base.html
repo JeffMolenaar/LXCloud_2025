@@ -399,28 +399,46 @@
             }
         }
         
-        // Add click listeners to mobile menu items that navigate to other pages
-        document.querySelectorAll('.mobile-nav-link[href]:not([href="#"])').forEach(link => {
-            link.addEventListener('click', function(e) {
+        // Enhanced mobile menu closing - use event delegation for better coverage
+        document.addEventListener('click', function(e) {
+            // Check if clicked element is within mobile menu
+            const mobileMenu = document.querySelector('.mobile-menu');
+            if (!mobileMenu || !mobileMenu.contains(e.target)) return;
+            
+            // Find the actual link element (in case we clicked on icon or span)
+            const link = e.target.closest('a');
+            if (!link) return;
+            
+            // Determine if this link should close the menu
+            let shouldClose = false;
+            
+            // Close for navigation links that have href and navigate away
+            if (link.classList.contains('mobile-nav-link') && link.href && link.href !== '#') {
                 // Don't close for Edit Layout button (stays on same page)
-                if (!this.onclick || this.onclick.toString().indexOf('toggleEditMode') === -1) {
-                    closeMobileMenu();
+                if (!link.onclick || link.onclick.toString().indexOf('toggleEditMode') === -1) {
+                    shouldClose = true;
                 }
-            });
-        });
-        
-        // Add click listeners to mobile dropdown items
-        document.querySelectorAll('.mobile-dropdown-items a[href]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                closeMobileMenu();
-            });
-        });
-        
-        // Add click listeners to mobile footer links that navigate
-        document.querySelectorAll('.mobile-footer-link[href]:not([onclick*="toggleTheme"])').forEach(link => {
-            link.addEventListener('click', function(e) {
-                closeMobileMenu();
-            });
+            }
+            
+            // Close for dropdown items that navigate
+            if (link.closest('.mobile-dropdown-items')) {
+                shouldClose = true;
+            }
+            
+            // Close for footer links except theme toggle
+            if (link.classList.contains('mobile-footer-link')) {
+                // Don't close for theme toggle or other onclick handlers that stay on page
+                if (!link.onclick || link.onclick.toString().indexOf('toggleTheme') === -1) {
+                    shouldClose = true;
+                }
+            }
+            
+            if (shouldClose) {
+                // Small delay to allow link navigation to start
+                setTimeout(() => {
+                    closeMobileMenu();
+                }, 100);
+            }
         });
         
         // Ensure mobile menu toggler works properly (fallback)
