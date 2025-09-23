@@ -81,6 +81,48 @@
     .ol-popup:after { border-top-color: #fff; border-width: 10px; left: 50%; margin-left: -10px; }
     .ol-popup:before { border-top-color: #e5e7eb; border-width: 11px; left: 50%; margin-left: -11px; }
 
+    /* Cluster popup styling */
+    .cluster-popup {
+        max-width: 300px;
+    }
+    .cluster-popup h6 {
+        margin: 0 0 10px 0;
+        color: #333;
+        font-weight: 600;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+    }
+    .cluster-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        padding: 4px 0;
+    }
+    .cluster-item:last-child {
+        margin-bottom: 0;
+    }
+    .cluster-status {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+    .cluster-info {
+        flex-grow: 1;
+        font-size: 13px;
+    }
+    .cluster-name {
+        font-weight: 500;
+        margin: 0;
+        color: #333;
+    }
+    .cluster-type {
+        margin: 0;
+        color: #666;
+        font-size: 12px;
+    }
+
     /* Controller List Card */
     .controller-list-card .controller-item { display: flex; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0; }
     .controller-list-card .controller-item:last-child { border-bottom: none; }
@@ -392,6 +434,7 @@ let draggedElement = null;
 /* ======= Map state (OpenLayers) ======= */
 let olMap = null;
 let vectorSource = null;
+let clusterSource = null;
 let vectorLayer = null;
 let popupOverlay = null;
 const featuresById = {};  // id -> ol.Feature
@@ -627,9 +670,37 @@ function initializeMap() {
     if (!olMap) {
         const center = ol.proj.fromLonLat([4.9041, 52.3676]); // Amsterdam
         vectorSource = new ol.source.Vector();
-        vectorLayer  = new ol.layer.Vector({
-            source: vectorSource,
-            style: defaultFeatureStyle
+        
+        // Create cluster source that wraps the vector source
+        clusterSource = new ol.source.Cluster({
+            distance: 40,  // Distance in pixels within which features will be clustered
+            minDistance: 20, // Minimum distance in pixels between clusters
+            source: vectorSource
+        });
+        
+        // Style function for clusters and individual markers
+        const styleFunction = function(feature) {
+            const features = feature.get('features');
+            if (!features) {
+                // Individual feature style
+                const controller = feature.get('controller') || {};
+                return getIconStyleForController(controller);
+            }
+            
+            const size = features.length;
+            if (size === 1) {
+                // Single marker
+                const controller = features[0].get('controller') || {};
+                return getIconStyleForController(controller);
+            } else {
+                // Cluster style
+                return getClusterStyle(size);
+            }
+        };
+        
+        vectorLayer = new ol.layer.Vector({
+            source: clusterSource,
+            style: styleFunction
         });
 
         olMap = new ol.Map({
@@ -651,12 +722,43 @@ function initializeMap() {
         olMap.on('singleclick', function (evt) {
             const feature = olMap.forEachFeatureAtPixel(evt.pixel, f => f);
             if (feature) {
-                const c = feature.get('controller');
-                popup.innerHTML = buildPopupHtml(c);
-                popupOverlay.setPosition(evt.coordinate);
+                const features = feature.get('features');
+                if (features && features.length > 1) {
+                    // Cluster clicked - show cluster popup
+                    popup.innerHTML = buildClusterPopupHtml(features);
+                    popupOverlay.setPosition(evt.coordinate);
+                    
+                    // Store current features for expandCluster function
+                    window.currentClusterFeatures = features;
+                    window.currentClusterCoordinate = evt.coordinate;
+                } else {
+                    // Single marker clicked - show popup
+                    const controller = features ? features[0].get('controller') : feature.get('controller');
+                    popup.innerHTML = buildPopupHtml(controller);
+                    popupOverlay.setPosition(evt.coordinate);
+                }
             } else {
                 popupOverlay.setPosition(undefined);
             }
+        });
+        
+        // Update cluster distance based on zoom level
+        olMap.getView().on('change:resolution', function() {
+            const zoom = olMap.getView().getZoom();
+            let distance = 40;
+            
+            // Adjust cluster distance based on zoom level
+            if (zoom <= 6) {
+                distance = 80;  // Large clusters at low zoom
+            } else if (zoom <= 10) {
+                distance = 50;  // Medium clusters at medium zoom
+            } else if (zoom <= 14) {
+                distance = 30;  // Smaller clusters at higher zoom
+            } else {
+                distance = 15;  // Minimal clustering at high zoom
+            }
+            
+            clusterSource.setDistance(distance);
         });
     }
 
@@ -796,6 +898,37 @@ function defaultFeatureStyle(feature) {
   return getIconStyleForController(c);
 }
 
+function getClusterStyle(size) {
+  // Create cluster style with count indicator
+  const radius = Math.min(20 + size * 2, 40); // Dynamic radius based on cluster size
+  const fontSize = size < 10 ? '12px' : size < 100 ? '14px' : '16px';
+  
+  // Create SVG for cluster
+  const svg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="${radius * 2}" height="${radius * 2}" viewBox="0 0 ${radius * 2} ${radius * 2}">
+    <!-- Outer circle -->
+    <circle cx="${radius}" cy="${radius}" r="${radius - 2}" fill="#4CAF50" stroke="#2E7D32" stroke-width="2" opacity="0.8"/>
+    <!-- Inner circle -->
+    <circle cx="${radius}" cy="${radius}" r="${radius * 0.6}" fill="#66BB6A" opacity="0.9"/>
+    <!-- Text -->
+    <text x="${radius}" y="${radius}" text-anchor="middle" dominant-baseline="central" 
+          font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="bold" fill="white">
+      ${size}
+    </text>
+  </svg>`.trim();
+
+  const url = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+
+  return new ol.style.Style({
+    image: new ol.style.Icon({
+      src: url,
+      anchor: [0.5, 0.5],
+      anchorXUnits: 'fraction',
+      anchorYUnits: 'fraction'
+    })
+  });
+}
+
 function startMapAutoRefresh() {
     if (window.__olRefreshTimer) return;
     window.__olRefreshTimer = setInterval(() => refreshMapData(false), REFRESH_MS);
@@ -857,7 +990,7 @@ function refreshMapData(fitOnFirstLoad = false) {
                 updated++;
             } else {
                 const feat = new ol.Feature({ geometry: new ol.geom.Point(coord3857), controller: item });
-                feat.setStyle(defaultFeatureStyle(feat));
+                // Note: No need to set style here as clustering layer handles it
                 vectorSource.addFeature(feat);
                 featuresById[key] = feat;
                 added++;
@@ -925,6 +1058,47 @@ function buildPopupHtml(c) {
     `;
 }
 
+function buildClusterPopupHtml(features) {
+    const onlineCount = features.filter(f => f.get('controller')?.is_online).length;
+    const offlineCount = features.length - onlineCount;
+    
+    return `
+        <div class="cluster-popup">
+            <h6>${features.length} Controllers in this area</h6>
+            <div style="margin-bottom: 10px; font-size: 13px; color: #666;">
+                <span style="color: #28a745;">${onlineCount} online</span> • 
+                <span style="color: #dc3545;">${offlineCount} offline</span>
+            </div>
+            <div style="max-height: 200px; overflow-y: auto;">
+                ${features.slice(0, 8).map(feature => {
+                    const c = feature.get('controller');
+                    const online = !!c?.is_online;
+                    const statusColor = online ? '#28a745' : '#dc3545';
+                    const name = c?.name || c?.serial_number || 'Unnamed';
+                    const type = c?.type || c?.controller_type || 'default';
+                    const capType = type.charAt(0).toUpperCase() + type.slice(1);
+                    
+                    return `
+                        <div class="cluster-item">
+                            <span class="cluster-status" style="background: ${statusColor};"></span>
+                            <div class="cluster-info">
+                                <p class="cluster-name">${escapeHtml(name)}</p>
+                                <p class="cluster-type">${escapeHtml(capType)}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+                ${features.length > 8 ? `<div style="text-align: center; margin-top: 8px; font-size: 12px; color: #666;">... and ${features.length - 8} more</div>` : ''}
+            </div>
+            <div class="text-center" style="margin-top: 10px;">
+                <button onclick="expandCluster()" class="btn btn-sm btn-primary" style="padding:4px 8px;font-size:12px;">
+                    <i class="fas fa-search-plus"></i> Zoom to expand
+                </button>
+            </div>
+        </div>
+    `;
+}
+
 /* -------- helpers -------- */
 function unwrapArray(payload) {
     if (Array.isArray(payload)) return payload;
@@ -956,6 +1130,21 @@ function updateStatistics(data) {
 
 /* === reset / shortcuts === */
 function resetLayout() { localStorage.removeItem('dashboardLayout'); location.reload(); }
+
+// Expand cluster function for popup button
+function expandCluster() {
+    if (window.currentClusterFeatures) {
+        const extent = ol.extent.createEmpty();
+        window.currentClusterFeatures.forEach(f => {
+            ol.extent.extend(extent, f.getGeometry().getExtent());
+        });
+        olMap.getView().fit(extent, { duration: 300, maxZoom: 18, padding: [50, 50, 50, 50] });
+        
+        // Close popup after expanding
+        popupOverlay.setPosition(undefined);
+    }
+}
+
 document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && e.key === 'e') { e.preventDefault(); toggleEditMode(); }
     if (e.key === 'Escape' && editMode) toggleEditMode();
