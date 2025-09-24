@@ -128,7 +128,7 @@ while IFS= read -r file; do
             MISSING_FILES+="$file"$'\n'
         fi
     fi
-done <<< "$CRITICAL_FILES"
+done < <(printf '%s\n' "$CRITICAL_FILES")
 
 if [[ -n "$MISSING_FILES" ]]; then
     echo -e "${RED}ERROR: Critical files are missing after installation:${NC}"
