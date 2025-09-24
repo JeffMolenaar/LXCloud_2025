@@ -21,9 +21,9 @@ DB_PASSWORD="lxcloud"
 
 # Optional behaviours (change before running or export as env vars)
 # Set INSTALL_MARIADB to "yes" to auto-install MariaDB during install
-INSTALL_MARIADB="no"
+INSTALL_MARIADB="yes"
 # Whether to allow anonymous MQTT connections (set to "false" in prod)
-MQTT_ALLOW_ANONYMOUS="true"
+MQTT_ALLOW_ANONYMOUS="false"
 
 echo -e "${BLUE}================================${NC}"
 echo -e "${BLUE}  LXCloud Installation Script   ${NC}"
@@ -82,6 +82,29 @@ if [[ "$INSTALL_MARIADB" == "yes" ]]; then
     echo -e "${BLUE}Installing MariaDB server...${NC}"
     apt install -y mariadb-server
     systemctl enable --now mariadb
+fi
+
+if [[ "$INSTALL_MARIADB" == "yes" ]]; then
+    echo -e "${BLUE}Creating MariaDB database and user...${NC}"
+    # Wait for MariaDB to be ready
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+        if mysqladmin ping >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
+
+    # Create database and user (idempotent)
+    SQL="CREATE DATABASE IF NOT EXISTS \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    SQL+="CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASSWORD';"
+    SQL+="GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';"
+    SQL+="FLUSH PRIVILEGES;"
+
+    if ! mysql -u root -e "$SQL" ; then
+        echo -e "${YELLOW}Warning: automatic creation of database/user failed. You may need to run the commands manually or check MariaDB status.${NC}"
+    else
+        echo -e "${GREEN}✓ Database and user ensured.${NC}"
+    fi
 fi
 
 # Create system user
