@@ -1,0 +1,63 @@
+{
+    "folders": [
+        {
+            "name": "LXCloud 2025",
+            "path": "."
+        }
+    ],
+    "settings": {
+        "python.defaultInterpreterPath": "./venv/bin/python",
+        "files.exclude": {
+            "**/__pycache__": true,
+            "**/*.pyc": true,
+            "**/node_modules": true,
+            "**/.git": false,
+            "**/venv": true,
+            "**/env": true,
+            "**/*.db": true,
+            "**/*.sqlite3": true,
+            "**/logs": true,
+            "**/tmp": true,
+            "**/temp": true
+        }
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Flask - Development Server",
+                "type": "python",
+                "request": "launch",
+                "program": "${workspaceFolder}/run.py",
+                "console": "integratedTerminal",
+                "envFile": "${workspaceFolder}/.env"
+            }
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Start Development Server",
+                "type": "shell",
+                "command": "python3 run.py",
+                "group": "build",
+                "presentation": {
+                    "reveal": "always"
+                },
+                "options": {
+                    "cwd": "${workspaceFolder}"
+                }
+            }
+        ]
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "wholroyd.jinja",
+            "samuelcolvin.jinjahtml",
+            "ms-vscode.vscode-html-css-support",
+            "mikestead.dotenv"
+        ]
+    }
+}

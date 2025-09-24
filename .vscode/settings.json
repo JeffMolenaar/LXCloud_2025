@@ -1,0 +1,103 @@
+{
+    // Python Configuration
+    "python.defaultInterpreterPath": "./venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.envFile": "${workspaceFolder}/.env",
+    
+    // Linting Configuration
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.pycodestyleEnabled": false,
+    "python.linting.flake8Args": [
+        "--max-line-length=120",
+        "--ignore=E203,W503"
+    ],
+    
+    // Formatting Configuration
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--line-length=120"
+    ],
+    "editor.formatOnSave": true,
+    "python.sortImports.args": [
+        "--profile=black"
+    ],
+    
+    // Flask Development
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.extraPaths": [
+        "./app"
+    ],
+    
+    // File Associations
+    "files.associations": {
+        "*.html": "html",
+        "*.jinja": "jinja-html",
+        "*.jinja2": "jinja-html",
+        ".env*": "dotenv",
+        "*.conf": "ini"
+    },
+    
+    // Editor Settings
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": true,
+    "editor.rulers": [120],
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 120,
+    
+    // File Watcher Settings
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/*/**": true,
+        "**/venv/**": true,
+        "**/env/**": true,
+        "**/__pycache__/**": true,
+        "**/*.pyc": true,
+        "**/logs/**": true,
+        "**/tmp/**": true,
+        "**/temp/**": true,
+        "**/*.db": true,
+        "**/*.sqlite3": true
+    },
+    
+    // Terminal Configuration
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "terminal.integrated.env.linux": {
+        "FLASK_ENV": "development",
+        "FLASK_DEBUG": "true"
+    },
+    
+    // Search Configuration
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/*.code-search": true,
+        "**/venv": true,
+        "**/env": true,
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/logs": true,
+        "**/.git": true
+    },
+    
+    // Emmet Configuration for HTML templates
+    "emmet.includeLanguages": {
+        "jinja-html": "html",
+        "jinja": "html"
+    },
+    
+    // HTML Configuration
+    "html.suggest.html5": true,
+    "html.format.wrapLineLength": 120,
+    
+    // CSS Configuration
+    "css.validate": true,
+    "scss.validate": true,
+    
+    // JavaScript Configuration
+    "javascript.suggest.autoImports": true,
+    "javascript.updateImportsOnFileMove.enabled": "always"
+}

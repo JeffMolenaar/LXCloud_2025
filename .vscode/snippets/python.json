@@ -1,0 +1,113 @@
+{
+    "Flask Route": {
+        "prefix": "route",
+        "body": [
+            "@app.route('/${1:path}', methods=['${2:GET}'])",
+            "def ${3:function_name}():",
+            "    \"\"\"${4:Description}\"\"\"",
+            "    ${5:# Your code here}",
+            "    return ${6:render_template('${7:template.html}')}"
+        ],
+        "description": "Create a Flask route"
+    },
+    "Flask API Route": {
+        "prefix": "api",
+        "body": [
+            "@app.route('/api/${1:endpoint}', methods=['${2:GET}'])",
+            "def ${3:api_function_name}():",
+            "    \"\"\"${4:API endpoint description}\"\"\"",
+            "    try:",
+            "        ${5:# Your API logic here}",
+            "        return jsonify({",
+            "            'status': 'success',",
+            "            'data': ${6:data}",
+            "        })",
+            "    except Exception as e:",
+            "        return jsonify({",
+            "            'status': 'error',",
+            "            'message': str(e)",
+            "        }), 500"
+        ],
+        "description": "Create a Flask API route with error handling"
+    },
+    "Flask Blueprint": {
+        "prefix": "blueprint",
+        "body": [
+            "from flask import Blueprint, render_template, request, jsonify",
+            "",
+            "${1:blueprint_name} = Blueprint('${1:blueprint_name}', __name__)",
+            "",
+            "@${1:blueprint_name}.route('/${2:path}')",
+            "def ${3:function_name}():",
+            "    \"\"\"${4:Description}\"\"\"",
+            "    return render_template('${5:template.html}')"
+        ],
+        "description": "Create a Flask Blueprint"
+    },
+    "SQLAlchemy Model": {
+        "prefix": "model",
+        "body": [
+            "class ${1:ModelName}(db.Model):",
+            "    \"\"\"${2:Model description}\"\"\"",
+            "    __tablename__ = '${3:table_name}'",
+            "",
+            "    id = db.Column(db.Integer, primary_key=True)",
+            "    ${4:field_name} = db.Column(db.${5:String(100)}, ${6:nullable=False})",
+            "    created_at = db.Column(db.DateTime, default=datetime.utcnow)",
+            "    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)",
+            "",
+            "    def __repr__(self):",
+            "        return f'<${1:ModelName} {self.${4:field_name}}>'"
+        ],
+        "description": "Create a SQLAlchemy model"
+    },
+    "Flask Error Handler": {
+        "prefix": "errorhandler",
+        "body": [
+            "@app.errorhandler(${1:404})",
+            "def ${2:handle_error}(error):",
+            "    \"\"\"Handle ${1:404} errors\"\"\"",
+            "    if request.path.startswith('/api/'):",
+            "        return jsonify({",
+            "            'error': '${3:Error message}',",
+            "            'message': str(error)",
+            "        }), ${1:404}",
+            "    return render_template('${4:error.html}'), ${1:404}"
+        ],
+        "description": "Create a Flask error handler"
+    },
+    "MQTT Handler": {
+        "prefix": "mqtt",
+        "body": [
+            "def ${1:on_message}(client, userdata, message):",
+            "    \"\"\"Handle MQTT message\"\"\"",
+            "    try:",
+            "        topic = message.topic",
+            "        payload = json.loads(message.payload.decode())",
+            "        ",
+            "        ${2:# Process the message}",
+            "        ",
+            "    except Exception as e:",
+            "        print(f'Error processing MQTT message: {e}')"
+        ],
+        "description": "Create an MQTT message handler"
+    },
+    "Database Query": {
+        "prefix": "query",
+        "body": [
+            "${1:Model}.query.${2:filter_by}(${3:field}=${4:value}).${5:first}()"
+        ],
+        "description": "Create a database query"
+    },
+    "Try-Except Block": {
+        "prefix": "try",
+        "body": [
+            "try:",
+            "    ${1:# Your code here}",
+            "except ${2:Exception} as e:",
+            "    ${3:print(f'Error: {e}')}",
+            "    ${4:# Handle error}"
+        ],
+        "description": "Create a try-except block"
+    }
+}

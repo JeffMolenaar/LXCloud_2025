@@ -1,0 +1,63 @@
+{
+    "recommendations": [
+        // Python Development
+        "ms-python.python",
+        "ms-python.flake8",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "ms-python.pylint",
+        
+        // Flask & Jinja2 Templates
+        "wholroyd.jinja",
+        "samuelcolvin.jinjahtml",
+        
+        // Web Development
+        "ms-vscode.vscode-html-css-support",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-rename-tag",
+        "formulahendry.auto-close-tag",
+        
+        // JavaScript & Frontend
+        "ms-vscode.vscode-json",
+        "ms-vscode.vscode-typescript-next",
+        "ms-vscode.vscode-js-debug",
+        
+        // Database
+        "ms-mssql.mssql",
+        "mysql.mysql-shell",
+        
+        // Docker (if using Docker deployment)
+        "ms-azuretools.vscode-docker",
+        
+        // Git & Version Control
+        "mhutchie.git-graph",
+        "donjayamanne.githistory",
+        "eamodio.gitlens",
+        
+        // Markdown & Documentation
+        "yzhang.markdown-all-in-one",
+        "davidanson.vscode-markdownlint",
+        
+        // MQTT Development
+        "ms-vscode.vscode-json",
+        
+        // Environment Files
+        "mikestead.dotenv",
+        
+        // REST API Testing
+        "humao.rest-client",
+        
+        // Code Quality & Productivity
+        "ms-vscode.vscode-eslint",
+        "streetsidesoftware.code-spell-checker",
+        "ms-vscode.vscode-todo-highlight",
+        "gruntfuggly.todo-tree",
+        "oderwat.indent-rainbow",
+        "pkief.material-icon-theme",
+        "zhuangtongfa.material-theme",
+        
+        // Remote Development (if needed)
+        "ms-vscode-remote.remote-ssh",
+        "ms-vscode-remote.remote-containers"
+    ]
+}
