@@ -239,7 +239,7 @@ Type=simple
 User=$SERVICE_USER
 Group=$SERVICE_USER
 WorkingDirectory=$INSTALL_DIR
-Environment=PATH=$INSTALL_DIR/venv/bin
+Environment=PATH=$INSTALL_DIR/venv/bin:$PATH
 ExecStart=$INSTALL_DIR/venv/bin/python run.py
 Restart=always
 RestartSec=10
