@@ -24,6 +24,9 @@ DB_PASSWORD="lxcloud"
 INSTALL_MARIADB="yes"
 # Whether to allow anonymous MQTT connections (set to "false" in prod)
 MQTT_ALLOW_ANONYMOUS="false"
+# MySQL/MariaDB root credentials (optional). If empty, the script will try socket auth.
+MYSQL_ROOT_USER="${MYSQL_ROOT_USER:-root}"
+MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-}"
 
 echo -e "${BLUE}================================${NC}"
 echo -e "${BLUE}  LXCloud Installation Script   ${NC}"
@@ -94,14 +97,38 @@ if [[ "$INSTALL_MARIADB" == "yes" ]]; then
         sleep 1
     done
 
+    # If no MYSQL_ROOT_PASSWORD provided and running interactively, prompt for it.
+    if [[ -z "$MYSQL_ROOT_PASSWORD" && -t 0 ]]; then
+        echo -n "Enter MariaDB root password (leave empty to use socket auth): "
+        read -s MYSQL_ROOT_PASSWORD
+        echo
+    fi
+
     # Create database and user (idempotent)
     SQL="CREATE DATABASE IF NOT EXISTS \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
     SQL+="CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASSWORD';"
     SQL+="GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';"
     SQL+="FLUSH PRIVILEGES;"
 
-    if ! mysql -u root -e "$SQL" ; then
-        echo -e "${YELLOW}Warning: automatic creation of database/user failed. You may need to run the commands manually or check MariaDB status.${NC}"
+    # Build auth args for mysql client. If MYSQL_ROOT_PASSWORD is provided, use it.
+    MYSQL_AUTH_ARGS=""
+    if [[ -n "$MYSQL_ROOT_PASSWORD" ]]; then
+        MYSQL_AUTH_ARGS="-p$MYSQL_ROOT_PASSWORD"
+    fi
+
+    if ! mysql -u "$MYSQL_ROOT_USER" $MYSQL_AUTH_ARGS -e "$SQL" ; then
+        echo -e "${YELLOW}Warning: automatic creation of database/user failed.${NC}"
+        echo -e "${YELLOW}Possible reasons:${NC}"
+        echo -e "  - MariaDB is not running"
+        echo -e "  - The root user requires a password and it was not provided"
+        echo -e "  - The provided root credentials are incorrect"
+        echo
+        echo -e "${BLUE}If your root user requires a password, re-run this script with the environment variable:${NC}"
+        echo -e "  ${GREEN}MYSQL_ROOT_PASSWORD='your_root_password' sudo ./scripts/install.sh${NC}"
+        echo
+        echo -e "${YELLOW}You can also run the following SQL manually as an admin user:${NC}"
+        printf '%s
+' "$SQL"
     else
         echo -e "${GREEN}✓ Database and user ensured.${NC}"
     fi
@@ -370,11 +397,11 @@ echo
 echo -e "${BLUE}LXCloud has been installed to: ${NC}$INSTALL_DIR"
 echo -e "${BLUE}Access the web interface at: ${NC}http://your-server-ip/"
 echo
-echo -e "${BLUE}Default admin credentials:${NC}"
-echo -e "  Username: ${GREEN}admin${NC}"
-echo -e "  Password: ${GREEN}admin123${NC}"
+# Admin credentials are not printed to stdout for security.
 echo
-echo -e "${YELLOW}⚠️  Please change the default admin password after first login!${NC}"
+echo -e "${BLUE}Admin account:${NC} Default 'admin' account is created if missing."
+echo -e "Credentials (if auto-generated) are stored at: ${GREEN}/etc/lxcloud/admin_credentials${NC} (owner root, mode 600)"
+echo -e "${YELLOW}⚠️  Please change the admin password after first login!${NC}"
 echo
 echo -e "${BLUE}Database credentials:${NC}"
 echo -e "  Database: $DB_NAME"

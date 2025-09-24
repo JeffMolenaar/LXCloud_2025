@@ -6,6 +6,8 @@ Provides database management and testing utilities
 import sys
 import os
 from datetime import datetime
+import secrets
+import stat
 
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -125,6 +127,7 @@ def initialize_schema():
     try:
         from app import create_app
         from app.models import db
+        import secrets
         
         app = create_app()
         with app.app_context():
@@ -142,10 +145,26 @@ def initialize_schema():
                     full_name='System Administrator',
                     is_admin=True
                 )
-                admin_user.set_password('admin123')
+                # Generate a secure random password and save it to a file with strict permissions
+                generated_password = secrets.token_urlsafe(12)
+                admin_user.set_password(generated_password)
                 db.session.add(admin_user)
                 db.session.commit()
-                print("✅ Created default admin user: admin/admin123")
+
+                cred_dir = '/etc/lxcloud'
+                cred_path = os.path.join(cred_dir, 'admin_credentials')
+                try:
+                    os.makedirs(cred_dir, exist_ok=True)
+                    with open(cred_path, 'w') as cf:
+                        cf.write(f"username: admin\npassword: {generated_password}\n")
+                    # Restrict permissions to owner only (root)
+                    os.chmod(cred_path, 0o600)
+                    # Ensure directory is root-owned and secure
+                    os.chown(cred_dir, 0, 0)
+                    os.chown(cred_path, 0, 0)
+                    print(f"✅ Created default admin user 'admin'. Credentials saved to: {cred_path} (permissions 600)")
+                except Exception as wf:
+                    print(f"✅ Created default admin user 'admin'. Failed to write credentials file: {wf}")
             else:
                 print("ℹ️  Admin user already exists")
                 
