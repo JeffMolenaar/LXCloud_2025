@@ -1,0 +1,17 @@
+Folders copied to project/working_copy:
+- app/
+- config/
+- static/
+- templates/
+- scripts/
+- archive/
+
+Files copied to project/working_copy:
+- run.py
+- requirements.txt
+- Dockerfile
+- README.md
+- VERSION
+- database.conf.example
+
+Edit `scripts/bootstrap_project.ps1` to change the list if you want different files.

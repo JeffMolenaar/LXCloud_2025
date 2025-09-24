@@ -1,0 +1,1148 @@
+{% extends "base.html" %}
+
+{% block title %}Controllers - LXCloud{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ===== Modern UI - Lovable-inspired styles ===== */
+.page-container {
+    min-height: 100vh;
+    background: hsl(var(--background, 0 0% 100%));
+}
+
+/* CSS Variables for Lovable-like design system */
+:root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 72.2% 50.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+}
+
+/* Status Pill Component */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-pill.neutral {
+    background-color: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+}
+
+.status-pill.accent {
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+}
+
+.status-pill.danger {
+    background-color: hsl(var(--destructive) / 0.1);
+    color: hsl(var(--destructive));
+}
+
+.status-pill-dot {
+    height: 0.375rem;
+    width: 0.375rem;
+    border-radius: 50%;
+}
+
+.status-pill.neutral .status-pill-dot {
+    background-color: hsl(var(--foreground) / 0.5);
+}
+
+.status-pill.accent .status-pill-dot {
+    background-color: hsl(var(--foreground) / 0.7);
+}
+
+.status-pill.danger .status-pill-dot {
+    background-color: hsl(var(--destructive));
+}
+
+/* Modern Cards */
+.modern-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: calc(var(--radius) + 2px);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    padding: 1rem;
+}
+
+/* Stats Cards */
+.stats-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: calc(var(--radius) + 2px);
+    padding: 1rem;
+}
+
+.stat-card .stat-label {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.stat-card .stat-value {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+/* Table Styles */
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: calc(var(--radius) + 2px);
+    overflow: hidden;
+}
+
+.modern-table th {
+    background: hsl(var(--muted) / 0.5);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.modern-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.modern-table tr:last-child td {
+    border-bottom: none;
+}
+
+.modern-table tr:hover {
+    background: hsl(var(--muted) / 0.3);
+}
+
+/* Buttons */
+.btn-modern {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: calc(var(--radius));
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-modern.btn-primary {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+}
+
+.btn-modern.btn-primary:hover {
+    background: hsl(var(--primary) / 0.9);
+}
+
+.btn-modern.btn-outline {
+    border: 1px solid hsl(var(--border));
+    background: transparent;
+    color: hsl(var(--foreground));
+}
+
+.btn-modern.btn-outline:hover {
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+}
+
+.btn-modern.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+/* Header */
+.page-header-modern {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.page-header-modern h1 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.875rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    margin: 0;
+}
+
+.page-header-modern p {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    margin: 0.25rem 0 0 0;
+}
+
+/* Empty State */
+.empty-state-modern {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: calc(var(--radius) + 2px);
+    padding: 2.5rem 1rem;
+    text-align: center;
+}
+
+.empty-state-modern .icon {
+    margin: 0 auto 0.75rem auto;
+    height: 2.5rem;
+    width: 2.5rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.empty-state-modern h3 {
+    font-size: 1.125rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.empty-state-modern p {
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+}
+
+/* Modal Styles - Fix positioning issues */
+.modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 1055 !important;
+    display: none;
+    width: 100% !important;
+    height: 100% !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    outline: 0;
+}
+
+.modal.fade {
+    opacity: 0;
+    transition: opacity 0.15s linear;
+}
+
+.modal.show {
+    opacity: 1;
+}
+
+.modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 1050 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.modal-dialog {
+    position: relative;
+    width: auto;
+    margin: 0.5rem;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 1rem);
+}
+
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+    transform: translate(0, -50px);
+}
+
+.modal.show .modal-dialog {
+    transform: none;
+}
+
+@media (min-width: 576px) {
+    .modal-dialog {
+        max-width: 500px;
+        margin: 1.75rem auto;
+    }
+}
+
+.modal-modern .modal-content {
+    border-radius: calc(var(--radius) + 4px);
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: #fff;
+    background-clip: padding-box;
+}
+
+.modal-modern .modal-header {
+    border-bottom: 1px solid hsl(var(--border));
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-modern .modal-body {
+    position: relative;
+    flex: 1 1 auto;
+    padding: 1.5rem;
+}
+
+.modal-modern .modal-footer {
+    border-top: 1px solid hsl(var(--border));
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Ensure modal appears on top of everything */
+.modal-open {
+    overflow: hidden !important;
+}
+
+.modal-open .modal {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Icons */
+.icon-sm {
+    height: 1rem;
+    width: 1rem;
+}
+
+.icon-md {
+    height: 1.25rem;
+    width: 1.25rem;
+}
+
+.icon-lg {
+    height: 1.75rem;
+    width: 1.75rem;
+}
+
+/* Mobile Card Layout - Alternative to table */
+.mobile-cards {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-cards {
+        display: block;
+    }
+    
+    .desktop-table {
+        display: none;
+    }
+    
+    .controller-card {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius) + 2px);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    }
+    
+    .controller-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+    
+    .controller-card-title {
+        font-weight: 500;
+        font-size: 1rem;
+        margin: 0;
+    }
+    
+    .controller-card-status {
+        flex-shrink: 0;
+        margin-left: 1rem;
+    }
+    
+    .controller-card-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .controller-card-detail {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .controller-card-detail-label {
+        font-size: 0.75rem;
+        color: hsl(var(--muted-foreground));
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .controller-card-detail-value {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .controller-card-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .controller-card-actions .btn-modern {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .controller-card-actions .btn-modern .sr-only {
+        position: static;
+        width: auto;
+        height: auto;
+        padding: 0;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+        border: 0;
+        font-size: 0.75rem;
+    }
+}
+
+/* Responsive Improvements for Mobile */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .py-10 {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+    
+    /* Make header more mobile-friendly */
+    .page-header-modern {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .page-header-modern .d-flex {
+        justify-content: center;
+    }
+    
+    /* Stats grid adjustments for mobile */
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        text-align: center;
+    }
+    
+    /* Section spacing on mobile */
+    section[style*="margin-top: 6rem"] {
+        margin-top: 3rem !important;
+    }
+    
+    /* Table responsive behavior */
+    .modern-table {
+        font-size: 0.875rem;
+    }
+    
+    .modern-table th,
+    .modern-table td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    /* Hide less important columns on very small screens */
+    .modern-table th:nth-child(3),
+    .modern-table td:nth-child(3),
+    .modern-table th:nth-child(5),
+    .modern-table td:nth-child(5),
+    .modern-table th:nth-child(6),
+    .modern-table td:nth-child(6) {
+        display: none;
+    }
+    
+    /* Make action buttons stack vertically on small screens */
+    .d-flex.justify-content-end.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .d-flex.justify-content-end.gap-2 .btn-modern {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Mobile-friendly modal */
+    .modal-dialog {
+        margin: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+    
+    /* Better touch targets for mobile */
+    .btn-modern {
+        min-height: 44px;
+        padding: 0.75rem 1rem;
+    }
+    
+    .btn-sm {
+        min-height: 40px;
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Extra small screens - show even fewer columns */
+    .modern-table th:nth-child(2),
+    .modern-table td:nth-child(2) {
+        display: none;
+    }
+    
+    /* Stack action buttons with icons only */
+    .d-flex.justify-content-end.gap-2 {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .d-flex.justify-content-end.gap-2 .btn-modern {
+        width: auto;
+        min-width: 44px;
+    }
+    
+    /* Hide button text, keep icons */
+    .d-flex.justify-content-end.gap-2 .btn-modern .sr-only {
+        position: static;
+        width: auto;
+        height: auto;
+        padding: 0;
+        margin: 0;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+        border: 0;
+        font-size: 0.75rem;
+        margin-left: 0.25rem;
+    }
+}
+
+/* Responsive */
+@media (min-width: 640px) {
+    .page-header-modern {
+        flex-direction: row;
+        align-items: end;
+        justify-content: space-between;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 769px) {
+    /* Restore full table on larger screens */
+    .modern-table th,
+    .modern-table td {
+        display: table-cell;
+    }
+    
+    .d-flex.justify-content-end.gap-2 {
+        flex-direction: row;
+    }
+    
+    .d-flex.justify-content-end.gap-2 .btn-modern {
+        width: auto;
+    }
+}
+
+/* Separator */
+.separator {
+    height: 1px;
+    background: hsl(var(--border));
+    margin: 1rem 0;
+}
+
+/* Text utilities */
+.text-muted {
+    color: hsl(var(--muted-foreground));
+}
+
+.text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+.font-mono {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+/* Layout utilities */
+.mb-6 {
+    margin-bottom: 1.5rem;
+}
+
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.overflow-auto {
+    overflow: auto;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.d-inline {
+    display: inline;
+}
+
+.d-inline-flex {
+    display: inline-flex;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.justify-content-end {
+    justify-content: flex-end;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.mt-4 {
+    margin-top: 1rem;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.mx-auto {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.py-10 {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="page-container">
+    <section class="container mx-auto py-10">
+        <!-- Header -->
+        <header class="page-header-modern">
+            <div>
+                <p>Manage your connected controllers</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn-modern btn-primary" data-bs-toggle="modal" data-bs-target="#bindControllerModal">
+                    Bind Controller
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <p class="stat-label">Total Controllers</p>
+                <p class="stat-value">{{ controllers|length }}</p>
+            </div>
+            <div class="stat-card">
+                <p class="stat-label">Online</p>
+                <p class="stat-value">{{ controllers|selectattr('is_online')|list|length }}</p>
+            </div>
+            <div class="stat-card">
+                <p class="stat-label">Unbound</p>
+                <p class="stat-value">{{ unbound_controllers|length if current_user.is_admin else 0 }}</p>
+            </div>
+        </div>
+
+        <!-- Admin: Unbound Controllers -->
+        {% if current_user.is_admin and unbound_controllers %}
+        <section class="mb-6" aria-labelledby="unbound-title" style="margin-top: 6rem;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 id="unbound-title" class="text-lg font-medium">Unbound Controllers</h2>
+            </div>
+            <div class="separator"></div>
+            <div class="overflow-auto" style="border-radius: calc(var(--radius) + 2px); border: 1px solid hsl(var(--border));">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Serial Number</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Last Seen</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for controller in unbound_controllers %}
+                        <tr>
+                            <td class="font-medium">{{ controller.serial_number }}</td>
+                            <td class="text-muted" style="text-transform: capitalize;">{{ controller.controller_type }}</td>
+                            <td>
+                                <span class="status-pill neutral">
+                                    <span class="status-pill-dot"></span>
+                                    {% if controller.is_online %}Online{% else %}Offline{% endif %}
+                                </span>
+                            </td>
+                            <td class="text-muted">
+                                {% if controller.last_seen %}{{ controller.last_seen.strftime('%m/%d %H:%M') }}{% else %}Never{% endif %}
+                            </td>
+                            <td style="text-align: right;">
+                                <form method="POST" action="{{ url_for('controllers.bind_controller') }}" class="d-inline">
+                                    <input type="hidden" name="serial_number" value="{{ controller.serial_number }}">
+                                    <button type="submit" class="btn-modern btn-outline btn-sm">
+                                        <i class="fas fa-link icon-sm"></i>
+                                        <span class="sr-only">Bind to me</span>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- My Controllers -->
+        <section class="mb-6" aria-labelledby="my-controllers-title" style="margin-top: 6rem;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 id="my-controllers-title" class="text-lg font-medium">My Controllers</h2>
+            </div>
+            <div class="separator"></div>
+            
+            {% if controllers %}
+                <!-- Desktop Table View -->
+                <div class="desktop-table overflow-auto" style="border-radius: calc(var(--radius) + 2px); border: 1px solid hsl(var(--border));">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Serial</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Location</th>
+                                <th>Last Seen</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for controller in controllers %}
+                            <tr>
+                                <td class="font-medium">{{ controller.name or controller.serial_number }}</td>
+                                <td>
+                                    <code class="font-mono text-sm text-muted">{{ controller.serial_number }}</code>
+                                </td>
+                                <td class="text-muted" style="text-transform: capitalize;">{{ controller.controller_type }}</td>
+                                <td>
+                                    <span class="status-pill neutral">
+                                        <span class="status-pill-dot"></span>
+                                        {% if controller.is_online %}Online{% else %}Offline{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if controller.latitude and controller.longitude %}
+                                        <div class="d-inline-flex align-items-center gap-2 text-muted">
+                                            <i class="fas fa-map-marker-alt icon-sm"></i> Set
+                                        </div>
+                                    {% else %}
+                                        <div class="d-inline-flex align-items-center gap-2 text-muted">
+                                            <i class="fas fa-map-marker-alt icon-sm"></i> Not set
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted">
+                                    {% if controller.last_seen %}{{ controller.last_seen.strftime('%m/%d %H:%M') }}{% else %}Never{% endif %}
+                                </td>
+                                <td style="text-align: right;">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a href="{{ url_for('controllers.view_data', controller_id=controller.id) }}" class="btn-modern btn-outline btn-sm">
+                                            <i class="fas fa-chart-line icon-sm"></i>
+                                            <span class="sr-only">View data</span>
+                                        </a>
+                                        <a href="{{ url_for('controllers.edit_controller', controller_id=controller.id) }}" class="btn-modern btn-outline btn-sm">
+                                            <i class="fas fa-edit icon-sm"></i>
+                                            <span class="sr-only">Edit</span>
+                                        </a>
+                                        <form method="POST" action="{{ url_for('controllers.unbind_controller', controller_id=controller.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to unbind this controller?')">
+                                            <button type="submit" class="btn-modern btn-outline btn-sm">
+                                                <i class="fas fa-unlink icon-sm"></i>
+                                                <span class="sr-only">Unbind</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Mobile Card View -->
+                <div class="mobile-cards">
+                    {% for controller in controllers %}
+                    <div class="controller-card">
+                        <div class="controller-card-header">
+                            <h3 class="controller-card-title">{{ controller.name or controller.serial_number }}</h3>
+                            <div class="controller-card-status">
+                                <span class="status-pill {% if controller.is_online %}accent{% else %}danger{% endif %}">
+                                    <span class="status-pill-dot"></span>
+                                    {% if controller.is_online %}Online{% else %}Offline{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="controller-card-details">
+                            <div class="controller-card-detail">
+                                <div class="controller-card-detail-label">Serial</div>
+                                <div class="controller-card-detail-value">
+                                    <code class="font-mono text-sm">{{ controller.serial_number }}</code>
+                                </div>
+                            </div>
+                            <div class="controller-card-detail">
+                                <div class="controller-card-detail-label">Type</div>
+                                <div class="controller-card-detail-value" style="text-transform: capitalize;">
+                                    {{ controller.controller_type }}
+                                </div>
+                            </div>
+                            <div class="controller-card-detail">
+                                <div class="controller-card-detail-label">Location</div>
+                                <div class="controller-card-detail-value">
+                                    {% if controller.latitude and controller.longitude %}
+                                        <i class="fas fa-map-marker-alt icon-sm"></i> Set
+                                    {% else %}
+                                        <i class="fas fa-map-marker-alt icon-sm"></i> Not set
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="controller-card-detail">
+                                <div class="controller-card-detail-label">Last Seen</div>
+                                <div class="controller-card-detail-value">
+                                    {% if controller.last_seen %}{{ controller.last_seen.strftime('%m/%d %H:%M') }}{% else %}Never{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="controller-card-actions">
+                            <a href="{{ url_for('controllers.view_data', controller_id=controller.id) }}" class="btn-modern btn-outline btn-sm">
+                                <i class="fas fa-chart-line icon-sm"></i>
+                                <span class="sr-only">Data</span>
+                            </a>
+                            <a href="{{ url_for('controllers.edit_controller', controller_id=controller.id) }}" class="btn-modern btn-outline btn-sm">
+                                <i class="fas fa-edit icon-sm"></i>
+                                <span class="sr-only">Edit</span>
+                            </a>
+                            <form method="POST" action="{{ url_for('controllers.unbind_controller', controller_id=controller.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to unbind this controller?')" style="flex: 1;">
+                                <button type="submit" class="btn-modern btn-outline btn-sm" style="width: 100%;">
+                                    <i class="fas fa-unlink icon-sm"></i>
+                                    <span class="sr-only">Unbind</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state-modern">
+                    <i class="fas fa-microchip icon" aria-hidden="true"></i>
+                    <h3>No Controllers Bound</h3>
+                    <p>Bind your first controller using the serial number to get started.</p>
+                    <div class="mt-4">
+                        <button class="btn-modern btn-primary" data-bs-toggle="modal" data-bs-target="#bindControllerModal">
+                            Bind Controller
+                        </button>
+                    </div>
+                </div>
+            {% endif %}
+        </section>
+    </section>
+</main>
+
+<!-- Bind Controller Modal -->
+<div class="modal fade modal-modern" id="bindControllerModal" tabindex="-1" aria-labelledby="bindControllerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bindControllerModalLabel">Bind New Controller</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">
+                    Enter the controller serial number. The controller must have reported at least once.
+                </p>
+                <form method="POST" action="{{ url_for('controllers.bind_controller') }}" id="bindControllerForm">
+                    <div class="mb-3">
+                        <label for="serial_number" class="form-label">Serial Number</label>
+                        <input type="text" class="form-control" id="serial_number" name="serial_number"
+                               required placeholder="Enter controller serial number"
+                               style="font-family: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modern btn-outline" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="bindControllerForm" class="btn-modern btn-primary">
+                    Bind Controller
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Custom Modal Implementation for Bootstrap Modal functionality
+    class SimpleModal {
+        constructor(element) {
+            this.element = element;
+            this.backdrop = null;
+            this.isVisible = false;
+        }
+        
+        show() {
+            if (this.isVisible) return;
+            
+            // Create backdrop
+            this.backdrop = document.createElement('div');
+            this.backdrop.className = 'modal-backdrop fade show';
+            this.backdrop.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                z-index: 1050 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background-color: rgba(0, 0, 0, 0.5) !important;
+            `;
+            
+            // Show modal
+            document.body.appendChild(this.backdrop);
+            document.body.classList.add('modal-open');
+            document.body.style.overflow = 'hidden';
+            
+            // Show the modal element
+            this.element.style.display = 'block';
+            this.element.classList.add('show');
+            this.element.style.cssText += `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                z-index: 1055 !important;
+                width: 100% !important;
+                height: 100% !important;
+                overflow-x: hidden;
+                overflow-y: auto;
+                outline: 0;
+            `;
+            
+            this.isVisible = true;
+            
+            // Focus on first input
+            const firstInput = this.element.querySelector('input, textarea, select');
+            if (firstInput) {
+                setTimeout(() => firstInput.focus(), 100);
+            }
+            
+            // Handle backdrop clicks
+            this.backdrop.addEventListener('click', () => this.hide());
+            
+            // Handle escape key
+            this.escapeHandler = (e) => {
+                if (e.key === 'Escape') this.hide();
+            };
+            document.addEventListener('keydown', this.escapeHandler);
+        }
+        
+        hide() {
+            if (!this.isVisible) return;
+            
+            // Hide modal
+            this.element.classList.remove('show');
+            this.element.style.display = 'none';
+            this.element.style.cssText = '';
+            
+            // Remove backdrop
+            if (this.backdrop) {
+                document.body.removeChild(this.backdrop);
+                this.backdrop = null;
+            }
+            
+            // Restore body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            
+            this.isVisible = false;
+            
+            // Remove escape handler
+            if (this.escapeHandler) {
+                document.removeEventListener('keydown', this.escapeHandler);
+                this.escapeHandler = null;
+            }
+        }
+    }
+    
+    // Initialize modal
+    const bindModalEl = document.getElementById('bindControllerModal');
+    let bindModal = null;
+    
+    if (bindModalEl) {
+        bindModal = new SimpleModal(bindModalEl);
+        
+        // Handle all bind controller button clicks
+        const bindButtons = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#bindControllerModal"]');
+        bindButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                bindModal.show();
+            });
+        });
+        
+        // Handle close buttons
+        const closeButtons = bindModalEl.querySelectorAll('[data-bs-dismiss="modal"]');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                bindModal.hide();
+            });
+        });
+    }
+
+    // Handle form submission for bind controller
+    const bindForm = document.getElementById('bindControllerForm');
+    if (bindForm) {
+        bindForm.addEventListener('submit', function(e) {
+            const serialInput = document.getElementById('serial_number');
+            if (!serialInput.value.trim()) {
+                e.preventDefault();
+                alert('Please enter a serial number');
+                return;
+            }
+        });
+    }
+
+    // Add subtle animation for status pills
+    const statusPills = document.querySelectorAll('.status-pill');
+    statusPills.forEach(pill => {
+        const dot = pill.querySelector('.status-pill-dot');
+        if (dot && pill.textContent.trim().toLowerCase().includes('online')) {
+            setInterval(() => {
+                dot.style.transform = 'scale(1.2)';
+                dot.style.transition = 'transform 0.3s ease';
+                setTimeout(() => {
+                    dot.style.transform = 'scale(1)';
+                }, 300);
+            }, 3000);
+        }
+    });
+
+    // Add hover effects to table rows
+    const tableRows = document.querySelectorAll('.modern-table tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-1px)';
+            this.style.transition = 'transform 0.2s ease';
+        });
+        row.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+
+    // Success message animation if present
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            alert.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            alert.style.opacity = '1';
+            alert.style.transform = 'translateY(0)';
+        }, 100);
+    });
+});
+</script>
+{% endblock %}

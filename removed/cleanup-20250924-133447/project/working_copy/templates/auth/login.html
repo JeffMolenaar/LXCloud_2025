@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}Login - LXCloud{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card card shadow">
+        <div class="card-header">
+            <h4><i class="fas fa-cloud"></i> LXCloud</h4>
+            <p>Modern Cloud Dashboard Platform</p>
+        </div>
+        <div class="card-body">
+            {% if needs_2fa %}
+                <h5 class="card-title">Two-Factor Authentication</h5>
+                <div class="two-factor-container">
+                    <p class="text-muted mb-4">Enter your 6-digit authenticator code</p>
+                    
+                    <form method="POST">
+                        <input type="hidden" name="username" value="{{ request.form.username }}">
+                        <input type="hidden" name="password" value="{{ request.form.password }}">
+                        
+                        <div class="mb-4">
+                            <input type="text" class="form-control two-factor-input" id="two_factor_token" 
+                                   name="two_factor_token" required maxlength="6" 
+                                   pattern="[0-9]{6}" placeholder="000000">
+                            <div class="form-text mt-2">Enter the code from your authenticator app</div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-login w-100 mb-3">
+                            <i class="fas fa-shield-alt me-2"></i> Verify Code
+                        </button>
+                    </form>
+                    
+                    <a href="{{ url_for('auth.login') }}" class="back-link">
+                        <i class="fas fa-arrow-left"></i> Back to login
+                    </a>
+                </div>
+            {% else %}
+                <h5 class="card-title">Welcome Back</h5>
+                
+                <form method="POST">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               placeholder="Enter your username" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               placeholder="Enter your password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-login w-100 mb-4">
+                        <i class="fas fa-sign-in-alt me-2"></i> Sign In
+                    </button>
+                </form>
+                
+                <div class="text-center">
+                    <a href="{{ url_for('auth.register') }}" class="register-link">
+                        Don't have an account? <strong>Create one</strong>
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        <div class="card-footer">
+            <small>Version {{ version }} • Secure & Modern</small>
+        </div>
+    </div>
+</div>
+
+<style>
+body {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--info-color) 100%);
+    min-height: 100vh;
+    font-family: var(--font-family-sans);
+}
+
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+}
+
+.login-card {
+    background: var(--bg-primary);
+    border: none;
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-2xl);
+    overflow: hidden;
+    width: 100%;
+    max-width: 400px;
+    backdrop-filter: blur(20px);
+    position: relative;
+}
+
+.login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--info-color), var(--success-color));
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    color: var(--text-inverse);
+    padding: var(--space-8) var(--space-6);
+    text-align: center;
+    border: none;
+}
+
+.card-header h4 {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--space-2);
+    color: inherit;
+}
+
+.card-header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: var(--font-size-sm);
+    color: inherit;
+}
+
+.card-body {
+    padding: var(--space-8) var(--space-6);
+}
+
+.card-title {
+    color: var(--text-primary);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-6);
+    text-align: center;
+}
+
+.form-floating {
+    position: relative;
+    margin-bottom: var(--space-5);
+}
+
+.form-floating .form-control {
+    height: 60px;
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    padding: var(--space-4) var(--space-4) var(--space-2) var(--space-4);
+    background-color: var(--bg-secondary);
+    transition: var(--transition-normal);
+}
+
+.form-floating .form-control:focus {
+    border-color: var(--primary-color);
+    background-color: var(--bg-primary);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.form-floating label {
+    color: var(--text-tertiary);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+    padding: var(--space-4);
+}
+
+.input-group {
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    margin-bottom: var(--space-5);
+}
+
+.input-group-text {
+    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+    border: 2px solid var(--border-light);
+    border-right: none;
+    color: var(--text-secondary);
+    width: 60px;
+    justify-content: center;
+}
+
+.input-group .form-control {
+    border-left: none;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    height: 60px;
+    border: 2px solid var(--border-light);
+    background-color: var(--bg-secondary);
+}
+
+.input-group .form-control:focus {
+    border-left: none;
+    background-color: var(--bg-primary);
+}
+
+.btn-login {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    border: none;
+    border-radius: var(--radius-xl);
+    padding: var(--space-4) var(--space-6);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-base);
+    color: var(--text-inverse);
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+    height: 60px;
+}
+
+.btn-login::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: var(--transition-normal);
+}
+
+.btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+    background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-dark) 100%);
+}
+
+.btn-login:hover::before {
+    left: 100%;
+}
+
+.btn-login:active {
+    transform: translateY(0);
+}
+
+.register-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+    transition: var(--transition-fast);
+}
+
+.register-link:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.register-link strong {
+    color: var(--primary-color);
+    font-weight: var(--font-weight-semibold);
+}
+
+.card-footer {
+    background: var(--bg-secondary);
+    border: none;
+    padding: var(--space-4) var(--space-6);
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: var(--font-size-xs);
+}
+
+.two-factor-container {
+    text-align: center;
+    padding: var(--space-4);
+}
+
+.two-factor-input {
+    text-align: center;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.5em;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    height: 80px;
+    font-family: var(--font-family-mono);
+}
+
+.two-factor-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.back-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+    transition: var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.back-link:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+    transform: translateX(-2px);
+}
+
+/* Animation for card entrance */
+.login-card {
+    animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .login-container {
+        padding: var(--space-2);
+    }
+    
+    .card-body {
+        padding: var(--space-6) var(--space-4);
+    }
+    
+    .card-header {
+        padding: var(--space-6) var(--space-4);
+    }
+}
+</style>
+{% endblock %}

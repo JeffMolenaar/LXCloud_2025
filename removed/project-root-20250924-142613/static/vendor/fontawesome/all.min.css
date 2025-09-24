@@ -1,0 +1,228 @@
+/* Font Awesome Icons - Essential set for LXCloud */
+
+/* Font Face for Font Awesome */
+@font-face {
+  font-family: "Font Awesome 6 Free";
+  font-style: normal;
+  font-weight: 900;
+  src: url("data:font/woff2;base64,") format("woff2");
+}
+
+/* Icon base class */
+.fas,
+.fa {
+  font-family: "Font Awesome 6 Free", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+  display: inline-block;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Since we can't load the actual font, we'll use Unicode symbols and CSS styling */
+
+/* Cloud icon */
+.fa-cloud::before {
+  content: "☁";
+  font-family: sans-serif;
+}
+
+/* User icon */
+.fa-user::before {
+  content: "👤";
+  font-family: sans-serif;
+  font-size: 0.9em;
+}
+
+/* Lock icon */
+.fa-lock::before {
+  content: "🔒";
+  font-family: sans-serif;
+  font-size: 0.9em;
+}
+
+/* Sign in icon */
+.fa-sign-in-alt::before {
+  content: "→";
+  font-family: sans-serif;
+  font-weight: bold;
+}
+
+/* User plus icon */
+.fa-user-plus::before {
+  content: "👤+";
+  font-family: sans-serif;
+  font-size: 0.8em;
+}
+
+/* Envelope icon */
+.fa-envelope::before {
+  content: "✉";
+  font-family: sans-serif;
+}
+
+/* ID card icon */
+.fa-id-card::before {
+  content: "🆔";
+  font-family: sans-serif;
+  font-size: 0.8em;
+}
+
+/* Map marker icon */
+.fa-map-marker-alt::before {
+  content: "📍";
+  font-family: sans-serif;
+  font-size: 0.9em;
+}
+
+/* Dashboard/tachometer icon */
+.fa-tachometer-alt::before {
+  content: "📊";
+  font-family: sans-serif;
+}
+
+/* Microchip icon */
+.fa-microchip::before {
+  content: "💾";
+  font-family: sans-serif;
+}
+
+/* Cog icon */
+.fa-cog::before {
+  content: "⚙";
+  font-family: sans-serif;
+}
+
+/* Shield icon */
+.fa-shield-alt::before {
+  content: "🛡";
+  font-family: sans-serif;
+}
+
+/* Arrow left icon */
+.fa-arrow-left::before {
+  content: "←";
+  font-family: sans-serif;
+  font-weight: bold;
+}
+
+/* Circle icon */
+.fa-circle::before {
+  content: "●";
+  font-family: sans-serif;
+  font-size: 0.8em;
+}
+
+/* Wind icon */
+.fa-wind::before {
+  content: "💨";
+  font-family: sans-serif;
+}
+
+/* Cloud sun icon */
+.fa-cloud-sun::before {
+  content: "⛅";
+  font-family: sans-serif;
+}
+
+/* Camera icon */
+.fa-camera::before {
+  content: "📷";
+  font-family: sans-serif;
+}
+
+/* Chart line icon */
+.fa-chart-line::before {
+  content: "📈";
+  font-family: sans-serif;
+}
+
+/* Edit icon */
+.fa-edit::before {
+  content: "✏";
+  font-family: sans-serif;
+}
+
+/* Times/close icon */
+.fa-times::before {
+  content: "×";
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+/* Additional icons */
+.fa-check::before {
+  content: "✓";
+  font-family: sans-serif;
+  color: #28a745;
+  font-weight: bold;
+}
+
+.fa-exclamation-triangle::before {
+  content: "⚠";
+  font-family: sans-serif;
+  color: #ffc107;
+}
+
+.fa-info-circle::before {
+  content: "ℹ";
+  font-family: sans-serif;
+  color: #17a2b8;
+}
+
+.fa-times-circle::before {
+  content: "✗";
+  font-family: sans-serif;
+  color: #dc3545;
+}
+
+/* Spinner for loading */
+.fa-spinner::before {
+  content: "⟳";
+  font-family: sans-serif;
+  animation: fa-spin 2s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Fix alignment issues */
+.fas,
+.fa {
+  vertical-align: baseline;
+  margin-right: 0.3em;
+}
+
+/* Ensure icons don't break layout */
+.fas:last-child,
+.fa:last-child {
+  margin-right: 0;
+}
+
+/* Special cases for input groups */
+.input-group-text .fas,
+.input-group-text .fa {
+  margin-right: 0;
+}
+
+/* Icon size modifiers */
+.fa-lg {
+  font-size: 1.3em;
+  line-height: 0.75em;
+}
+
+.fa-2x {
+  font-size: 2em;
+}
+
+.fa-3x {
+  font-size: 3em;
+}

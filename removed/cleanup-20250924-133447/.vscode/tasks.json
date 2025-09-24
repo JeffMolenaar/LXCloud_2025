@@ -1,0 +1,186 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Install Dependencies",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "-m",
+                "pip",
+                "install",
+                "-r",
+                "requirements.txt"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Create Virtual Environment",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "-m",
+                "venv",
+                "venv"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Activate Virtual Environment and Install Dependencies",
+            "type": "shell",
+            "command": "source venv/bin/activate && pip install -r requirements.txt",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "shell": {
+                    "executable": "/bin/bash",
+                    "args": [
+                        "-c"
+                    ]
+                }
+            },
+            "problemMatcher": [],
+            "dependsOn": "Create Virtual Environment"
+        },
+        {
+            "label": "Run Flask Development Server",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "run.py"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "FLASK_ENV": "development",
+                    "FLASK_DEBUG": "true",
+                    "FLASK_HOST": "127.0.0.1",
+                    "FLASK_PORT": "5000"
+                }
+            },
+            "problemMatcher": [],
+            "isBackground": true
+        },
+        {
+            "label": "Run Database Setup",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "database_install.sh"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Format Python Code",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "-m",
+                "black",
+                ".",
+                "--line-length=120"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Lint Python Code",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "-m",
+                "flake8",
+                ".",
+                "--max-line-length=120",
+                "--ignore=E203,W503"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Install Development Tools",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "-m",
+                "pip",
+                "install",
+                "black",
+                "flake8",
+                "isort"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

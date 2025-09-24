@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Setup 2FA - LXCloud{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shield-alt"></i> 
+                        Setup Two-Factor Authentication
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <p>Scan this QR code with your authenticator app:</p>
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="2FA QR Code" class="img-fluid">
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Setup Instructions:</h6>
+                        <ol class="mb-0">
+                            <li>Install an authenticator app (Google Authenticator, Authy, etc.)</li>
+                            <li>Scan the QR code above with your app</li>
+                            <li>Enter the 6-digit code from your app below</li>
+                            <li>Click "Enable 2FA" to complete setup</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Manual Entry Key (if QR code doesn't work):</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{ secret }}" readonly>
+                            <button class="btn btn-outline-secondary" onclick="copyToClipboard('{{ secret }}')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('auth.enable_2fa') }}">
+                        <div class="mb-3">
+                            <label for="token" class="form-label">Verification Code</label>
+                            <input type="text" class="form-control text-center" id="token" name="token" 
+                                   required maxlength="6" pattern="[0-9]{6}" placeholder="000000">
+                            <div class="form-text">Enter the 6-digit code from your authenticator app</div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success flex-fill">
+                                <i class="fas fa-shield-alt"></i> Enable 2FA
+                            </button>
+                            <a href="{{ url_for('users.profile') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        LXCloud.showAlert('Secret key copied to clipboard!', 'success');
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}UI Customization - LXCloud{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">
+                <i class="fas fa-palette text-primary"></i> 
+                UI Customization
+            </h1>
+            <p class="text-muted">Customize the appearance and branding of your LXCloud instance</p>
+        </div>
+    </div>
+
+    <!-- Customization Tabs -->
+    <div class="row">
+        <div class="col">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <ul class="nav nav-tabs card-header-tabs" id="customizationTabs" role="tablist">
+                        {% for page, customization in customizations.items() %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if loop.first %}active{% endif %}" 
+                                    id="{{ page }}-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#{{ page }}-pane" type="button" role="tab">
+                                {{ page.title() }}
+                            </button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="customizationTabsContent">
+                        {% for page, customization in customizations.items() %}
+                        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                             id="{{ page }}-pane" role="tabpanel" tabindex="0">
+                            
+                            <form method="POST" action="{{ url_for('admin.save_ui_customization', page_name=page) }}" enctype="multipart/form-data">
+                                <div class="row">
+                                    <!-- Header Configuration -->
+                                    <div class="col-lg-6">
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-window-maximize text-primary"></i> Header Configuration
+                                        </h6>
+                                        
+                                        <div class="mb-3">
+                                            <label for="header_logo_text_{{ page }}" class="form-label">Logo Text</label>
+                                            <input type="text" class="form-control" 
+                                                   id="header_logo_text_{{ page }}" name="header_logo_text" 
+                                                   value="{{ customization.get_header_config().get('logo_text', 'LXCloud') }}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="logo_file_{{ page }}" class="form-label">Custom Logo</label>
+                                            <input type="file" class="form-control" 
+                                                   id="logo_file_{{ page }}" name="logo_file" 
+                                                   accept="image/*">
+                                            <div class="form-text">
+                                                Upload a custom logo image (PNG, JPG, SVG recommended). Will replace the logo text when uploaded.
+                                            </div>
+                                            {% if customization.logo_filename %}
+                                            <div class="mt-2">
+                                                <small class="text-success">
+                                                    <i class="fas fa-check"></i> Current logo: {{ customization.logo_filename }}
+                                                </small>
+                                                <div class="mt-1">
+                                                    <img src="{{ url_for('static', filename='uploads/' + customization.logo_filename) }}" 
+                                                         alt="Current logo" class="img-thumbnail" style="max-height: 50px;">
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="header_height_{{ page }}" class="form-label">Header Height</label>
+                                            <input type="text" class="form-control" 
+                                                   id="header_height_{{ page }}" name="header_height" 
+                                                   value="{{ customization.get_header_config().get('height', '60px') }}"
+                                                   placeholder="60px">
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="header_bg_color_{{ page }}" class="form-label">Background Color</label>
+                                                    <input type="color" class="form-control form-control-color" 
+                                                           id="header_bg_color_{{ page }}" name="header_bg_color" 
+                                                           value="{{ customization.get_header_config().get('background_color', '#2c3e50') }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="header_text_color_{{ page }}" class="form-label">Text Color</label>
+                                                    <input type="color" class="form-control form-control-color" 
+                                                           id="header_text_color_{{ page }}" name="header_text_color" 
+                                                           value="{{ customization.get_header_config().get('text_color', '#ffffff') }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="logo_left_padding_{{ page }}" class="form-label">Logo Left Padding</label>
+                                                    <input type="text" class="form-control" 
+                                                           id="logo_left_padding_{{ page }}" name="logo_left_padding" 
+                                                           value="{{ customization.get_header_config().get('logo_left_padding', '15px') }}"
+                                                           placeholder="15px">
+                                                    <div class="form-text">Distance from left edge of header</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="logo_menu_spacing_{{ page }}" class="form-label">Logo to Menu Spacing</label>
+                                                    <input type="text" class="form-control" 
+                                                           id="logo_menu_spacing_{{ page }}" name="logo_menu_spacing" 
+                                                           value="{{ customization.get_header_config().get('logo_menu_spacing', '30px') }}"
+                                                           placeholder="30px">
+                                                    <div class="form-text">Space between logo and menu items</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="user_button_right_padding_{{ page }}" class="form-label">User Button Right Padding</label>
+                                            <input type="text" class="form-control" 
+                                                   id="user_button_right_padding_{{ page }}" name="user_button_right_padding" 
+                                                   value="{{ customization.get_header_config().get('user_button_right_padding', '15px') }}"
+                                                   placeholder="15px">
+                                            <div class="form-text">Distance from right edge of header</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Footer Configuration -->
+                                    <div class="col-lg-6">
+                                        <h6 class="mb-3">
+                                            <i class="fas fa-window-minimize text-secondary"></i> Footer Configuration
+                                        </h6>
+                                        
+                                        <div class="mb-3">
+                                            <label for="footer_text_{{ page }}" class="form-label">Footer Text</label>
+                                            <input type="text" class="form-control" 
+                                                   id="footer_text_{{ page }}" name="footer_text" 
+                                                   value="{{ customization.get_footer_config().get('text', '© 2025 LXCloud') }}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="footer_height_{{ page }}" class="form-label">Footer Height</label>
+                                            <input type="text" class="form-control" 
+                                                   id="footer_height_{{ page }}" name="footer_height" 
+                                                   value="{{ customization.get_footer_config().get('height', '40px') }}"
+                                                   placeholder="40px">
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="footer_bg_color_{{ page }}" class="form-label">Background Color</label>
+                                                    <input type="color" class="form-control form-control-color" 
+                                                           id="footer_bg_color_{{ page }}" name="footer_bg_color" 
+                                                           value="{{ customization.get_footer_config().get('background_color', '#34495e') }}">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="mb-3">
+                                                    <label for="footer_text_color_{{ page }}" class="form-label">Text Color</label>
+                                                    <input type="color" class="form-control form-control-color" 
+                                                           id="footer_text_color_{{ page }}" name="footer_text_color" 
+                                                           value="{{ customization.get_footer_config().get('text_color', '#ffffff') }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Marker Configuration (Dashboard only) -->
+                                {% if page == 'dashboard' %}
+                                <div class="mb-4">
+                                    <h6 class="mb-3">
+                                        <i class="fas fa-map-marker-alt text-warning"></i> Controller Marker Configuration
+                                    </h6>
+                                    <p class="text-muted mb-3">Customize markers for each controller type with different styles for online and offline states.</p>
+                                    
+                                    {% set marker_config = customization.get_marker_config() %}
+                                    {% set controller_types = [
+                                        ('speedradar', 'Speed Radar', 'fas fa-tachometer-alt'),
+                                        ('beaufortmeter', 'Beaufort Meter', 'fas fa-wind'),
+                                        ('weatherstation', 'Weather Station', 'fas fa-cloud-sun'),
+                                        ('aicamera', 'AI Camera', 'fas fa-camera'),
+                                        ('default', 'Default', 'fas fa-microchip')
+                                    ] %}
+                                    
+                                    <div class="row">
+                                        {% for controller_type, display_name, default_icon in controller_types %}
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card border-light">
+                                                <div class="card-header bg-light">
+                                                    <h6 class="mb-0">
+                                                        <i class="{{ default_icon }}"></i> {{ display_name }}
+                                                    </h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <!-- Online Marker -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label text-success">
+                                                            <i class="fas fa-circle"></i> Online Marker
+                                                        </label>
+                                                        <div class="row">
+                                                            <div class="col-4">
+                                                                <label for="marker_{{ controller_type }}_online_icon_{{ page }}" class="form-label small">Font Awesome Icon</label>
+                                                                <input type="text" class="form-control form-control-sm" 
+                                                                       id="marker_{{ controller_type }}_online_icon_{{ page }}" 
+                                                                       name="marker_{{ controller_type }}_online_icon" 
+                                                                       value="{{ marker_config.get(controller_type, {}).get('online', {}).get('icon', default_icon) }}"
+                                                                       placeholder="{{ default_icon }}">
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <label for="marker_{{ controller_type }}_online_color_{{ page }}" class="form-label small">Color</label>
+                                                                <input type="color" class="form-control form-control-color form-control-sm" 
+                                                                       id="marker_{{ controller_type }}_online_color_{{ page }}" 
+                                                                       name="marker_{{ controller_type }}_online_color" 
+                                                                       value="{{ marker_config.get(controller_type, {}).get('online', {}).get('color', '#28a745') }}">
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <label for="marker_{{ controller_type }}_online_size_{{ page }}" class="form-label small">Size</label>
+                                                                <input type="number" class="form-control form-control-sm" 
+                                                                       id="marker_{{ controller_type }}_online_size_{{ page }}" 
+                                                                       name="marker_{{ controller_type }}_online_size" 
+                                                                       value="{{ marker_config.get(controller_type, {}).get('online', {}).get('size', '30') }}"
+                                                                       min="20" max="50" placeholder="30">
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Custom Icon Upload -->
+                                                        <div class="mt-2">
+                                                            <label for="marker_{{ controller_type }}_online_icon_file_{{ page }}" class="form-label small">Custom PNG Icon</label>
+                                                            <input type="file" class="form-control form-control-sm" 
+                                                                   id="marker_{{ controller_type }}_online_icon_file_{{ page }}" 
+                                                                   name="marker_{{ controller_type }}_online_icon_file" 
+                                                                   accept=".png">
+                                                            <div class="form-text small">
+                                                                Upload a PNG icon (overrides Font Awesome icon when provided)
+                                                            </div>
+                                                            {% if marker_config.get(controller_type, {}).get('online', {}).get('custom_icon') %}
+                                                            <div class="mt-1">
+                                                                <small class="text-success">
+                                                                    <i class="fas fa-check"></i> Current custom icon: {{ marker_config.get(controller_type, {}).get('online', {}).get('custom_icon') }}
+                                                                </small>
+                                                                <div class="mt-1">
+                                                                    <img src="{{ url_for('static', filename='uploads/' + marker_config.get(controller_type, {}).get('online', {}).get('custom_icon')) }}" 
+                                                                         alt="Online marker icon" class="img-thumbnail" style="max-height: 30px;">
+                                                                </div>
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Offline Marker -->
+                                                    <div class="mb-3">
+                                                        <label class="form-label text-danger">
+                                                            <i class="fas fa-circle"></i> Offline Marker
+                                                        </label>
+                                                        <div class="row">
+                                                            <div class="col-4">
+                                                                <label for="marker_{{ controller_type }}_offline_icon_{{ page }}" class="form-label small">Font Awesome Icon</label>
+                                                                <input type="text" class="form-control form-control-sm" 
+                                                                       id="marker_{{ controller_type }}_offline_icon_{{ page }}" 
+                                                                       name="marker_{{ controller_type }}_offline_icon" 
+                                                                       value="{{ marker_config.get(controller_type, {}).get('offline', {}).get('icon', default_icon) }}"
+                                                                       placeholder="{{ default_icon }}">
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <label for="marker_{{ controller_type }}_offline_color_{{ page }}" class="form-label small">Color</label>
+                                                                <input type="color" class="form-control form-control-color form-control-sm" 
+                                                                       id="marker_{{ controller_type }}_offline_color_{{ page }}" 
+                                                                       name="marker_{{ controller_type }}_offline_color" 
+                                                                       value="{{ marker_config.get(controller_type, {}).get('offline', {}).get('color', '#dc3545') }}">
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <label for="marker_{{ controller_type }}_offline_size_{{ page }}" class="form-label small">Size</label>
+                                                                <input type="number" class="form-control form-control-sm" 
+                                                                       id="marker_{{ controller_type }}_offline_size_{{ page }}" 
+                                                                       name="marker_{{ controller_type }}_offline_size" 
+                                                                       value="{{ marker_config.get(controller_type, {}).get('offline', {}).get('size', '30') }}"
+                                                                       min="20" max="50" placeholder="30">
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Custom Icon Upload -->
+                                                        <div class="mt-2">
+                                                            <label for="marker_{{ controller_type }}_offline_icon_file_{{ page }}" class="form-label small">Custom PNG Icon</label>
+                                                            <input type="file" class="form-control form-control-sm" 
+                                                                   id="marker_{{ controller_type }}_offline_icon_file_{{ page }}" 
+                                                                   name="marker_{{ controller_type }}_offline_icon_file" 
+                                                                   accept=".png">
+                                                            <div class="form-text small">
+                                                                Upload a PNG icon (overrides Font Awesome icon when provided)
+                                                            </div>
+                                                            {% if marker_config.get(controller_type, {}).get('offline', {}).get('custom_icon') %}
+                                                            <div class="mt-1">
+                                                                <small class="text-success">
+                                                                    <i class="fas fa-check"></i> Current custom icon: {{ marker_config.get(controller_type, {}).get('offline', {}).get('custom_icon') }}
+                                                                </small>
+                                                                <div class="mt-1">
+                                                                    <img src="{{ url_for('static', filename='uploads/' + marker_config.get(controller_type, {}).get('offline', {}).get('custom_icon')) }}" 
+                                                                         alt="Offline marker icon" class="img-thumbnail" style="max-height: 30px;">
+                                                                </div>
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-info-circle"></i> Usage Tips</h6>
+                                        <ul class="mb-0">
+                                            <li>Use Font Awesome icon classes (e.g., fas fa-camera, fas fa-wind) for text-based icons</li>
+                                            <li>Upload custom PNG icons to override Font Awesome icons with your own designs</li>
+                                            <li>Custom icons will be automatically resized to match the specified size</li>
+                                            <li>Colors can be hex values or CSS color names</li>
+                                            <li>Size range: 20-50 pixels for optimal display</li>
+                                            <li>Changes apply to the dashboard map markers</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Custom CSS -->
+                                <div class="mb-3">
+                                    <label for="custom_css_{{ page }}" class="form-label">
+                                        <i class="fas fa-code text-info"></i> Custom CSS
+                                    </label>
+                                    <textarea class="form-control font-monospace" 
+                                              id="custom_css_{{ page }}" name="custom_css" 
+                                              rows="8" 
+                                              placeholder="Enter custom CSS rules for this page...">{{ customization.custom_css or '' }}</textarea>
+                                    <div class="form-text">
+                                        Add custom CSS rules to further customize the appearance of this page.
+                                    </div>
+                                </div>
+                                
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: #6c757d;
+}
+
+.nav-tabs .nav-link.active {
+    border-bottom-color: #007bff;
+    color: #007bff;
+    background: none;
+}
+
+.form-control-color {
+    width: 3rem;
+    height: calc(2.25rem + 2px);
+}
+
+.font-monospace {
+    font-family: 'Courier New', Courier, monospace;
+}
+</style>
+{% endblock %}

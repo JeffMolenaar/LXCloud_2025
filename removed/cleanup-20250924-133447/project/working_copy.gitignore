@@ -1,0 +1,8 @@
+# Ignore common transient files in the working copy
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.bak-*
+node_modules/
+instance/
