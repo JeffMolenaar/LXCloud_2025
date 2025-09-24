@@ -121,19 +121,20 @@ templates/base.html
 run.py
 requirements.txt"
 
-MISSING_FILES=()
+MISSING_FILES=""
 while IFS= read -r file; do
     if [[ -n "$file" ]]; then
         if [[ ! -f "$INSTALL_DIR/$file" ]]; then
-            MISSING_FILES+=("$file")
+            MISSING_FILES+="$file"$'\n'
         fi
     fi
 done <<< "$CRITICAL_FILES"
 
-if [[ ${#MISSING_FILES[@]} -gt 0 ]]; then
+if [[ -n "$MISSING_FILES" ]]; then
     echo -e "${RED}ERROR: Critical files are missing after installation:${NC}"
-    for file in "${MISSING_FILES[@]}"; do
-        echo -e "${RED}  - $file${NC}"
+    # Print each missing file
+    printf "%s" "$MISSING_FILES" | while IFS= read -r mf; do
+        echo -e "${RED}  - $mf${NC}"
     done
     echo -e "${RED}Installation failed. Please check source directory and try again.${NC}"
     exit 1
