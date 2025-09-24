@@ -114,21 +114,21 @@ fi
 
 # Verify critical files were copied correctly
 echo -e "${BLUE}Verifying installation...${NC}"
-CRITICAL_FILES=(
-    "app/__init__.py"
-    "templates/auth/login.html"
-    "templates/auth/register.html"
-    "templates/base.html"
-    "run.py"
-    "requirements.txt"
-)
+CRITICAL_FILES="app/__init__.py
+templates/auth/login.html
+templates/auth/register.html
+templates/base.html
+run.py
+requirements.txt"
 
 MISSING_FILES=()
-for file in "${CRITICAL_FILES[@]}"; do
-    if [[ ! -f "$INSTALL_DIR/$file" ]]; then
-        MISSING_FILES+=("$file")
+while IFS= read -r file; do
+    if [[ -n "$file" ]]; then
+        if [[ ! -f "$INSTALL_DIR/$file" ]]; then
+            MISSING_FILES+=("$file")
+        fi
     fi
-done
+done <<< "$CRITICAL_FILES"
 
 if [[ ${#MISSING_FILES[@]} -gt 0 ]]; then
     echo -e "${RED}ERROR: Critical files are missing after installation:${NC}"
