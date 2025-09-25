@@ -50,6 +50,11 @@
                             </li>
                             {% endif %}
                             <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="osm-tab" data-bs-toggle="pill" data-bs-target="#osm-pane" type="button" role="tab">
+                                    <i class="fas fa-globe-europe me-2"></i>OpenStreetMap
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="css-tab" data-bs-toggle="pill" data-bs-target="#css-pane" type="button" role="tab">
                                     <i class="fas fa-code me-2"></i>CSS
                                 </button>
@@ -232,6 +237,47 @@
                             </div>
                             {% endif %}
                             
+                            <!-- OpenStreetMap Configuration -->
+                            <div class="tab-pane fade" id="osm-pane" role="tabpanel">
+                                <div class="card modern-card">
+                                    <div class="card-header bg-info bg-opacity-10">
+                                        <h5 class="text-info mb-0">
+                                            <i class="fas fa-globe-europe me-2"></i>OpenStreetMap Settings
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3">Configure OpenStreetMap display options for map pages.</p>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label small">Default Tile Source</label>
+                                                <select class="form-select modern-input" name="osm_tile_source">
+                                                    <option value="osm" {% if customization.get_map_config().get('tile_source') == 'osm' %}selected{% endif %}>OpenStreetMap</option>
+                                                    <option value="toner" {% if customization.get_map_config().get('tile_source') == 'toner' %}selected{% endif %}>Stamen Toner</option>
+                                                    <option value="watercolor" {% if customization.get_map_config().get('tile_source') == 'watercolor' %}selected{% endif %}>Stamen Watercolor</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small">Default Zoom</label>
+                                                <input type="number" class="form-control modern-input" name="osm_default_zoom" value="{{ customization.get_map_config().get('default_zoom', 12) }}" min="0" max="20">
+                                            </div>
+                                        </div>
+                                        <div class="row g-3 mt-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label small">Show Attribution</label>
+                                                <select class="form-select modern-input" name="osm_show_attribution">
+                                                    <option value="true" {% if customization.get_map_config().get('show_attribution', True) %}selected{% endif %}>Yes</option>
+                                                    <option value="false" {% if not customization.get_map_config().get('show_attribution', True) %}selected{% endif %}>No</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small">Max Bounds (bbox)</label>
+                                                <input type="text" class="form-control modern-input" name="osm_max_bounds" placeholder="minLon,minLat,maxLon,maxLat" value="{{ customization.get_map_config().get('max_bounds', '') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <!-- CSS Configuration -->
                             <div class="tab-pane fade" id="css-pane" role="tabpanel">
                                 <div class="card modern-card">
@@ -318,7 +364,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const progressSteps = {
         'header-pane': 25,
         'footer-pane': 50,
-        'markers-pane': 75,
+        'markers-pane': 70,
+        'osm-pane': 85,
         'css-pane': 100
     };
     
