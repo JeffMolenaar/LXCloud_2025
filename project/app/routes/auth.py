@@ -64,12 +64,13 @@ def register():
             flash('Email already registered', 'error')
             return render_template('auth/register.html')
         
-        # Create new user
+        # Create new user (force non-admin regardless of form input)
         user = User(
             username=username,
             email=email,
             full_name=full_name,
-            address=address
+            address=address,
+            is_admin=False
         )
         user.set_password(password)
         

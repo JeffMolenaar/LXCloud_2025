@@ -168,6 +168,7 @@ class UICustomization(db.Model):
     header_config = db.Column(db.Text, nullable=True)  # JSON
     footer_config = db.Column(db.Text, nullable=True)  # JSON
     marker_config = db.Column(db.Text, nullable=True)  # JSON for marker configurations
+    map_config = db.Column(db.Text, nullable=True)  # JSON for OpenStreetMap / map settings
     logo_filename = db.Column(
         db.String(255), nullable=True
     )  # Store uploaded logo filename
@@ -207,6 +208,17 @@ class UICustomization(db.Model):
     def set_marker_config(self, config_dict):
         """Serialize and store marker configuration as JSON."""
         self.marker_config = json.dumps(config_dict)
+
+    def get_map_config(self):
+        """Return map (OpenStreetMap) configuration as a dict, or an empty dict on error."""
+        try:
+            return json.loads(self.map_config) if self.map_config else {}
+        except Exception:
+            return {}
+
+    def set_map_config(self, config_dict):
+        """Serialize and store map configuration as JSON."""
+        self.map_config = json.dumps(config_dict)
 
 
 class Addon(db.Model):

@@ -255,6 +255,34 @@ def save_ui_customization(page_name):
         except Exception as e:
             print(f"Error setting marker config: {str(e)}")
             flash(f'Error saving marker configuration: {str(e)}', 'error')
+
+        # Map (OpenStreetMap) configuration
+        try:
+            map_config = customization.get_map_config() if hasattr(customization, 'get_map_config') else {}
+            # Read posted OSM fields
+            osm_tile_source = request.form.get('osm_tile_source')
+            osm_default_zoom = request.form.get('osm_default_zoom')
+            osm_show_attribution = request.form.get('osm_show_attribution')
+            osm_max_bounds = request.form.get('osm_max_bounds')
+
+            if osm_tile_source is not None:
+                map_config['tile_source'] = osm_tile_source
+            if osm_default_zoom:
+                try:
+                    map_config['default_zoom'] = int(osm_default_zoom)
+                except ValueError:
+                    map_config['default_zoom'] = map_config.get('default_zoom', 12)
+            if osm_show_attribution is not None:
+                map_config['show_attribution'] = True if osm_show_attribution in ['true', 'True', '1'] else False
+            if osm_max_bounds is not None:
+                map_config['max_bounds'] = osm_max_bounds
+
+            # Persist map configuration
+            if hasattr(customization, 'set_map_config'):
+                customization.set_map_config(map_config)
+        except Exception as e:
+            print(f"Error setting map config: {str(e)}")
+            flash(f'Error saving map configuration: {str(e)}', 'error')
         
         db.session.commit()
         flash(f'UI customization for {page_name} saved successfully', 'success')
