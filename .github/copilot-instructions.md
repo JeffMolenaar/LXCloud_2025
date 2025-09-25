@@ -1,4 +1,8 @@
-## IMPORTANT: Follow General Workflow
+## IMPORTANT: Follow General Workflow and make sure to follow Plan
+
+## Plan
+- Present the plan to the user and wait for confirmation.
+- Only after user approval, start implementing the plan.
 
 ## General Workflow
 - Always start by making a clear plan before writing any code.
