@@ -218,9 +218,9 @@ Type=simple
 User=$SERVICE_USER
 Group=$SERVICE_USER
 WorkingDirectory=$INSTALL_DIR
-Environment=PATH=$INSTALL_DIR/venv/bin
-ExecStart=$INSTALL_DIR/venv/bin/python run.py
-Restart=always
+Environment=PATH=$INSTALL_DIR/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+ExecStart=$INSTALL_DIR/venv/bin/python $INSTALL_DIR/run.py
+Restart=on-failure
 RestartSec=10
 
 [Install]
@@ -283,6 +283,12 @@ ufw allow 1883/tcp # MQTT
 # Create log directory
 mkdir -p /var/log/lxcloud
 chown "$SERVICE_USER:$SERVICE_USER" /var/log/lxcloud
+
+# Create debug queue directory in user home
+echo -e "${BLUE}Creating debug queue directory...${NC}"
+mkdir -p "/home/$SERVICE_USER/debug_queue"
+chown "$SERVICE_USER:$SERVICE_USER" "/home/$SERVICE_USER/debug_queue"
+chmod 755 "/home/$SERVICE_USER/debug_queue"
 
 # Initialize database using the database utilities
 echo -e "${BLUE}Initializing database schema...${NC}"

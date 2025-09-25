@@ -12,6 +12,24 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Error handling function
+error_exit() {
+    echo -e "${RED}ERROR: $1${NC}" >&2
+    echo -e "${YELLOW}Installation failed. Check the log above for details.${NC}" >&2
+    
+    # Attempt basic cleanup if possible
+    if [ -n "$SERVICE_USER" ] && id "$SERVICE_USER" >/dev/null 2>&1; then
+        echo -e "${BLUE}Stopping any running services...${NC}"
+        systemctl stop lxcloud >/dev/null 2>&1 || true
+        systemctl disable lxcloud >/dev/null 2>&1 || true
+    fi
+    
+    exit 1
+}
+
+# Set up error trap
+trap 'error_exit "Script interrupted or command failed on line $LINENO"' ERR
+
 # Configuration
 INSTALL_DIR="/opt/LXCloud"
 SERVICE_USER="lxcloud"
@@ -170,6 +188,8 @@ fi
 # Verify critical files were copied correctly
 echo -e "${BLUE}Verifying installation...${NC}"
 CRITICAL_FILES="app/__init__.py
+app/debug_reporter.py
+scripts/push_debug_reports.py
 templates/auth/login.html
 templates/auth/register.html
 templates/base.html
@@ -196,6 +216,20 @@ if [[ -n "$MISSING_FILES" ]]; then
 fi
 
 echo -e "${GREEN}✓ All critical files verified successfully${NC}"
+
+# Create service user home directory if it doesn't exist
+echo -e "${BLUE}Setting up service user home directory...${NC}"
+if ! id "$SERVICE_USER" >/dev/null 2>&1; then
+    useradd -r -s /bin/bash -d "/home/$SERVICE_USER" -m "$SERVICE_USER"
+    echo -e "${GREEN}✓ Created service user: $SERVICE_USER${NC}"
+else
+    # Ensure home directory exists
+    if [[ ! -d "/home/$SERVICE_USER" ]]; then
+        mkdir -p "/home/$SERVICE_USER"
+        chown "$SERVICE_USER:$SERVICE_USER" "/home/$SERVICE_USER"
+        echo -e "${GREEN}✓ Created home directory for $SERVICE_USER${NC}"
+    fi
+fi
 
 # Setup Python virtual environment
 echo -e "${BLUE}Setting up Python virtual environment...${NC}"
@@ -241,8 +275,23 @@ allow_anonymous ${MQTT_ALLOW_ANONYMOUS}
 log_type all
 EOF
 
+# Test MQTT configuration and restart
+if ! mosquitto -c /etc/mosquitto/mosquitto.conf -t; then
+    echo -e "${RED}✗ Mosquitto configuration test failed${NC}"
+    exit 1
+fi
+
 systemctl restart mosquitto
 systemctl enable mosquitto
+
+# Verify MQTT is running
+if ! systemctl is-active --quiet mosquitto; then
+    echo -e "${RED}✗ Mosquitto failed to start${NC}"
+    systemctl status mosquitto
+    exit 1
+fi
+
+echo -e "${GREEN}✓ Mosquitto MQTT configured and running${NC}"
 
 # Create database configuration file
 echo -e "${BLUE}Creating database configuration...${NC}"
@@ -295,9 +344,9 @@ Type=simple
 User=$SERVICE_USER
 Group=$SERVICE_USER
 WorkingDirectory=$INSTALL_DIR
-Environment=PATH=$INSTALL_DIR/venv/bin:$PATH
-ExecStart=$INSTALL_DIR/venv/bin/python run.py
-Restart=always
+Environment=PATH=$INSTALL_DIR/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+ExecStart=$INSTALL_DIR/venv/bin/python $INSTALL_DIR/run.py
+Restart=on-failure
 RestartSec=10
 
 [Install]
@@ -438,7 +487,67 @@ fi
 echo -e "${BLUE}Starting services...${NC}"
 systemctl daemon-reload
 systemctl enable lxcloud
+
+# Start service and check status
 systemctl start lxcloud
+sleep 5
+
+# Comprehensive health check
+echo -e "${BLUE}Performing health checks...${NC}"
+HEALTH_CHECK_PASSED=true
+
+# Check systemd service status
+if systemctl is-active --quiet lxcloud; then
+    echo -e "${GREEN}✓ LXCloud systemd service is running${NC}"
+else
+    echo -e "${RED}✗ LXCloud systemd service is not active${NC}"
+    systemctl status lxcloud
+    HEALTH_CHECK_PASSED=false
+fi
+
+# Check if application is responding on port 5000
+if command -v curl >/dev/null 2>&1; then
+    if curl -s http://localhost:5000 >/dev/null 2>&1; then
+        echo -e "${GREEN}✓ Web application responding on port 5000${NC}"
+    else
+        echo -e "${RED}✗ Web application not responding on port 5000${NC}"
+        HEALTH_CHECK_PASSED=false
+    fi
+else
+    echo -e "${YELLOW}! curl not available, skipping HTTP response check${NC}"
+fi
+
+# Check database connectivity
+echo -e "${BLUE}Testing database connectivity...${NC}"
+if sudo -u "$SERVICE_USER" -H bash -c "cd '$INSTALL_DIR' && source venv/bin/activate && python -c 'from app import create_app; app = create_app(); app.app_context().push(); from app.models import db; db.engine.connect().close(); print(\"Database connection successful\")'"; then
+    echo -e "${GREEN}✓ Database connectivity verified${NC}"
+else
+    echo -e "${RED}✗ Database connection failed${NC}"
+    HEALTH_CHECK_PASSED=false
+fi
+
+# Check MQTT broker
+if systemctl is-active --quiet mosquitto; then
+    echo -e "${GREEN}✓ Mosquitto MQTT broker is running${NC}"
+else
+    echo -e "${RED}✗ Mosquitto MQTT broker is not active${NC}"
+    HEALTH_CHECK_PASSED=false
+fi
+
+# Check nginx
+if systemctl is-active --quiet nginx; then
+    echo -e "${GREEN}✓ Nginx web server is running${NC}"
+else
+    echo -e "${RED}✗ Nginx web server is not active${NC}"
+    HEALTH_CHECK_PASSED=false
+fi
+
+# Show overall status
+if [ "$HEALTH_CHECK_PASSED" = true ]; then
+    echo -e "${GREEN}✓ All health checks passed${NC}"
+else
+    echo -e "${RED}⚠ Some health checks failed - please review the errors above${NC}"
+fi
 
 # Setup debug reporting if git repository and GitHub token available
 echo -e "${BLUE}Setting up debug reporting...${NC}"
@@ -496,14 +605,6 @@ fi
 # Wait for service to start
 sleep 5
 
-# Check service status
-if systemctl is-active --quiet lxcloud; then
-    echo -e "${GREEN}✓ LXCloud service is running${NC}"
-else
-    echo -e "${RED}✗ LXCloud service failed to start${NC}"
-    systemctl status lxcloud
-fi
-
 # Installation complete
 echo
 echo -e "${GREEN}================================${NC}"
@@ -539,7 +640,7 @@ echo
 echo -e "${BLUE}Debug Reports:${NC}"
 echo -e "  Push reports: ${GREEN}systemctl start lxcloud-debug-push${NC}"
 echo -e "  Auto push:    ${GREEN}systemctl enable lxcloud-debug-push.timer${NC}"
-echo -e "  View queue:   ${GREEN}ls -la /tmp/lxcloud_debug_queue/${NC}"
+echo -e "  View queue:   ${GREEN}ls -la /home/$SERVICE_USER/debug_queue/${NC}"
 echo
 echo -e "${BLUE}MQTT Broker:${NC} localhost:1883"
 echo -e "${BLUE}Log files:${NC} /var/log/lxcloud/"

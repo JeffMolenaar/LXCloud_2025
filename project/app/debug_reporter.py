@@ -18,7 +18,8 @@ class DebugReporter:
 
     def __init__(self, app=None):
         self.app = app
-        self.debug_queue_dir = "/tmp/lxcloud_debug_queue"
+        # Change to home directory instead of /tmp
+        self.debug_queue_dir = "/home/lxcloud/debug_queue"
         self.logger = logging.getLogger('lxcloud.debug_reporter')
 
         # Ensure debug queue directory exists

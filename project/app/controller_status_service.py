@@ -20,6 +20,24 @@ class ControllerStatusService:
         # Counter used for occasional heartbeat logging
         self._check_counter = 0
 
+    def init_app(self, app):
+        """Initialize the service with a Flask app instance.
+
+        This mirrors the pattern used by other services in the project so
+        callers can safely call `service.init_app(app)` before `service.start()`.
+        """
+        self.app = app
+
+        # Allow the app to enable/disable the service via config if present
+        try:
+            # Prefer explicit config in Flask app
+            enabled = app.config.get('CONTROLLER_STATUS_ENABLED', None)
+            if enabled is not None:
+                self.enabled = bool(enabled)
+        except Exception:
+            # If anything goes wrong, keep default behavior
+            pass
+
     def start(self):
         """Start the background status checking service.
 
