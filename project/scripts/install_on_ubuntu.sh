@@ -55,6 +55,48 @@ if [ -f "$PROJECT_DIR/project/database.conf.example" ] && [ ! -f "$PROJECT_DIR/p
   cp "$PROJECT_DIR/project/database.conf.example" "$PROJECT_DIR/project/database.conf"
 fi
 
+echo "Running DB migration: ensure ui_customization.map_config column exists (idempotent)"
+cd "$PROJECT_DIR"
+"$VENV_DIR/bin/python" - <<'PY'
+from app import create_app
+from app.models import db
+
+app = create_app()
+with app.app_context():
+  conn = db.engine.connect()
+  try:
+    url = app.config.get('SQLALCHEMY_DATABASE_URI', '') or ''
+    # SQLite path
+    if url.startswith('sqlite'):
+      res = conn.execute(db.text("PRAGMA table_info(ui_customization)")).fetchall()
+      cols = [r[1] for r in res]
+      if 'map_config' not in cols:
+        conn.execute(db.text("ALTER TABLE ui_customization ADD COLUMN map_config TEXT"))
+        print('Added map_config column to ui_customization (sqlite)')
+      else:
+        print('map_config column already present (sqlite)')
+    else:
+      # Try MySQL/MariaDB via INFORMATION_SCHEMA
+      try:
+        db_name = url.rsplit('/', 1)[-1]
+        res = conn.execute(db.text(
+          "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
+          "WHERE TABLE_SCHEMA = :db_name AND TABLE_NAME = 'ui_customization'"
+        ), {"db_name": db_name}).fetchall()
+        cols = [r[0] for r in res]
+        if 'map_config' not in cols:
+          conn.execute(db.text("ALTER TABLE ui_customization ADD COLUMN map_config TEXT"))
+          print('Added map_config column to ui_customization (mysql)')
+        else:
+          print('map_config column already present (mysql)')
+      except Exception as e:
+        print('Could not determine MySQL schema or perform migration:', e)
+  except Exception as e:
+    print('Migration check failed or not needed:', e)
+  finally:
+    conn.close()
+PY
+
 # Migrate DB if your project uses migration scripts
 # (This project may use custom scripts; run them here if needed.)
 # Example placeholder:

@@ -72,9 +72,9 @@ class Controller(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     serial_number = db.Column(db.String(100), unique=True, nullable=False)
-    controller_type = db.Column(
-        db.String(50), nullable=False
-    )  # speedradar, beaufortmeter, weatherstation, aicamera
+    controller_type = db.Column(db.String(50), nullable=False)
+
+    # Known controller types: speedradar, beaufortmeter, weatherstation, aicamera
     name = db.Column(db.String(120), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     latitude = db.Column(db.Float, nullable=True)
@@ -168,7 +168,8 @@ class UICustomization(db.Model):
     header_config = db.Column(db.Text, nullable=True)  # JSON
     footer_config = db.Column(db.Text, nullable=True)  # JSON
     marker_config = db.Column(db.Text, nullable=True)  # JSON for marker configurations
-    map_config = db.Column(db.Text, nullable=True)  # JSON for OpenStreetMap / map settings
+    map_config = db.Column(db.Text, nullable=True)
+    # JSON for OpenStreetMap / map settings
     logo_filename = db.Column(
         db.String(255), nullable=True
     )  # Store uploaded logo filename

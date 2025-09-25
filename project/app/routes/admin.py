@@ -1,4 +1,12 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    jsonify,
+)
 from flask_login import login_required, current_user
 from functools import wraps
 from werkzeug.utils import secure_filename
@@ -25,11 +33,13 @@ def index():
     online_controllers = Controller.query.filter_by(is_online=True).count()
     unbound_controllers = Controller.query.filter_by(user_id=None).count()
     
-    return render_template('admin/index.html',
-                         user_count=user_count,
-                         controller_count=controller_count,
-                         online_controllers=online_controllers,
-                         unbound_controllers=unbound_controllers)
+    return render_template(
+        'admin/index.html',
+        user_count=user_count,
+        controller_count=controller_count,
+        online_controllers=online_controllers,
+        unbound_controllers=unbound_controllers,
+    )
 
 @admin_bp.route('/users')
 @login_required
@@ -124,14 +134,18 @@ def save_ui_customization(page_name):
         customization.custom_css = request.form.get('custom_css', '')
         
         # Handle logo upload
+        # compute base directory once to keep lines short
+        base_dir = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
         if 'logo_file' in request.files:
             logo_file = request.files['logo_file']
             if logo_file and logo_file.filename:
                 try:
-                    # Ensure uploads directory exists
-                    upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'static', 'uploads')
+                    # Ensure uploads directory exists (compute once)
+                    upload_dir = os.path.join(base_dir, 'static', 'uploads')
                     os.makedirs(upload_dir, exist_ok=True)
-                    
+
                     # Secure the filename and save
                     filename = secure_filename(logo_file.filename)
                     if not filename:
@@ -141,7 +155,7 @@ def save_ui_customization(page_name):
                         name, ext = os.path.splitext(filename)
                         filename = f"logo_{page_name}_{name}{ext}"
                         file_path = os.path.join(upload_dir, filename)
-                        
+
                         logo_file.save(file_path)
                         customization.logo_filename = filename
                         flash(f'Logo uploaded successfully for {page_name}', 'success')
@@ -193,10 +207,12 @@ def save_ui_customization(page_name):
                 online_icon_file = request.files.get(f'marker_{controller_type}_online_icon_file')
                 if online_icon_file and online_icon_file.filename:
                     try:
-                        # Ensure uploads directory exists
-                        upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'static', 'uploads')
+                        # Ensure uploads directory exists (reuse computed upload_dir)
+                        upload_dir = os.path.join(
+                            base_dir, 'static', 'uploads'
+                            )
                         os.makedirs(upload_dir, exist_ok=True)
-                        
+
                         # Secure the filename and save
                         filename = secure_filename(online_icon_file.filename)
                         if filename and filename.lower().endswith('.png'):
@@ -204,12 +220,16 @@ def save_ui_customization(page_name):
                             name, ext = os.path.splitext(filename)
                             icon_filename = f"marker_{controller_type}_online_{name}{ext}"
                             file_path = os.path.join(upload_dir, icon_filename)
-                            
+
                             online_icon_file.save(file_path)
                             marker_config[controller_type]['online']['custom_icon'] = icon_filename
                             flash(f'Online icon uploaded successfully for {controller_type}', 'success')
                         else:
-                            flash(f'Invalid file type for {controller_type} online icon. Only PNG files are allowed.', 'error')
+                            flash(
+                                f'Invalid file type for {controller_type} online icon. '
+                                'Only PNG files are allowed.',
+                                'error'
+                            )
                     except Exception as e:
                         print(f"Error uploading online icon for {controller_type}: {str(e)}")
                         flash(f'Error uploading online icon for {controller_type}: {str(e)}', 'error')
@@ -218,10 +238,12 @@ def save_ui_customization(page_name):
                 offline_icon_file = request.files.get(f'marker_{controller_type}_offline_icon_file')
                 if offline_icon_file and offline_icon_file.filename:
                     try:
-                        # Ensure uploads directory exists
-                        upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'static', 'uploads')
+                        # Ensure uploads directory exists (reuse computed upload_dir)
+                        upload_dir = os.path.join(
+                            base_dir, 'static', 'uploads'
+                            )
                         os.makedirs(upload_dir, exist_ok=True)
-                        
+
                         # Secure the filename and save
                         filename = secure_filename(offline_icon_file.filename)
                         if filename and filename.lower().endswith('.png'):
@@ -229,12 +251,16 @@ def save_ui_customization(page_name):
                             name, ext = os.path.splitext(filename)
                             icon_filename = f"marker_{controller_type}_offline_{name}{ext}"
                             file_path = os.path.join(upload_dir, icon_filename)
-                            
+
                             offline_icon_file.save(file_path)
                             marker_config[controller_type]['offline']['custom_icon'] = icon_filename
                             flash(f'Offline icon uploaded successfully for {controller_type}', 'success')
                         else:
-                            flash(f'Invalid file type for {controller_type} offline icon. Only PNG files are allowed.', 'error')
+                            flash(
+                                f'Invalid file type for {controller_type} offline icon. '
+                                'Only PNG files are allowed.',
+                                'error'
+                            )
                     except Exception as e:
                         print(f"Error uploading offline icon for {controller_type}: {str(e)}")
                         flash(f'Error uploading offline icon for {controller_type}: {str(e)}', 'error')
