@@ -7,6 +7,7 @@ import io
 import base64
 
 from app.models import db, User
+from app.forms import RegistrationForm, LoginForm
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -48,31 +49,28 @@ def login():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        full_name = request.form.get('full_name', '')
-        address = request.form.get('address', '')
-        
+    form = RegistrationForm()
+    
+    if form.validate_on_submit():
         # Check if user already exists
-        if User.query.filter_by(username=username).first():
+        if User.query.filter_by(username=form.username.data).first():
             flash('Username already exists', 'error')
-            return render_template('auth/register.html')
+            return render_template('auth/register.html', form=form)
         
-        if User.query.filter_by(email=email).first():
+        if User.query.filter_by(email=form.email.data).first():
             flash('Email already registered', 'error')
-            return render_template('auth/register.html')
+            return render_template('auth/register.html', form=form)
         
         # Create new user (force non-admin regardless of form input)
+        full_name = f"{form.first_name.data} {form.last_name.data}"
         user = User(
-            username=username,
-            email=email,
+            username=form.username.data,
+            email=form.email.data,
             full_name=full_name,
-            address=address,
+            address='',
             is_admin=False
         )
-        user.set_password(password)
+        user.set_password(form.password.data)
         
         db.session.add(user)
         db.session.commit()
@@ -80,7 +78,7 @@ def register():
         flash('Registration successful! Please log in.', 'success')
         return redirect(url_for('auth.login'))
     
-    return render_template('auth/register.html')
+    return render_template('auth/register.html', form=form)
 
 @auth_bp.route('/logout')
 @login_required

@@ -292,7 +292,7 @@
                                             <textarea class="form-control font-monospace modern-textarea" 
                                                       name="custom_css" rows="15" 
                                                       placeholder="/* Enter your custom CSS here */&#10;.navbar-brand { font-weight: bold; }&#10;.card { border-radius: 10px; }">{{ customization.get_custom_css(page) }}</textarea>
-                                            <div class="form-text">Add custom styles for the {{ page }} page</div>
+                                            <div class="form-text">Add custom styles for the {{ page_name }} page</div>
                                         </div>
                                         
                                         <!-- Quick CSS Examples -->
@@ -333,7 +333,7 @@
                                         <h5 class="card-title text-success mb-3">
                                             <i class="fas fa-save me-2"></i>Save Your Changes
                                         </h5>
-                                        <p class="text-muted mb-4">Apply your customizations to the {{ page }} page</p>
+                                        <p class="text-muted mb-4">Apply your customizations to the {{ page_name }} page</p>
                                         
                                         <div class="d-flex justify-content-center gap-3">
                                             <button type="button" class="btn btn-outline-secondary" id="resetBtn">
