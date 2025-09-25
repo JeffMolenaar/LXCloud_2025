@@ -146,10 +146,15 @@ mkdir -p "$INSTALL_DIR"
 chown "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
 
 # Determine source directory to copy from (prefer `project` folder)
-if [[ -d "project" ]]; then
-    INSTALL_SRC="project"
+## Determine source directory to copy from (prefer `project` folder)
+# Use the script location to reliably find the repo root even if the script
+# is executed from elsewhere or via sudo from a different working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [[ -d "$REPO_ROOT/project" ]]; then
+    INSTALL_SRC="$REPO_ROOT/project"
 else
-    INSTALL_SRC="."
+    INSTALL_SRC="$REPO_ROOT"
 fi
 
 # Copy application files (use rsync, exclude repo internals)
