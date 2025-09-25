@@ -371,6 +371,64 @@ else
     sudo -u "$SERVICE_USER" -H bash -c "source venv/bin/activate && python -c 'from app import create_app; create_app()'"
 fi
 
+## Perform idempotent DB migration to add map_config column if missing
+echo -e "${BLUE}Ensuring ui_customization.map_config column exists...${NC}"
+if [[ -d "$INSTALL_DIR/venv" ]]; then
+    MIGRATE_PY="$INSTALL_DIR/tmp_migrate_map_config.py"
+    cat > "$MIGRATE_PY" << 'PY'
+import os, sys
+
+# Ensure project directory is on sys.path so 'import app' works
+sys.path.insert(0, os.getcwd())
+
+try:
+    from app import create_app
+    from app.models import db
+except Exception as e:
+    print('ERROR: could not import app package:', e)
+    raise
+
+app = create_app()
+with app.app_context():
+    conn = db.engine.connect()
+    try:
+        url = app.config.get('SQLALCHEMY_DATABASE_URI', '') or ''
+        if url.startswith('sqlite'):
+            res = conn.execute(db.text("PRAGMA table_info(ui_customization)")).fetchall()
+            cols = [r[1] for r in res]
+            if 'map_config' not in cols:
+                conn.execute(db.text("ALTER TABLE ui_customization ADD COLUMN map_config TEXT"))
+                print('Added map_config column to ui_customization (sqlite)')
+            else:
+                print('map_config column already present (sqlite)')
+        else:
+            try:
+                db_name = url.rsplit('/', 1)[-1]
+                res = conn.execute(db.text(
+                    "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
+                    "WHERE TABLE_SCHEMA = :db_name AND TABLE_NAME = 'ui_customization'"
+                ), {"db_name": db_name}).fetchall()
+                cols = [r[0] for r in res]
+                if 'map_config' not in cols:
+                    conn.execute(db.text("ALTER TABLE ui_customization ADD COLUMN map_config TEXT"))
+                    print('Added map_config column to ui_customization (mysql)')
+                else:
+                    print('map_config column already present (mysql)')
+            except Exception as e:
+                print('Could not determine MySQL schema or perform migration:', e)
+    except Exception as e:
+        print('Migration check failed or not needed:', e)
+    finally:
+        conn.close()
+PY
+
+    chown "$SERVICE_USER:$SERVICE_USER" "$MIGRATE_PY"
+    sudo -u "$SERVICE_USER" -H bash -c "cd '$INSTALL_DIR' && source venv/bin/activate && python $(basename $MIGRATE_PY)"
+    rm -f "$MIGRATE_PY"
+else
+    echo -e "${YELLOW}Warning: virtualenv not found at $INSTALL_DIR/venv; skipping migration step${NC}"
+fi
+
 # Start services
 echo -e "${BLUE}Starting services...${NC}"
 systemctl daemon-reload
