@@ -36,7 +36,76 @@ warning() {
 # Set up error trap for critical errors only
 # We'll handle non-critical errors manually with warning()
 trap 'error_exit "Critical script error on line $LINENO"' ERR
-set +e  # Disable automatic exit on error - we'll handle errors manually
+# Disable automatic exit on error - we'll handle errors manually
+set +e
+# Make failures in pipes visible
+set -o pipefail
+
+# CLI flags (default: interactive, no smoke test)
+NONINTERACTIVE=false
+RUN_SMOKE=false
+
+print_usage() {
+    cat <<'USAGE'
+Usage: sudo ./scripts/install.sh [--yes] [--run-smoke] [--help]
+
+Options:
+  --yes, -y        Run non-interactive (DEBIAN_FRONTEND=noninteractive, auto-yes to apt)
+  --run-smoke      Run an optional create_app smoke-test after installing Python deps (opt-in)
+  --help           Show this help message
+USAGE
+}
+
+# Parse args
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -y|--yes)
+            NONINTERACTIVE=true; shift ;;
+        --run-smoke)
+            RUN_SMOKE=true; shift ;;
+        --help)
+            print_usage; exit 0 ;;
+        *)
+            echo "Unknown arg: $1"; print_usage; exit 1 ;;
+    esac
+done
+
+# If non-interactive, set apt options
+if [ "$NONINTERACTIVE" = true ]; then
+    export DEBIAN_FRONTEND=noninteractive
+    APT_OPTS="-y"
+else
+    APT_OPTS=""
+fi
+
+# Helper: retry a command N times with delay (useful for transient systemctl failures)
+retry_cmd() {
+    local -r cmd="$1"
+    local -r attempts=${2:-5}
+    local -r delay=${3:-3}
+    local i=0
+    while [ $i -lt $attempts ]; do
+        if eval "$cmd"; then
+            return 0
+        fi
+        i=$((i+1))
+        echo -e "${YELLOW}Command failed, retrying ($i/$attempts): $cmd${NC}"
+        sleep $delay
+    done
+    return 1
+}
+
+# Helper: rsync with --chown if available, fallback to plain rsync + chown
+safe_rsync() {
+    local src="$1"
+    local dst="$2"
+    if rsync --version >/dev/null 2>&1 && rsync --help 2>&1 | grep -q -- '--chown'; then
+        rsync -a --delete --chown="$SERVICE_USER:$SERVICE_USER" --exclude='.git' --exclude='removed' --exclude='archive' "$src" "$dst/"
+    else
+        rsync -a --delete --exclude='.git' --exclude='removed' --exclude='archive' "$src" "$dst/"
+        chown -R "$SERVICE_USER:$SERVICE_USER" "$dst"
+    fi
+}
 
 # Configuration
 INSTALL_DIR="/home/lxcloud/LXCloud"
@@ -44,6 +113,7 @@ SERVICE_USER="lxcloud"
 DB_NAME="lxcloud"
 DB_USER="lxcloud"
 DB_PASSWORD="lxcloud"
+DEBUG_QUEUE_DIR="/home/$SERVICE_USER/debug_queue"
 
 # Optional behaviours (change before running or export as env vars)
 # Set INSTALL_MARIADB to "yes" to auto-install MariaDB during install
@@ -84,35 +154,15 @@ if ! apt update; then
     error_exit "Failed to update package lists"
 fi
 
-if ! apt upgrade -y; then
+if ! apt upgrade $APT_OPTS; then
     warning "System upgrade had issues, but continuing..."
 fi
 
 # Install required packages (build deps included)
 echo -e "${BLUE}Installing required packages...${NC}"
-REQUIRED_PACKAGES=(
-    build-essential
-    libssl-dev
-    libffi-dev
-    python3-dev
-    pkg-config
-    default-libmysqlclient-dev
-    rsync
-    python3
-    python3-pip
-    python3-venv
-    mosquitto
-    mosquitto-clients
-    nginx
-    git
-    curl
-    wget
-    supervisor
-    openssl
-    ufw
-)
+REQUIRED_PACKAGES="build-essential libssl-dev libffi-dev python3-dev pkg-config default-libmysqlclient-dev rsync python3 python3-pip python3-venv mosquitto mosquitto-clients nginx git curl wget supervisor openssl ufw"
 
-if ! apt install -y "${REQUIRED_PACKAGES[@]}"; then
+if ! apt install $APT_OPTS $REQUIRED_PACKAGES; then
     error_exit "Failed to install required packages"
 fi
 
@@ -121,13 +171,12 @@ echo -e "${GREEN}✓ Required packages installed successfully${NC}"
 # Optionally install MariaDB if requested
 if [[ "$INSTALL_MARIADB" == "yes" ]]; then
     echo -e "${BLUE}Installing MariaDB server...${NC}"
-    if ! apt install -y mariadb-server; then
+    if ! apt install $APT_OPTS mariadb-server; then
         error_exit "Failed to install MariaDB server"
     fi
-    
-    if ! systemctl enable --now mariadb; then
-        error_exit "Failed to start MariaDB service"
-    fi
+
+    # Start/enable with retries
+    retry_cmd "systemctl enable --now mariadb" 3 2 || error_exit "Failed to start MariaDB service"
     
     echo -e "${GREEN}✓ MariaDB installed and started${NC}"
 fi
@@ -179,16 +228,25 @@ if [[ "$INSTALL_MARIADB" == "yes" ]]; then
     fi
 fi
 
-# Create system user
+# Create system user (system account with a real home directory)
 echo -e "${BLUE}Creating system user...${NC}"
 if ! id "$SERVICE_USER" &>/dev/null; then
-    useradd --system --home "$INSTALL_DIR" --shell /bin/bash "$SERVICE_USER"
+    # Create a system user but ensure a home directory exists at /home/<user>
+    useradd --system --create-home --home "/home/$SERVICE_USER" --shell /bin/bash "$SERVICE_USER" || true
+    mkdir -p "/home/$SERVICE_USER"
+    chown "$SERVICE_USER:$SERVICE_USER" "/home/$SERVICE_USER"
+    echo -e "${GREEN}✓ Created system user: $SERVICE_USER with home /home/$SERVICE_USER${NC}"
 fi
 
 # Create installation directory
 echo -e "${BLUE}Creating installation directory...${NC}"
 mkdir -p "$INSTALL_DIR"
 chown "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
+
+# Ensure debug queue exists and has correct ownership/permissions
+mkdir -p "$DEBUG_QUEUE_DIR"
+chown "$SERVICE_USER:$SERVICE_USER" "$DEBUG_QUEUE_DIR"
+chmod 755 "$DEBUG_QUEUE_DIR"
 
 # Determine source directory to copy from (prefer `project` folder)
 ## Determine source directory to copy from (prefer `project` folder)
@@ -202,10 +260,10 @@ else
     INSTALL_SRC="$REPO_ROOT"
 fi
 
-# Copy application files (use rsync, exclude repo internals)
+# Copy application files (use safe_rsync helper to preserve ownership where possible)
 echo -e "${BLUE}Copying application files from $INSTALL_SRC ...${NC}"
-rsync -a --delete --exclude='.git' --exclude='removed' --exclude='archive' "$INSTALL_SRC/" "$INSTALL_DIR/"
-chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
+safe_rsync "$INSTALL_SRC/" "$INSTALL_DIR"
+echo -e "${GREEN}✓ Files copied${NC}"
 
 # Make database installation script executable
 if [[ -f "$INSTALL_DIR/database_install.sh" ]]; then
@@ -244,18 +302,10 @@ fi
 
 echo -e "${GREEN}✓ All critical files verified successfully${NC}"
 
-# Create service user home directory if it doesn't exist
-echo -e "${BLUE}Setting up service user home directory...${NC}"
-if ! id "$SERVICE_USER" >/dev/null 2>&1; then
-    useradd -r -s /bin/bash -d "/home/$SERVICE_USER" -m "$SERVICE_USER"
-    echo -e "${GREEN}✓ Created service user: $SERVICE_USER${NC}"
-else
-    # Ensure home directory exists
-    if [[ ! -d "/home/$SERVICE_USER" ]]; then
-        mkdir -p "/home/$SERVICE_USER"
-        chown "$SERVICE_USER:$SERVICE_USER" "/home/$SERVICE_USER"
-        echo -e "${GREEN}✓ Created home directory for $SERVICE_USER${NC}"
-    fi
+# Service user creation handled earlier; ensure home directory exists and owned by service user
+if [[ ! -d "/home/$SERVICE_USER" ]]; then
+    mkdir -p "/home/$SERVICE_USER"
+    chown "$SERVICE_USER:$SERVICE_USER" "/home/$SERVICE_USER"
 fi
 
 # Setup Python virtual environment
@@ -273,6 +323,26 @@ fi
 echo -e "${BLUE}Installing Python requirements...${NC}"
 if ! sudo -u "$SERVICE_USER" "$INSTALL_DIR/venv/bin/pip" install -r "$INSTALL_DIR/requirements.txt"; then
     error_exit "Failed to install Python requirements"
+fi
+
+if [ "$RUN_SMOKE" = true ]; then
+    # Run a quick create_app smoke-test to detect import-time errors early
+    echo -e "${BLUE}Running create_app smoke-test...${NC}"
+    if ! sudo -u "$SERVICE_USER" -H bash -c "cd '$INSTALL_DIR' && source venv/bin/activate && python - <<PY
+try:
+    from app import create_app
+    app = create_app()
+    print('CREATE_APP_OK')
+except Exception as e:
+    import traceback
+    traceback.print_exc()
+    raise
+PY"; then
+        echo -e "${YELLOW}Warning: create_app smoke-test failed. See traceback above.${NC}"
+        warning "Continuing installation but application may be broken - check logs and fix errors"
+    else
+        echo -e "${GREEN}✓ create_app smoke-test passed${NC}"
+    fi
 fi
 
 echo -e "${GREEN}✓ Python virtual environment setup completed${NC}"
@@ -367,7 +437,7 @@ else
     echo -e "${YELLOW}Continuing installation - you may need to fix MQTT configuration manually${NC}"
 fi
 
-systemctl enable mosquitto
+retry_cmd "systemctl enable mosquitto" 3 2 || warning "Failed to enable mosquitto unit"
 echo -e "${GREEN}✓ Mosquitto MQTT configured${NC}"
 
 # Create database configuration file
@@ -563,10 +633,10 @@ fi
 # Start services
 echo -e "${BLUE}Starting services...${NC}"
 systemctl daemon-reload
-systemctl enable lxcloud
+retry_cmd "systemctl enable lxcloud" 3 2 || warning "Failed to enable lxcloud unit"
 
-# Start service and check status
-systemctl start lxcloud
+# Start service and check status (retry if transient failures)
+retry_cmd "systemctl start lxcloud" 5 3 || warning "Failed to start lxcloud service"
 sleep 5
 
 # Comprehensive health check
