@@ -10,7 +10,7 @@ from datetime import datetime
 
 # Configuration
 DEBUG_QUEUE_DIR = "/home/lxcloud/debug_queue"
-REPO_DIR = "/opt/LXCloud"
+REPO_DIR = "/home/lxcloud/LXCloud"
 DEBUG_BRANCH_PREFIX = "debug-reports"
 MAX_REPORTS_PER_PUSH = 10
 

@@ -18,8 +18,8 @@ services:
       - mariadb
       - mosquitto
     volumes:
-      - ./project/static/uploads:/opt/lxcloud/static/uploads
-      - ./project/logs:/opt/lxcloud/logs
+      - ./project/static/uploads:/home/lxcloud/LXCloud/static/uploads
+      - ./project/logs:/home/lxcloud/LXCloud/logs
     restart: unless-stopped
 
   mariadb:

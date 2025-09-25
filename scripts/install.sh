@@ -39,7 +39,7 @@ trap 'error_exit "Critical script error on line $LINENO"' ERR
 set +e  # Disable automatic exit on error - we'll handle errors manually
 
 # Configuration
-INSTALL_DIR="/opt/LXCloud"
+INSTALL_DIR="/home/lxcloud/LXCloud"
 SERVICE_USER="lxcloud"
 DB_NAME="lxcloud"
 DB_USER="lxcloud"

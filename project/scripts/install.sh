@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-INSTALL_DIR="/opt/LXCloud"
+INSTALL_DIR="/home/lxcloud/LXCloud"
 SERVICE_USER="lxcloud"
 DB_NAME="lxcloud"
 DB_USER="lxcloud"

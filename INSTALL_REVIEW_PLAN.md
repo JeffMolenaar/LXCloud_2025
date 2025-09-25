@@ -3,14 +3,13 @@
 ## Gevonden Problemen in scripts/install.sh
 
 ### 1. **KRITIEK: Project Path Inconsistentie**
-- Script installeert naar `/opt/LXCloud` 
+ - Script installeert naar `/home/lxcloud/LXCloud` 
 - Maar gebruikt soms `project/` subdirectory en soms niet
 - `debug_reporter.py` staat in `project/app/` maar systemd zoekt in `app/`
 - **Fix**: Consistente pad structuur doorheen hele script
 
 ### 2. **Debug Directory Location**
-- Script maakt `/tmp/lxcloud_debug_queue` aan (oude locatie)
-- Zou `/home/lxcloud/debug_queue` moeten zijn
+ - Script maakt `/home/lxcloud/debug_queue` aan
 - **Fix**: Al aangepast in debug scripts, moet nog in install.sh
 
 ### 3. **Systemd Service Issues**

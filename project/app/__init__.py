@@ -33,7 +33,7 @@ def create_app():
     
     # Method 3: Last resort - check common deployment paths
     if not os.path.exists(template_folder):
-        deployment_paths = ['/opt/LXCloud', '/app', os.path.expanduser('~/LXCloud')]
+        deployment_paths = ['/home/lxcloud/LXCloud', '/app', os.path.expanduser('~/LXCloud')]
         for deployment_root in deployment_paths:
             deployment_template_folder = os.path.join(deployment_root, 'templates')
             deployment_static_folder = os.path.join(deployment_root, 'static')
