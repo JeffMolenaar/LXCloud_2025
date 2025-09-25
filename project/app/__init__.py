@@ -129,6 +129,10 @@ def create_app():
     db.init_app(app)
     CORS(app)
     
+    # Initialize debug reporting
+    from app.debug_reporter import debug_reporter
+    debug_reporter.init_app(app)
+    
     # Initialize Flask-Login
     login_manager = LoginManager()
     login_manager.init_app(app)

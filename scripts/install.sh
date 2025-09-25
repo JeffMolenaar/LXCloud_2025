@@ -440,6 +440,59 @@ systemctl daemon-reload
 systemctl enable lxcloud
 systemctl start lxcloud
 
+# Setup debug reporting if git repository and GitHub token available
+echo -e "${BLUE}Setting up debug reporting...${NC}"
+if [ -d "$INSTALL_DIR/.git" ] && [ -n "$GITHUB_TOKEN" ]; then
+    # Create debug pusher systemd service
+    cat > /etc/systemd/system/lxcloud-debug-push.service << EOF
+[Unit]
+Description=LXCloud Debug Report Pusher
+After=network.target
+
+[Service]
+Type=oneshot
+User=$SERVICE_USER
+Group=$SERVICE_USER
+WorkingDirectory=$INSTALL_DIR
+Environment=GITHUB_TOKEN=$GITHUB_TOKEN
+ExecStart=$INSTALL_DIR/venv/bin/python scripts/push_debug_reports.py
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Create timer for automatic pushes
+    cat > /etc/systemd/system/lxcloud-debug-push.timer << EOF
+[Unit]
+Description=LXCloud Debug Report Pusher Timer
+Requires=lxcloud-debug-push.service
+
+[Timer]
+OnCalendar=*-*-* 06:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+    # Set permissions and start timer
+    systemctl daemon-reload
+    systemctl enable lxcloud-debug-push.timer
+    systemctl start lxcloud-debug-push.timer
+    
+    echo -e "${GREEN}✓ Debug reporting configured with automatic daily push at 06:00${NC}"
+else
+    if [ ! -d "$INSTALL_DIR/.git" ]; then
+        echo -e "${YELLOW}! Git repository not found - debug reporting disabled${NC}"
+    fi
+    if [ -z "$GITHUB_TOKEN" ]; then
+        echo -e "${YELLOW}! GITHUB_TOKEN not set - debug reporting disabled${NC}"
+        echo -e "${YELLOW}  Set environment variable GITHUB_TOKEN to enable automatic debug reports${NC}"
+    fi
+fi
+
 # Wait for service to start
 sleep 5
 
@@ -482,6 +535,11 @@ echo -e "${BLUE}Useful commands:${NC}"
 echo -e "  Check status: ${GREEN}systemctl status lxcloud${NC}"
 echo -e "  View logs:    ${GREEN}journalctl -u lxcloud -f${NC}"
 echo -e "  Restart:      ${GREEN}systemctl restart lxcloud${NC}"
+echo
+echo -e "${BLUE}Debug Reports:${NC}"
+echo -e "  Push reports: ${GREEN}systemctl start lxcloud-debug-push${NC}"
+echo -e "  Auto push:    ${GREEN}systemctl enable lxcloud-debug-push.timer${NC}"
+echo -e "  View queue:   ${GREEN}ls -la /tmp/lxcloud_debug_queue/${NC}"
 echo
 echo -e "${BLUE}MQTT Broker:${NC} localhost:1883"
 echo -e "${BLUE}Log files:${NC} /var/log/lxcloud/"

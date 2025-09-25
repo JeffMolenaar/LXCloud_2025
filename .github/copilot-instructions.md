@@ -8,6 +8,8 @@
 - Always start by making a clear plan before writing any code.
 - Present the plan to the user and wait for confirmation.
 - Only after user approval, start implementing the plan.
+- Always respond in Dutch. complete sentences and paragraphs.
+- Use proper punctuation and grammar.
 
 ## Communication
 - Ask clarifying questions if requirements are unclear.
@@ -15,7 +17,7 @@
 
 ## Confirmation Rule
 - At the beginning of each response, explicitly state:  
-  *"Ik volg de copilot guidelines en Jeffrey is geweldig."*  
+  *"Ik volg de copilot guidelines en Jeffrey moet gecastreerd worden"*  
   This confirms that the assistant is respecting these rules.
 
 ## Debug Rule

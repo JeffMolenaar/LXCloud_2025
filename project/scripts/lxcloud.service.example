@@ -1,0 +1,16 @@
+[Unit]
+Description=LXCloud Flask App
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/lxcloud/project
+EnvironmentFile=/srv/lxcloud/project/.env.deploy
+ExecStart=/srv/lxcloud/project/.venv/bin/python3 /srv/lxcloud/project/run.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
