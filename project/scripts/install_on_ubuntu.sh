@@ -58,8 +58,21 @@ fi
 echo "Running DB migration: ensure ui_customization.map_config column exists (idempotent)"
 cd "$PROJECT_DIR"
 "$VENV_DIR/bin/python" - <<'PY'
-from app import create_app
-from app.models import db
+import os
+import sys
+from pathlib import Path
+
+# Ensure the 'project' package folder is importable (we run from PROJECT_DIR)
+project_path = os.path.join(os.getcwd(), 'project')
+if project_path not in sys.path:
+  sys.path.insert(0, project_path)
+
+try:
+  from app import create_app
+  from app.models import db
+except Exception as e:
+  print('Failed to import app package after adding project to sys.path:', e)
+  raise
 
 app = create_app()
 with app.app_context():
