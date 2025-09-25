@@ -1,0 +1,1162 @@
+{% extends "base.html" %}
+
+{% block title %}Register - LXCloud{% endblock %}
+
+{% block content %}
+<div class="modern-register-container">
+    <!-- Background Effects -->
+    <div class="background-effects">
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+        </div>
+    </div>
+    
+    <div class="register-wrapper">
+        <div class="register-card modern-card">
+            <!-- Brand Header -->
+            <div class="brand-header">
+                <div class="logo-container">
+                    <i class="fas fa-cloud logo-icon"></i>
+                </div>
+                <h2 class="brand-title">Join LXCloud</h2>
+                <p class="brand-subtitle">Create your account and get started</p>
+            </div>
+            
+            <div class="register-content">
+                <div class="form-header">
+                    <h3 class="form-title">
+                        <i class="fas fa-user-plus me-2 text-success"></i>
+                        Create Account
+                    </h3>
+                    <p class="form-subtitle">Fill in the details below to get started</p>
+                </div>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-modern alert-{{ 'danger' if category == 'error' else category }} fade-in">
+                                <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' }} me-2"></i>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <form method="POST" class="modern-form">
+                    <!-- Row 1: Username & Email -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="input-group-modern">
+                                <div class="input-wrapper">
+                                    <input type="text" 
+                                           class="form-control modern-input" 
+                                           id="username" 
+                                           name="username" 
+                                           required
+                                           pattern="[a-zA-Z0-9_]+"
+                                           title="Only letters, numbers and underscores allowed"
+                                           autocomplete="username">
+                                    <label for="username" class="input-label">
+                                        <i class="fas fa-user me-1"></i>Username *
+                                    </label>
+                                    <div class="input-highlight"></div>
+                                </div>
+                                <small class="form-text">Letters, numbers, and underscores only</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group-modern">
+                                <div class="input-wrapper">
+                                    <input type="email" 
+                                           class="form-control modern-input" 
+                                           id="email" 
+                                           name="email" 
+                                           required
+                                           autocomplete="email">
+                                    <label for="email" class="input-label">
+                                        <i class="fas fa-envelope me-1"></i>Email Address *
+                                    </label>
+                                    <div class="input-highlight"></div>
+                                </div>
+                                <small class="form-text">We'll send you login confirmations here</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Row 2: Full Name -->
+                    <div class="input-group-modern mb-4">
+                        <div class="input-wrapper">
+                            <input type="text" 
+                                   class="form-control modern-input" 
+                                   id="full_name" 
+                                   name="full_name"
+                                   autocomplete="name">
+                            <label for="full_name" class="input-label">
+                                <i class="fas fa-id-card me-1"></i>Full Name
+                            </label>
+                            <div class="input-highlight"></div>
+                        </div>
+                        <small class="form-text">Optional - helps personalize your experience</small>
+                    </div>
+                    
+                    <!-- Row 3: Address -->
+                    <div class="input-group-modern mb-4">
+                        <div class="input-wrapper textarea-wrapper">
+                            <textarea class="form-control modern-input modern-textarea" 
+                                      id="address" 
+                                      name="address" 
+                                      rows="3"
+                                      autocomplete="street-address"></textarea>
+                            <label for="address" class="input-label">
+                                <i class="fas fa-map-marker-alt me-1"></i>Address
+                            </label>
+                            <div class="input-highlight"></div>
+                        </div>
+                        <small class="form-text">Optional - used for location-based features</small>
+                    </div>
+                    
+                    <!-- Row 4: Phone -->
+                    <div class="input-group-modern mb-4">
+                        <div class="input-wrapper">
+                            <input type="tel" 
+                                   class="form-control modern-input" 
+                                   id="phone" 
+                                   name="phone"
+                                   autocomplete="tel">
+                            <label for="phone" class="input-label">
+                                <i class="fas fa-phone me-1"></i>Phone Number
+                            </label>
+                            <div class="input-highlight"></div>
+                        </div>
+                        <small class="form-text">Optional - for account recovery and notifications</small>
+                    </div>
+                    
+                    <!-- Row 5: Passwords -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="input-group-modern">
+                                <div class="input-wrapper">
+                                    <input type="password" 
+                                           class="form-control modern-input" 
+                                           id="password" 
+                                           name="password" 
+                                           required
+                                           minlength="8"
+                                           autocomplete="new-password">
+                                    <label for="password" class="input-label">
+                                        <i class="fas fa-lock me-1"></i>Password *
+                                    </label>
+                                    <div class="input-highlight"></div>
+                                    <button type="button" class="password-toggle" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="password-strength" id="passwordStrength">
+                                    <div class="strength-bars">
+                                        <div class="strength-bar"></div>
+                                        <div class="strength-bar"></div>
+                                        <div class="strength-bar"></div>
+                                        <div class="strength-bar"></div>
+                                    </div>
+                                    <small class="strength-text">Password strength</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group-modern">
+                                <div class="input-wrapper">
+                                    <input type="password" 
+                                           class="form-control modern-input" 
+                                           id="confirm_password" 
+                                           name="confirm_password" 
+                                           required
+                                           autocomplete="new-password">
+                                    <label for="confirm_password" class="input-label">
+                                        <i class="fas fa-lock me-1"></i>Confirm Password *
+                                    </label>
+                                    <div class="input-highlight"></div>
+                                    <button type="button" class="password-toggle" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="form-text match-status" id="matchStatus"></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Role Selection -->
+                    <div class="input-group-modern mb-4">
+                        <label class="form-label-modern">
+                            <i class="fas fa-user-tag me-2"></i>Account Type
+                        </label>
+                        <div class="role-selection">
+                            <div class="role-option">
+                                <input type="radio" class="role-radio" id="role_user" name="role" value="user" checked>
+                                <label for="role_user" class="role-label">
+                                    <div class="role-icon">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="role-info">
+                                        <strong>Standard User</strong>
+                                        <p>Access to dashboards and basic features</p>
+                                    </div>
+                                </label>
+                            </div>
+                            <!-- Administrator registration removed: users may only register as standard users -->
+                        </div>
+                    </div>
+                    
+                    <!-- Terms & Privacy -->
+                    <div class="form-options mb-4">
+                        <div class="form-check modern-check">
+                            <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="#" class="link-modern">Terms of Service</a> and <a href="#" class="link-modern">Privacy Policy</a>
+                            </label>
+                        </div>
+                        <div class="form-check modern-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter">
+                            <label class="form-check-label" for="newsletter">
+                                Send me updates and news about LXCloud
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-modern btn-primary w-100 mb-4">
+                        <span class="btn-text">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Create Account
+                        </span>
+                        <div class="btn-ripple"></div>
+                    </button>
+                    
+                    <div class="text-center">
+                        <a href="{{ url_for('auth.login') }}" class="login-link">
+                            Already have an account? <strong>Sign in</strong>
+                        </a>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Footer -->
+            <div class="register-footer">
+                <div class="security-info">
+                    <div class="security-features">
+                        <span class="security-feature">
+                            <i class="fas fa-shield-alt me-1"></i>Secure
+                        </span>
+                        <span class="security-feature">
+                            <i class="fas fa-lock me-1"></i>Encrypted
+                        </span>
+                        <span class="security-feature">
+                            <i class="fas fa-user-secret me-1"></i>Private
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Side Info Panel -->
+        <div class="info-panel">
+            <div class="info-content">
+                <h4><i class="fas fa-star me-2"></i>Why Choose LXCloud?</h4>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <i class="fas fa-rocket feature-icon"></i>
+                        <div>
+                            <strong>Lightning Fast</strong>
+                            <p>Optimized for speed and performance</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt feature-icon"></i>
+                        <div>
+                            <strong>Secure by Design</strong>
+                            <p>Enterprise-grade security features</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-chart-line feature-icon"></i>
+                        <div>
+                            <strong>Real-time Analytics</strong>
+                            <p>Monitor everything in real-time</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-mobile-alt feature-icon"></i>
+                        <div>
+                            <strong>Mobile Ready</strong>
+                            <p>Access from any device, anywhere</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modern JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced form interactions (reuse from login)
+    const inputs = document.querySelectorAll('.modern-input');
+    
+    inputs.forEach(input => {
+        const wrapper = input.closest('.input-wrapper');
+        const label = wrapper.querySelector('.input-label');
+        const highlight = wrapper.querySelector('.input-highlight');
+        
+        input.addEventListener('focus', function() {
+            wrapper.classList.add('focused');
+            highlight.style.transform = 'scaleX(1)';
+        });
+        
+        input.addEventListener('blur', function() {
+            wrapper.classList.remove('focused');
+            highlight.style.transform = 'scaleX(0)';
+            
+            if (this.value) {
+                wrapper.classList.add('filled');
+            } else {
+                wrapper.classList.remove('filled');
+            }
+        });
+        
+        if (input.value) {
+            wrapper.classList.add('filled');
+        }
+    });
+    
+    // Password toggles
+    const passwordToggles = document.querySelectorAll('.password-toggle');
+    passwordToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const input = this.previousElementSibling.previousElementSibling;
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+    });
+    
+    // Password strength meter
+    const passwordInput = document.getElementById('password');
+    const strengthBars = document.querySelectorAll('.strength-bar');
+    const strengthText = document.querySelector('.strength-text');
+    
+    if (passwordInput && strengthBars.length) {
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            const strength = calculatePasswordStrength(password);
+            
+            // Reset bars
+            strengthBars.forEach(bar => {
+                bar.classList.remove('weak', 'medium', 'strong', 'very-strong');
+            });
+            
+            // Fill bars based on strength
+            for (let i = 0; i < strength.score; i++) {
+                strengthBars[i].classList.add(strength.class);
+            }
+            
+            strengthText.textContent = strength.text;
+            strengthText.className = `strength-text ${strength.class}`;
+        });
+    }
+    
+    // Password confirmation matching
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const matchStatus = document.getElementById('matchStatus');
+    
+    if (confirmPasswordInput && matchStatus) {
+        function checkPasswordMatch() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (confirmPassword.length === 0) {
+                matchStatus.textContent = '';
+                matchStatus.className = 'form-text match-status';
+                return;
+            }
+            
+            if (password === confirmPassword) {
+                matchStatus.textContent = '✓ Passwords match';
+                matchStatus.className = 'form-text match-status match';
+            } else {
+                matchStatus.textContent = '✗ Passwords do not match';
+                matchStatus.className = 'form-text match-status no-match';
+            }
+        }
+        
+        passwordInput.addEventListener('input', checkPasswordMatch);
+        confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+    }
+    
+    // Username validation
+    const usernameInput = document.getElementById('username');
+    if (usernameInput) {
+        usernameInput.addEventListener('input', function() {
+            const username = this.value;
+            const wrapper = this.closest('.input-wrapper');
+            
+            if (username.match(/^[a-zA-Z0-9_]+$/)) {
+                wrapper.classList.remove('invalid');
+                wrapper.classList.add('valid');
+            } else if (username.length > 0) {
+                wrapper.classList.remove('valid');
+                wrapper.classList.add('invalid');
+            } else {
+                wrapper.classList.remove('valid', 'invalid');
+            }
+        });
+    }
+    
+    // Form validation
+    const form = document.querySelector('.modern-form');
+    form.addEventListener('submit', function(e) {
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        const termsChecked = document.getElementById('terms').checked;
+        
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            return;
+        }
+        
+        if (!termsChecked) {
+            e.preventDefault();
+            alert('Please accept the Terms of Service to continue.');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
+    });
+    
+    // Button ripple effect (reuse from login)
+    const buttons = document.querySelectorAll('.btn-modern');
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const ripple = this.querySelector('.btn-ripple');
+            if (ripple) {
+                ripple.classList.remove('active');
+                setTimeout(() => {
+                    ripple.classList.add('active');
+                    setTimeout(() => ripple.classList.remove('active'), 600);
+                }, 10);
+            }
+        });
+    });
+});
+
+function calculatePasswordStrength(password) {
+    let score = 0;
+    let feedback = [];
+    
+    if (password.length >= 8) score++;
+    if (password.match(/[a-z]/)) score++;
+    if (password.match(/[A-Z]/)) score++;
+    if (password.match(/[0-9]/)) score++;
+    if (password.match(/[^a-zA-Z0-9]/)) score++;
+    
+    const strengths = [
+        { score: 0, class: '', text: 'Enter password' },
+        { score: 1, class: 'weak', text: 'Very weak' },
+        { score: 2, class: 'weak', text: 'Weak' },
+        { score: 3, class: 'medium', text: 'Medium' },
+        { score: 4, class: 'strong', text: 'Strong' },
+        { score: 5, class: 'very-strong', text: 'Very strong' }
+    ];
+    
+    return strengths[Math.min(score, 5)];
+}
+</script>
+
+<!-- Reuse styles from login + additions -->
+<style>
+/* Base styles from login */
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow-x: hidden;
+}
+
+.modern-register-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.background-effects {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.floating-shapes {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.shape {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.1;
+    animation: float 6s ease-in-out infinite;
+}
+
+.shape-1 {
+    width: 80px;
+    height: 80px;
+    background: white;
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.shape-2 {
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.5);
+    top: 60%;
+    right: 10%;
+    animation-delay: 2s;
+}
+
+.shape-3 {
+    width: 60px;
+    height: 60px;
+    background: white;
+    bottom: 20%;
+    left: 20%;
+    animation-delay: 4s;
+}
+
+.shape-4 {
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.3);
+    top: 30%;
+    right: 30%;
+    animation-delay: 1s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+.register-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
+    max-width: 1400px;
+    width: 100%;
+    z-index: 2;
+    position: relative;
+}
+
+@media (min-width: 1200px) {
+    .register-wrapper {
+        grid-template-columns: 600px 1fr;
+        align-items: center;
+    }
+}
+
+.modern-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.brand-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+    position: relative;
+}
+
+.brand-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><radialGradient id="a" cx="50%" cy="0%" r="100%"><stop offset="0%" stop-color="white" stop-opacity="0.1"/><stop offset="100%" stop-color="white" stop-opacity="0"/></radialGradient></defs><rect width="100" height="20" fill="url(%23a)"/></svg>');
+    opacity: 0.5;
+}
+
+.logo-container {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 15px;
+}
+
+.logo-icon {
+    font-size: 40px;
+    background: linear-gradient(45deg, #fff, rgba(255, 255, 255, 0.7));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.brand-title {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+}
+
+.brand-subtitle {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.register-content {
+    padding: 40px 30px;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.form-title {
+    color: #2d3748;
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+}
+
+.form-subtitle {
+    color: #718096;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Form Elements */
+.input-group-modern {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.modern-input {
+    width: 100%;
+    height: 50px;
+    padding: 18px 16px 6px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f7fafc;
+    font-size: 15px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.modern-textarea {
+    height: auto;
+    padding-top: 20px;
+    resize: vertical;
+    min-height: 70px;
+}
+
+.modern-input:focus {
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.input-label {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    color: #a0aec0;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    background: transparent;
+}
+
+.input-wrapper.focused .input-label,
+.input-wrapper.filled .input-label {
+    top: 6px;
+    font-size: 11px;
+    color: #667eea;
+}
+
+.textarea-wrapper.focused .input-label,
+.textarea-wrapper.filled .input-label {
+    top: 8px;
+}
+
+.input-highlight {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transform: scaleX(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 1px;
+}
+
+.input-wrapper.valid .modern-input {
+    border-color: #48bb78;
+    background: #f0fff4;
+}
+
+.input-wrapper.invalid .modern-input {
+    border-color: #f56565;
+    background: #fffafa;
+}
+
+.form-text {
+    color: #718096;
+    font-size: 11px;
+    margin-top: 6px;
+    display: block;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #a0aec0;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.3s ease;
+}
+
+.password-toggle:hover {
+    color: #667eea;
+}
+
+/* Password Strength */
+.password-strength {
+    margin-top: 8px;
+}
+
+.strength-bars {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 4px;
+}
+
+.strength-bar {
+    height: 4px;
+    flex: 1;
+    background: #e2e8f0;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.strength-bar.weak {
+    background: #f56565;
+}
+
+.strength-bar.medium {
+    background: #ed8936;
+}
+
+.strength-bar.strong {
+    background: #38b2ac;
+}
+
+.strength-bar.very-strong {
+    background: #48bb78;
+}
+
+.strength-text {
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.strength-text.weak { color: #f56565; }
+.strength-text.medium { color: #ed8936; }
+.strength-text.strong { color: #38b2ac; }
+.strength-text.very-strong { color: #48bb78; }
+
+/* Password Match Status */
+.match-status.match {
+    color: #48bb78;
+}
+
+.match-status.no-match {
+    color: #f56565;
+}
+
+/* Role Selection */
+.form-label-modern {
+    display: block;
+    color: #2d3748;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.role-selection {
+    display: grid;
+    gap: 12px;
+}
+
+.role-option {
+    position: relative;
+}
+
+.role-radio {
+    position: absolute;
+    opacity: 0;
+}
+
+.role-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f7fafc;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.role-radio:checked + .role-label {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.role-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #4a5568;
+    transition: all 0.3s ease;
+}
+
+.role-radio:checked + .role-label .role-icon {
+    background: #667eea;
+    color: white;
+}
+
+.role-info strong {
+    display: block;
+    color: #2d3748;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+.role-info p {
+    margin: 0;
+    color: #718096;
+    font-size: 12px;
+}
+
+/* Modern Checkbox */
+.modern-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.modern-check .form-check-input {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 4px;
+    background: #f7fafc;
+    transition: all 0.3s ease;
+    margin-top: 2px;
+}
+
+.modern-check .form-check-input:checked {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: #667eea;
+}
+
+.modern-check .form-check-label {
+    color: #4a5568;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.link-modern {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.link-modern:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+/* Buttons */
+.btn-modern {
+    position: relative;
+    height: 50px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-modern.btn-primary {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.btn-modern:disabled {
+    opacity: 0.7;
+    transform: none;
+    cursor: not-allowed;
+}
+
+.btn-ripple {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.6s ease;
+}
+
+.btn-ripple.active {
+    width: 300px;
+    height: 300px;
+}
+
+.btn-text {
+    position: relative;
+    z-index: 1;
+}
+
+.login-link {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.login-link:hover {
+    color: #764ba2;
+    text-decoration: none;
+}
+
+.login-link strong {
+    font-weight: 600;
+}
+
+/* Footer */
+.register-footer {
+    background: #f7fafc;
+    padding: 20px 30px;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+.security-features {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.security-feature {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: white;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+}
+
+/* Info Panel */
+.info-panel {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: none;
+}
+
+@media (min-width: 1200px) {
+    .info-panel {
+        display: block;
+    }
+}
+
+.info-content h4 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 25px;
+}
+
+.feature-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.feature-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.feature-item strong {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.feature-item p {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* Alerts */
+.alert-modern {
+    border: none;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.alert-modern.alert-danger {
+    background: linear-gradient(135deg, #fed7d7, #feb2b2);
+    color: #c53030;
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modern-register-container {
+        padding: 10px;
+    }
+    
+    .register-content {
+        padding: 30px 20px;
+    }
+    
+    .brand-header {
+        padding: 25px 20px;
+    }
+    
+    .role-selection {
+        grid-template-columns: 1fr;
+    }
+    
+    .modern-input {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
+@media (max-width: 480px) {
+    .brand-title {
+        font-size: 20px;
+    }
+    
+    .form-title {
+        font-size: 18px;
+    }
+    
+    .row.g-3 {
+        --bs-gutter-x: 1rem;
+    }
+}
+</style>
+{% endblock %}

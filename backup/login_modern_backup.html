@@ -2,340 +2,52 @@
 
 {% block title %}Login - LXCloud{% endblock %}
 
-{% block extra_css %}
-<style>
-.nextcloud-login {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.login-container {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    padding: 40px;
-    width: 100%;
-    max-width: 400px;
-    margin: 20px;
-}
-
-.login-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.login-logo {
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
-}
-
-.login-logo i {
-    color: white;
-    font-size: 32px;
-}
-
-.login-title {
-    font-size: 28px;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 8px;
-}
-
-.login-subtitle {
-    color: #666;
-    font-size: 16px;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-label {
-    display: block;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 8px;
-    font-size: 14px;
-}
-
-.form-input {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #e1e5e9;
-    border-radius: 8px;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    background: white;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.login-button {
-    width: 100%;
-    padding: 14px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: none;
-}
-
-.login-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
-}
-
-.login-button:active {
-    transform: translateY(0);
-}
-
-.alert {
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    font-size: 14px;
-}
-
-.alert-danger {
-    background: #fee;
-    border: 1px solid #fcc;
-    color: #c33;
-}
-
-.alert-info {
-    background: #e7f3ff;
-    border: 1px solid #b3d9ff;
-    color: #0066cc;
-}
-
-.register-link {
-    text-align: center;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #e1e5e9;
-}
-
-.register-link a {
-    color: #667eea;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.register-link a:hover {
-    text-decoration: underline;
-}
-
-.two-factor-section {
-    text-align: center;
-    padding: 20px 0;
-}
-
-.two-factor-code {
-    text-align: center;
-    font-size: 18px;
-    letter-spacing: 4px;
-    font-weight: 600;
-}
-
-.floating-shapes {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: -1;
-}
-
-.floating-shape {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    animation: float 6s ease-in-out infinite;
-}
-
-.floating-shape:nth-child(1) {
-    width: 80px;
-    height: 80px;
-    top: 20%;
-    left: 10%;
-    animation-delay: 0s;
-}
-
-.floating-shape:nth-child(2) {
-    width: 120px;
-    height: 120px;
-    top: 60%;
-    right: 10%;
-    animation-delay: 2s;
-}
-
-.floating-shape:nth-child(3) {
-    width: 60px;
-    height: 60px;
-    bottom: 20%;
-    left: 20%;
-    animation-delay: 4s;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-}
-
-@media (max-width: 480px) {
-    .login-container {
-        margin: 10px;
-        padding: 30px 20px;
-    }
-    
-    .login-title {
-        font-size: 24px;
-    }
-}
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="nextcloud-login">
-    <div class="floating-shapes">
-        <div class="floating-shape"></div>
-        <div class="floating-shape"></div>
-        <div class="floating-shape"></div>
+<div class="modern-login-container">
+    <!-- Background Effects -->
+    <div class="background-effects">
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+        </div>
     </div>
     
-    <div class="login-container">
-        <div class="login-header">
-            <div class="login-logo">
-                <i class="fas fa-cloud"></i>
-            </div>
-            <h1 class="login-title">LXCloud</h1>
-            <p class="login-subtitle">Sign in to your account</p>
-        </div>
-        
-        {% if needs_2fa %}
-        <div class="alert alert-info">
-            <i class="fas fa-shield-alt"></i> Please enter your 2FA authentication code
-        </div>
-        {% endif %}
-        
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <div class="alert alert-danger">
-            {% for message in messages %}
-                <div><i class="fas fa-exclamation-circle"></i> {{ message }}</div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% endwith %}
-        
-        <form method="POST">
-            <div class="form-group">
-                <label for="username" class="form-label">
-                    <i class="fas fa-user"></i> Username
-                </label>
-                <input type="text" 
-                       class="form-input" 
-                       id="username" 
-                       name="username" 
-                       required
-                       {% if needs_2fa %}value="{{ request.form.username }}" readonly{% endif %}
-                       placeholder="Enter your username">
-            </div>
-            
-            <div class="form-group">
-                <label for="password" class="form-label">
-                    <i class="fas fa-lock"></i> Password
-                </label>
-                <input type="password" 
-                       class="form-input" 
-                       id="password" 
-                       name="password" 
-                       required
-                       {% if needs_2fa %}style="display: none;"{% endif %}
-                       placeholder="Enter your password">
+    <div class="login-wrapper">
+        <div class="login-card modern-card">
+            <!-- Brand Header -->
+            <div class="brand-header">
+                <div class="logo-container">
+                    <i class="fas fa-cloud logo-icon"></i>
+                </div>
+                <h2 class="brand-title">LXCloud</h2>
+                <p class="brand-subtitle">Modern Cloud Dashboard Platform</p>
             </div>
             
             {% if needs_2fa %}
-            <div class="form-group two-factor-section">
-                <label for="two_factor_token" class="form-label">
-                    <i class="fas fa-mobile-alt"></i> Two-Factor Authentication Code
-                </label>
-                <input type="text" 
-                       class="form-input two-factor-code" 
-                       id="two_factor_token" 
-                       name="two_factor_token" 
-                       required 
-                       maxlength="6"
-                       placeholder="000000">
-                <input type="hidden" name="password" value="{{ request.form.password }}">
-            </div>
-            {% endif %}
-            
-            <button type="submit" class="login-button">
-                {% if needs_2fa %}
-                    <i class="fas fa-shield-alt"></i> Verify & Sign In
-                {% else %}
-                    <i class="fas fa-sign-in-alt"></i> Sign In
-                {% endif %}
-            </button>
-        </form>
-        
-        <div class="register-link">
-            <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Create one here</a></p>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-focus on first empty input
-    const inputs = document.querySelectorAll('.form-input');
-    for (let input of inputs) {
-        if (input.value === '' && input.style.display !== 'none') {
-            input.focus();
-            break;
-        }
-    }
-    
-    // 2FA code auto-formatting
-    const tfaInput = document.getElementById('two_factor_token');
-    if (tfaInput) {
-        tfaInput.addEventListener('input', function(e) {
-            // Only allow numbers
-            this.value = this.value.replace(/[^0-9]/g, '');
-            
-            // Auto-submit when 6 digits entered
-            if (this.value.length === 6) {
-                this.form.submit();
-            }
-        });
-    }
-});
-</script>
-{% endblock %}
+                <!-- 2FA Section -->
+                <div class="login-content">
+                    <div class="form-header">
+                        <h3 class="form-title">
+                            <i class="fas fa-shield-alt me-2 text-warning"></i>
+                            Two-Factor Authentication
+                        </h3>
+                        <p class="form-subtitle">Enter your 6-digit authenticator code</p>
+                    </div>
+                    
+                    <form method="POST" class="modern-form">
+                        <input type="hidden" name="username" value="{{ request.form.username }}">
+                        <input type="hidden" name="password" value="{{ request.form.password }}">
+                        
+                        <div class="input-group-modern mb-4">
+                            <div class="input-wrapper">
+                                <input type="text" 
+                                       class="form-control modern-input two-factor-code" 
+                                       id="two_factor_token" 
+                                       name="two_factor_token" 
+                                       required 
+                                       maxlength="6" 
                                        pattern="[0-9]{6}" 
                                        placeholder="000000"
                                        autocomplete="one-time-code">

@@ -91,9 +91,10 @@ def delete_user(user_id):
     return redirect(url_for('admin.users'))
 
 @admin_bp.route('/ui-customization')
+@admin_bp.route('/ui-customization/<page_name>')
 @login_required
 @admin_required
-def ui_customization():
+def ui_customization(page_name='dashboard'):
     try:
         pages = ['dashboard', 'login', 'controllers', 'profile']
         customizations = {}
@@ -105,8 +106,14 @@ def ui_customization():
                 db.session.add(customization)
             customizations[page] = customization
         
+        # Get current page customization
+        current_customization = customizations.get(page_name)
+        
         db.session.commit()
-        return render_template('admin/ui_customization.html', customizations=customizations)
+        return render_template('admin/ui_customization.html', 
+                             customizations=customizations,
+                             page_name=page_name,
+                             current_customization=current_customization)
     except Exception as e:
         db.session.rollback()
         print(f"Error in ui_customization: {str(e)}")

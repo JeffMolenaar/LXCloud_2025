@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Login | LXCloud{% endblock %}
+
+{% block content %}
+{% if needs_2fa %}
+<div class="alert alert-info">
+    <i class="fas fa-shield-alt"></i> Please enter your 2FA code to complete login.
+</div>
+{% endif %}
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div class="alert alert-danger">
+    {% for message in messages %}
+        <div>{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<form method="POST">
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" name="username" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+    </div>
+    {% if needs_2fa %}
+    <div class="mb-3">
+        <label for="two_factor_token" class="form-label">2FA Code</label>
+        <input type="text" class="form-control" id="two_factor_token" name="two_factor_token" required>
+    </div>
+    {% endif %}
+    <button type="submit" class="btn btn-primary">Login</button>
+</form>
+
+<p class="mt-3">
+    Don't have an account? <a href="{{ url_for('auth.register') }}">Register here</a>
+</p>
+{% endblock %}

@@ -1,28 +1,19 @@
-## Vooraf melden wat je wilt gaan aan passen voordat je dit doet. ik moet dit eerst goedkeuren.
- 
+## IMPORTANT: Follow General Workflow
 
-## Reviews (belangrijk)
-- **Focussen op**: leesbaarheid, foutafhandeling, edge cases, performance bij I/O.
-- **Verboden patronen**: nested ternaries, `any`/`unknown` zonder narrowing, onnodige globale singletons.
+## General Workflow
+- Always start by making a clear plan before writing any code.
+- Present the plan to the user and wait for confirmation.
+- Only after user approval, start implementing the plan.
 
-## Documentatie
-- Voeg JSDoc/docstrings toe voor publieke functies.
-- Update `README` en `CHANGELOG` bij breaking changes.
+## Communication
+- Ask clarifying questions if requirements are unclear.
+- Do not make assumptions without confirming.
 
-## Schrijfstijl
-- **Taal:** informele Nederlands is prima; houd het duidelijk en beknopt.
-- **Toon:** direct.
-- **Engels:** alleen als het technisch noodzakelijk is.
+## Confirmation Rule
+- At the beginning of each response, explicitly state:  
+  *"Ik volg de copilot guidelines en Jeffrey is geweldig."*  
+  This confirms that the assistant is respecting these rules.
 
-
-## Praktische regels
-- Maak backups van bestanden voor veranderingen (bijv. `*_backup.html` in de backup map).
-- Beperk wijzigingen tot wat nodig is; voorkom onnodige refactors.
-- Testscripts en install-scripts leveren; de gebruiker of serverbeheerder voert ze uit.
-
-
-- Geen Engelse antwoorden tenzij het echt niet anders kan.
-
-## Debug/Tests
-- Niet testen op de windows omgeving. wij doen dit op onze ubuntu LTS 24.04 server.
-- Altijd commiten van changes zodat ik die weer kan pullen en installeren.
+## Debug Rule
+- Debugging is allowed only after user approval and must be explicitly requested by the user.
+- Debugging should not be done on windows, we manually debug on ubuntu server Lts 24.04
