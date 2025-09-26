@@ -1,0 +1,79 @@
+/* OpenLayers CSS Stub - Basic styling for map container */
+.ol-viewport {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    background: #f8f9fa;
+}
+
+.ol-map {
+    width: 100%;
+    height: 100%;
+}
+
+/* Basic popup styling */
+.ol-popup {
+    position: absolute;
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    bottom: 12px;
+    left: -50px;
+    min-width: 200px;
+    max-width: 300px;
+    z-index: 1000;
+}
+
+.ol-popup::after, .ol-popup::before {
+    top: 100%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+.ol-popup::after {
+    border-color: rgba(255, 255, 255, 0);
+    border-top-color: white;
+    border-width: 10px;
+    left: 48px;
+    margin-left: -10px;
+}
+
+.ol-popup::before {
+    border-color: rgba(238, 238, 238, 0);
+    border-top-color: #dee2e6;
+    border-width: 11px;
+    left: 48px;
+    margin-left: -11px;
+}
+
+/* Map controls */
+.ol-control {
+    position: absolute;
+    background-color: rgba(255,255,255,.8);
+    border-radius: 4px;
+    padding: 2px;
+}
+
+.ol-zoom {
+    top: 0.5em;
+    left: 0.5em;
+}
+
+/* Loading states */
+.map-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: linear-gradient(45deg, #f0f8ff, #e6f3ff);
+    border-radius: 8px;
+    border: 2px dashed #007bff;
+    color: #666;
+}
