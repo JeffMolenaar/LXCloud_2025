@@ -102,8 +102,32 @@ fi
 echo "Syncing files to $INSTALL_DIR"
 safe_rsync "$SRC" "$INSTALL_DIR"
 
+# Ensure .github/copilot-instructions.md is present in the install dir so local operators
+# and any automation can read the repo-specific Copilot instructions. Some deployments
+# put code in `project/` (which excludes .github), so copy it explicitly if present.
+if [ -f "$REPO_ROOT/.github/copilot-instructions.md" ]; then
+    mkdir -p "$INSTALL_DIR/.github"
+    cp "$REPO_ROOT/.github/copilot-instructions.md" "$INSTALL_DIR/.github/copilot-instructions.md"
+    chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR/.github"
+fi
+
 echo "Ensuring ownership"
-    chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR" || true
+chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR" || true
+
+# Ensure debug queue exists with correct ownership
+mkdir -p "$DEBUG_QUEUE_DIR" || true
+chown "$SERVICE_USER:$SERVICE_USER" "$DEBUG_QUEUE_DIR" || true
+chmod 755 "$DEBUG_QUEUE_DIR" || true
+
+# Make common scripts executable in the installed tree
+if [ -d "$INSTALL_DIR/scripts" ]; then
+    find "$INSTALL_DIR/scripts" -type f -name "*.sh" -exec chmod +x {} \; || true
+fi
+
+# Ensure database install script if present is executable
+if [ -f "$INSTALL_DIR/database_install.sh" ]; then
+    chmod +x "$INSTALL_DIR/database_install.sh" || true
+fi
 
 # Install/upgrade python requirements if venv exists
 if [ -d "$INSTALL_DIR/venv" ]; then
@@ -113,10 +137,39 @@ else
     echo "No virtualenv found at $INSTALL_DIR/venv - skipping dependency install."
 fi
 
+# Run a quick create_app smoke-test to detect import-time errors early and ensure app
+# will start correctly. We run as SERVICE_USER and print traceback if it fails.
+if [ -d "$INSTALL_DIR/venv" ]; then
+    echo "Running create_app smoke-test..."
+    if sudo -u "$SERVICE_USER" -H bash -c "cd '$INSTALL_DIR' && source venv/bin/activate && python - <<PY
+try:
+    from app import create_app
+    app = create_app()
+    print('CREATE_APP_OK')
+except Exception:
+    import traceback
+    traceback.print_exc()
+    raise
+PY"; then
+        echo "create_app smoke-test passed"
+    else
+        echo "Warning: create_app smoke-test failed. Continuing but check logs." >&2
+    fi
+fi
+
 echo "Restarting services and reloading systemd"
 systemctl daemon-reload || true
 if systemctl list-units --full -all | grep -q '^lxcloud.service'; then
     systemctl enable --now lxcloud || systemctl start lxcloud || true
+fi
+
+# Restart common system services that the application depends on to ensure changes
+# take effect immediately on the host.
+if systemctl list-units --full -all | grep -q '^nginx.service'; then
+    systemctl restart nginx || true
+fi
+if systemctl list-units --full -all | grep -q '^mosquitto.service'; then
+    systemctl restart mosquitto || true
 fi
 
 echo "Update complete. Recent lxcloud journal entries:"
