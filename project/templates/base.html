@@ -5,30 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}LXCloud{% endblock %}</title>
     
-    <!-- Google Fonts with fallback -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" onerror="this.remove()">
-    
-    <!-- Fallback fonts CSS for when Google Fonts fails -->
+    <!-- Enhanced Font Loading with Robust Fallbacks -->
     <style>
-    /* Fallback font definitions when Google Fonts is unavailable */
-    @media print {
-        * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
-    }
-    
-    /* Enhanced fallback font stack */
+    /* Robust font system that always works */
     :root {
-        --font-family-sans-fallback: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+        --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Oxygen', 'Ubuntu', 'Cantarell', 'Inter', 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+        --font-family-mono: 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', Consolas, 'Courier New', monospace;
     }
     
-    /* Apply fallback fonts if Inter is not available */
-    @supports not (font-family: 'Inter') {
-        :root {
-            --font-family-sans: var(--font-family-sans-fallback);
+    /* Print optimizations */
+    @media print {
+        * { 
+            -webkit-print-color-adjust: exact !important; 
+            color-adjust: exact !important; 
         }
     }
+    
+    /* Improved body and base font rendering */
+    body {
+        font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'pnum' 1, 'tnum' 0, 'onum' 1, 'lnum' 0, 'dlig' 0;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
     </style>
+    
+    <!-- Optional Google Fonts - loads asynchronously without blocking -->
+    <script>
+    (function() {
+        // Try to load Google Fonts with graceful fallback
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap';
+        
+        // Set a timeout to prevent blocking
+        const timeout = setTimeout(function() {
+            console.log('Google Fonts loading timeout - using system fonts');
+        }, 3000);
+        
+        link.onload = function() {
+            clearTimeout(timeout);
+            // Update CSS variable to use Inter if loaded successfully
+            document.documentElement.style.setProperty('--font-family-sans', 
+                "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Oxygen', 'Ubuntu', 'Cantarell', 'Helvetica Neue', Arial, sans-serif");
+        };
+        
+        link.onerror = function() {
+            clearTimeout(timeout);
+            console.log('Google Fonts failed to load - using system fonts');
+        };
+        
+        document.head.appendChild(link);
+    })();
+    </script>
     
     <!-- Bootstrap CSS (Local) -->
     <link href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
