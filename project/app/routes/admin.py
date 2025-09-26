@@ -109,11 +109,16 @@ def ui_customization(page_name='dashboard'):
         # Get current page customization
         current_customization = customizations.get(page_name)
         
+        # Ensure customization object is not None for template rendering
+        if current_customization is None:
+            current_customization = UICustomization(page_name=page_name)
+            db.session.add(current_customization)
+        
         db.session.commit()
         return render_template('admin/ui_customization.html', 
                              customizations=customizations,
                              page_name=page_name,
-                             current_customization=current_customization)
+                             customization=current_customization)
     except Exception as e:
         db.session.rollback()
         print(f"Error in ui_customization: {str(e)}")

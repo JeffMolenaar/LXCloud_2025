@@ -5,15 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}LXCloud{% endblock %}</title>
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts with fallback -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" onerror="this.remove()">
+    
+    <!-- Fallback fonts CSS for when Google Fonts fails -->
+    <style>
+    /* Fallback font definitions when Google Fonts is unavailable */
+    @media print {
+        * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+    }
+    
+    /* Enhanced fallback font stack */
+    :root {
+        --font-family-sans-fallback: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    }
+    
+    /* Apply fallback fonts if Inter is not available */
+    @supports not (font-family: 'Inter') {
+        :root {
+            --font-family-sans: var(--font-family-sans-fallback);
+        }
+    }
+    </style>
     
     <!-- Bootstrap CSS (Local) -->
     <link href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
     <!-- Font Awesome (Local) -->
-    <link href="{{ url_for('static', filename='vendor/fontawesome/all.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='vendor/fontawesome/css/all.min.css') }}" rel="stylesheet">
     <!-- Leaflet CSS (Local) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}" />
     
