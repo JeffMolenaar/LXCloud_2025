@@ -19,7 +19,8 @@
             "**/logs": true,
             "**/tmp": true,
             "**/temp": true
-        }
+        },
+        "chat.agent.maxRequests": 50
     },
     "launch": {
         "version": "0.2.0",

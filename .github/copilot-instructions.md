@@ -18,7 +18,7 @@
 
 ## Confirmation Rule
 - At the beginning of each response, explicitly state:  
-  *"Ik volg de copilot guidelines en Jeffrey moet gecastreerd worden"*  
+  *"Ik volg de copilot guidelines."*  
   This confirms that the assistant is respecting these rules.
 
 ## Debug Rule
