@@ -453,7 +453,7 @@
 
 {% block extra_js %}
 <script>
-/* --------- Dynamically load OpenLayers (JS + CSS) ---------- */
+/* --------- Dynamically load OpenLayers (JS + CSS) with fallback ---------- */
 function ensureOpenLayers() {
   return new Promise((resolve, reject) => {
     if (window.ol && typeof ol.Map === 'function') return resolve();
@@ -465,17 +465,74 @@ function ensureOpenLayers() {
     }
     window.__olLoading = true;
 
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdn.jsdelivr.net/npm/ol@latest/ol.css';
-    document.head.appendChild(link);
+    // Try to load local OpenLayers first, then fallback to CDN
+    const tryLoadLocal = () => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = "{{ url_for('static', filename='vendor/openlayers/ol.css') }}";
+      link.onerror = () => {
+        // If local CSS fails, try CDN CSS
+        const cdnLink = document.createElement('link');
+        cdnLink.rel = 'stylesheet';
+        cdnLink.href = 'https://cdn.jsdelivr.net/npm/ol@latest/ol.css';
+        document.head.appendChild(cdnLink);
+      };
+      document.head.appendChild(link);
 
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js';
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load OpenLayers'));
-    document.body.appendChild(script);
+      const script = document.createElement('script');
+      script.src = "{{ url_for('static', filename='vendor/openlayers/ol.js') }}";
+      script.onload = () => resolve();
+      script.onerror = () => {
+        // If local JS fails, try CDN
+        const cdnScript = document.createElement('script');
+        cdnScript.src = 'https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js';
+        cdnScript.onload = () => resolve();
+        cdnScript.onerror = () => {
+          // If both fail, show fallback map
+          console.warn('OpenLayers failed to load from both local and CDN sources');
+          showFallbackMap();
+          resolve(); // Resolve anyway to prevent blocking
+        };
+        document.body.appendChild(cdnScript);
+      };
+      document.body.appendChild(script);
+    };
+
+    tryLoadLocal();
   });
+}
+
+/* --------- Fallback map when OpenLayers fails ---------- */
+function showFallbackMap() {
+  const mapContainer = document.getElementById('map');
+  if (!mapContainer) return;
+  
+  mapContainer.innerHTML = `
+    <div style="
+      height: 100%; 
+      background: linear-gradient(45deg, #f0f8ff, #e6f3ff);
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      border-radius: 8px;
+      border: 2px dashed #007bff;
+      color: #666;
+      padding: 20px;
+    ">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">🗺️</div>
+      <h4 style="color: #007bff; margin-bottom: 0.5rem;">Controller Map</h4>
+      <p style="margin: 0; font-size: 0.9rem;">Map functionality temporarily unavailable</p>
+      <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; opacity: 0.7;">
+        Controllers: <strong id="map-controller-count">0</strong> | 
+        Online: <strong id="map-online-count">0</strong>
+      </p>
+    </div>
+  `;
+  
+  // Update the fallback map with current stats
+  updateFallbackMapStats();
 }
 /* ---------------------------------------------------------- */
 </script>
@@ -1253,6 +1310,21 @@ function escapeHtml(v) {
 }
 
 /* === stats === */
+function updateFallbackMapStats() {
+    // Update fallback map with current statistics
+    const mapControllerCount = document.getElementById('map-controller-count');
+    const mapOnlineCount = document.getElementById('map-online-count');
+    
+    if (mapControllerCount && mapOnlineCount) {
+        // Get stats from the dashboard cards
+        const totalElement = document.querySelector('[data-card-id="total-controllers"] .stat-value');
+        const onlineElement = document.querySelector('[data-card-id="online-controllers"] .stat-value');
+        
+        if (totalElement) mapControllerCount.textContent = totalElement.textContent || '0';
+        if (onlineElement) mapOnlineCount.textContent = onlineElement.textContent || '0';
+    }
+}
+
 function updateStatistics(data) {
     if (data.total_controllers !== undefined) {
         const totalCard = document.querySelector('[data-card-id="total-controllers"] .stat-value');
@@ -1264,6 +1336,9 @@ function updateStatistics(data) {
         const offlineCard = document.querySelector('[data-card-id="offline-controllers"] .stat-value');
         if (offlineCard) offlineCard.textContent = data.total_controllers - data.online_controllers;
     }
+    
+    // Update fallback map if it's being used
+    updateFallbackMapStats();
 }
 
 /* === reset / shortcuts === */

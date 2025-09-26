@@ -82,9 +82,9 @@
     --space-16: 4rem;
     --space-20: 5rem;
     
-    /* Typography */
-    --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    --font-family-mono: 'JetBrains Mono', 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', Consolas, 'Courier New', monospace;
+    /* Typography - System fonts first for reliability */
+    --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Oxygen', 'Ubuntu', 'Cantarell', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    --font-family-mono: 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', 'JetBrains Mono', Consolas, 'Courier New', monospace;
     
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;

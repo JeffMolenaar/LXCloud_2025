@@ -221,6 +221,14 @@ class UICustomization(db.Model):
         """Serialize and store map configuration as JSON."""
         self.map_config = json.dumps(config_dict)
 
+    def get_custom_css(self, page_name=None):
+        """Return custom CSS for a specific page or default."""
+        return self.custom_css if self.custom_css else ""
+
+    def set_custom_css(self, css_content):
+        """Store custom CSS content."""
+        self.custom_css = css_content
+
 
 class Addon(db.Model):
     __tablename__ = "addons"
