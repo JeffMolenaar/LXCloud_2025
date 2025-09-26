@@ -134,7 +134,21 @@ if [ -d "$INSTALL_DIR/venv" ]; then
     echo "Installing Python requirements into existing virtualenv..."
     sudo -u "$SERVICE_USER" -H bash -c "source '$INSTALL_DIR/venv/bin/activate' && python -m pip install --upgrade pip && pip install -r '$INSTALL_DIR/requirements.txt'"
 else
-    echo "No virtualenv found at $INSTALL_DIR/venv - skipping dependency install."
+    echo "No virtualenv found at $INSTALL_DIR/venv - creating one and installing requirements..."
+    # Try to create a venv as the service user; fall back to root creation if needed
+    if sudo -u "$SERVICE_USER" -H python3 -m venv "$INSTALL_DIR/venv" 2>/dev/null; then
+        echo "Virtualenv created as $SERVICE_USER"
+    else
+        echo "Creating virtualenv as root (fallback)"
+        python3 -m venv "$INSTALL_DIR/venv" || true
+        chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR/venv" || true
+    fi
+    # Install requirements into the venv
+    if [ -f "$INSTALL_DIR/requirements.txt" ]; then
+        sudo -u "$SERVICE_USER" -H bash -c "source '$INSTALL_DIR/venv/bin/activate' && python -m pip install --upgrade pip && pip install -r '$INSTALL_DIR/requirements.txt'"
+    else
+        echo "Warning: requirements.txt not found at $INSTALL_DIR/requirements.txt - skipping pip install"
+    fi
 fi
 
 # Run a quick create_app smoke-test to detect import-time errors early and ensure app
