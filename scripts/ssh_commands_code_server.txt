@@ -1,0 +1,87 @@
+#!/bin/bash
+# Simple Code-Server SSH Commands
+# Copy and paste these commands via SSH
+
+echo "=== Code-Server SSH Commands ==="
+echo "Copy and paste these commands one by one in your SSH session"
+echo
+
+echo "1. Stop code-server:"
+echo "sudo systemctl stop code-server@lxcloud"
+echo
+
+echo "2. Configure code-server (port 8081):"
+echo "mkdir -p ~/.config/code-server"
+echo "cat > ~/.config/code-server/config.yaml << 'EOF'"
+echo "bind-addr: 0.0.0.0:8081"
+echo "auth: password"
+echo "password: LXCloud"
+echo "cert: false"
+echo "EOF"
+echo
+
+echo "3. Try installing extensions with different methods:"
+echo
+
+echo "Method A - Basic extensions:"
+echo "code-server --install-extension ms-python.python"
+echo "code-server --install-extension redhat.vscode-yaml"
+echo "code-server --install-extension ms-vscode.vscode-json"
+echo
+
+echo "Method B - If Method A fails, use Open VSX:"
+echo "code-server --install-extension ms-python.python --marketplace-url https://open-vsx.org/vscode/gallery"
+echo
+
+echo "Method C - Manual download (if others fail):"
+echo "cd /tmp"
+echo "wget https://github.com/microsoft/vscode-python/releases/download/2023.20.0/ms-python-python-2023.20.0.vsix"
+echo "code-server --install-extension ms-python-python-2023.20.0.vsix"
+echo "rm ms-python-python-2023.20.0.vsix"
+echo
+
+echo "4. Create systemd service:"
+echo "sudo tee /etc/systemd/system/code-server@.service > /dev/null << 'EOF'"
+echo "[Unit]"
+echo "Description=code-server"
+echo "After=network.target"
+echo ""
+echo "[Service]"
+echo "Type=exec"
+echo "ExecStart=/usr/bin/code-server --config /home/%i/.config/code-server/config.yaml /home/lxcloud/LXCloud"
+echo "Restart=always"
+echo "RestartSec=10"
+echo "User=%i"
+echo "Group=%i"
+echo ""
+echo "[Install]"
+echo "WantedBy=multi-user.target"
+echo "EOF"
+echo
+
+echo "5. Start the service:"
+echo "sudo systemctl daemon-reload"
+echo "sudo systemctl enable code-server@lxcloud"
+echo "sudo systemctl start code-server@lxcloud"
+echo
+
+echo "6. Open firewall:"
+echo "sudo ufw allow 8081/tcp"
+echo
+
+echo "7. Check status:"
+echo "sudo systemctl status code-server@lxcloud"
+echo "sudo journalctl -u code-server@lxcloud -f"
+echo
+
+echo "8. Access code-server:"
+echo "Open browser: http://YOUR_SERVER_IP:8081"
+echo "Password: LXCloud"
+echo "Workspace: /home/lxcloud/LXCloud"
+echo
+
+echo "=== Troubleshooting ==="
+echo "If extensions don't install:"
+echo "1. Use the web interface (Extensions tab in code-server)"
+echo "2. Install extensions directly in the browser"
+echo "3. Check logs: sudo journalctl -u code-server@lxcloud"
