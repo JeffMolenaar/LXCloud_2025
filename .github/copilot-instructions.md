@@ -31,3 +31,7 @@
 - User: lxcloud
 - Group: lxcloud
 - Password: LXCloud
+
+## Werkwijzen
+- Werk altijd vanuit de project map, voeg, modificeer of verwijder bestanden alleen daarin.
+- Bij zin "Backup" maak je ten alle tijden een directe kopie van de project map naar archive en geef je de archive map de naam cleanup-YYYYMMDD-WORKING.

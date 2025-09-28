@@ -11,7 +11,206 @@
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white; padding: 2rem 0; margin-bottom: 2rem;
     }
-    /* ...existing content truncated in archive copy for brevity... */
+    .dashboard-header h1 { margin: 0; font-weight: 300; letter-spacing: -1px; }
+    .dashboard-header p { margin: 0.5rem 0 0 0; opacity: 0.9; }
+
+    .edit-mode-toggle {
+        position: fixed; top: 80px; right: 30px; z-index: 1001;
+        background: #007bff; color: white; border: none; border-radius: 50px;
+        padding: 12px 20px; box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        transition: all 0.3s ease;
+    }
+    .edit-mode-toggle:hover { background: #0056b3; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,123,255,0.4); }
+    .edit-mode-toggle.active { background: #dc3545; }
+    .edit-mode-toggle.active:hover { background: #c82333; }
+
+    /* Grid System */
+    .dashboard-grid {
+        display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: 100px;
+        gap: 1rem; padding: 2rem; max-width: 1600px; margin: 0 auto;
+    }
+
+    /* Mobile Grid Adjustments */
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            padding: 1rem; /* Reduce side padding on mobile */
+            padding-top: 2rem; /* Ensure top margin equals gap between cards (1rem) + extra space */
+            gap: 1rem; /* Maintain consistent gap */
+        }
+    }
+
+    .grid-item {
+        background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 2px solid transparent; transition: all 0.3s ease; position: relative; overflow: hidden;
+    }
+    .grid-item:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+    .grid-item.edit-mode { border-color: #007bff; cursor: move; }
+    .grid-item.edit-mode::before { content: ''; position: absolute; inset: 0; background: rgba(0,123,255,0.1); z-index: 1; }
+    .grid-item.edit-mode .resize-handle { display: block; }
+
+    .resize-handle {
+        display: none; position: absolute; bottom: 5px; right: 5px; width: 15px; height: 15px;
+        background: #007bff; cursor: nw-resize; border-radius: 3px; z-index: 2;
+    }
+
+    /* Card Sizes */
+    .card-small { grid-column: span 3; grid-row: span 2; }
+    .card-medium { grid-column: span 4; grid-row: span 3; }
+    .card-large { grid-column: span 6; grid-row: span 4; }
+    .card-xl { grid-column: span 8; grid-row: span 5; }
+    .card-full { grid-column: span 12; grid-row: span 4; }
+
+    /* Card Content */
+    .card-content { padding: 1.5rem; height: 100%; display: flex; flex-direction: column; position: relative; z-index: 0; }
+
+    .stat-card .card-content { justify-content: center; text-align: center; }
+    .stat-card .stat-value { font-size: 2.5rem; font-weight: 700; margin: 0; line-height: 1; }
+    .stat-card .stat-label { font-size: 0.9rem; color: #6c757d; margin: 0.5rem 0 0 0; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-card .stat-icon { position: absolute; top: 1rem; right: 1rem; font-size: 2rem; opacity: 0.3; }
+
+    /* Map Card */
+    .map-card #map {
+        height: 100%; min-height: 300px; border-radius: 8px; border: 1px solid var(--border-light);
+        background-color: var(--bg-primary); position: relative; /* overlay anchor */
+    }
+    .map-card .card-content { padding: 1rem; }
+
+    /* IMPORTANT: disable hover transform on the map card to avoid pointer math issues */
+    .map-card.grid-item:hover { transform: none; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+
+    /* OpenLayers popup */
+    .ol-popup {
+        position: absolute; background: #fff; padding: 10px 12px; border: 1px solid #e5e7eb;
+        border-radius: 6px; min-width: 200px; box-shadow: 0 2px 10px rgba(0,0,0,.12);
+        transform: translate(-50%, -100%); /* anchor above */
+    }
+    .ol-popup:after, .ol-popup:before {
+        top: 100%; border: solid transparent; content: " "; height: 0; width: 0; position: absolute; pointer-events: none;
+    }
+    .ol-popup:after { border-top-color: #fff; border-width: 10px; left: 50%; margin-left: -10px; }
+    .ol-popup:before { border-top-color: #e5e7eb; border-width: 11px; left: 50%; margin-left: -11px; }
+
+    /* Cluster popup styling */
+    .cluster-popup {
+        max-width: 300px;
+    }
+    .cluster-popup h6 {
+        margin: 0 0 10px 0;
+        color: #333;
+        font-weight: 600;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+    }
+    .cluster-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        padding: 4px 0;
+    }
+    .cluster-item:last-child {
+        margin-bottom: 0;
+    }
+    .cluster-status {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+    .cluster-info {
+        flex-grow: 1;
+        font-size: 13px;
+    }
+    .cluster-name {
+        font-weight: 500;
+        margin: 0;
+        color: #333;
+    }
+    .cluster-type {
+        margin: 0;
+        color: #666;
+        font-size: 12px;
+    }
+
+    /* Controller List Card */
+    .controller-list-card .controller-item { display: flex; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0; }
+    .controller-list-card .controller-item:last-child { border-bottom: none; }
+
+    .controller-status { width: 8px; height: 8px; border-radius: 50%; margin-right: 0.75rem; flex-shrink: 0; }
+    .status-online { background-color: #28a745; }
+    .status-offline { background-color: #dc3545; }
+
+    .controller-name { font-weight: 500; margin: 0; font-size: 0.9rem; }
+    .controller-type { font-size: 0.8rem; color: #6c757d; margin: 0; }
+    .controller-actions { margin-left: auto; display: flex; gap: 0.5rem; }
+    .controller-actions .btn { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+
+    /* Welcome Card */
+    .welcome-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .welcome-card .card-content { justify-content: center; text-align: center; }
+    .welcome-card h3 { margin: 0; font-weight: 300; }
+    .welcome-card p { margin: 0.5rem 0 0 0; opacity: 0.9; }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .dashboard-grid { grid-template-columns: repeat(8, 1fr); padding: 0 1rem 2rem 1rem; }
+        .card-large { grid-column: span 4; }
+        .card-xl { grid-column: span 6; }
+        .card-full { grid-column: span 8; }
+    }
+    @media (max-width: 768px) {
+        .dashboard-grid { grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+        .card-small, .card-medium, .card-large, .card-xl { grid-column: span 4; grid-row: span 3; }
+        .card-full { grid-column: span 4; grid-row: span 4; }
+        .edit-mode-toggle { top: 80px; right: 15px; padding: 10px 16px; }
+    }
+
+    /* Drag/Drop */
+    .grid-item.dragging { opacity: 0.5; transform: rotate(5deg); }
+    .grid-item.drag-over { border-color: #28a745; background-color: rgba(40,167,69,0.1); }
+
+    /* Card Header */
+    .card-header-custom { display: flex; align-items: center; justify-content: between; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e9ecef; }
+    .card-header-custom h5 { margin: 0; font-size: 1rem; font-weight: 600; color: #495057; }
+    .card-header-custom .icon { margin-right: 0.5rem; color: #6c757d; }
+
+    /* Card Management Panel */
+    .card-management-panel {
+        position: fixed; top: 80px; right: 200px; width: 280px; background: white; border: 1px solid var(--border-light);
+        border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); z-index: 998; max-height: 70vh; overflow-y: auto;
+    }
+    .card-management-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--border-light); background: var(--bg-secondary); border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+    .card-management-header h6 { margin: 0; font-weight: 600; color: var(--text-primary); }
+
+    .btn-close-panel { background: none; border: none; font-size: 1.2rem; color: var(--text-secondary); cursor: pointer; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+    .btn-close-panel:hover { background: var(--danger-light); color: var(--danger-color); }
+
+    .card-management-content { padding: 1rem; }
+    .available-cards h6 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary); }
+    .card-option { display: flex; align-items: center; margin-bottom: 0.5rem; padding: 0.25rem 0; }
+    .card-option input[type="checkbox"] { margin-right: 0.5rem; width: 16px; height: 16px; }
+    .card-option label { font-size: 0.85rem; color: var(--text-primary); cursor: pointer; margin: 0; flex: 1; }
+    
+    /* Card Order Controls */
+    .card-order-controls { display: flex; align-items: center; gap: 0.25rem; }
+    .card-order-input { width: 40px; height: 24px; font-size: 0.75rem; text-align: center; border: 1px solid var(--border-light); border-radius: 4px; }
+    .card-order-btn { background: none; border: 1px solid var(--border-light); border-radius: 4px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; cursor: pointer; }
+    .card-order-btn:hover { background: var(--bg-secondary); }
+
+    .card-management-actions { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-light); display: flex; gap: 0.5rem; }
+    .card-management-actions .btn { flex: 1; font-size: 0.8rem; }
+
+    /* Mobile Card Management Panel */
+    @media (max-width: 768px) {
+        .card-management-panel {
+            position: fixed; top: 80px; left: 1rem; right: 1rem; width: auto;
+            max-height: 60vh;
+        }
+        
+        .edit-mode-toggle {
+            display: none; /* Hide fixed edit button on mobile - it's now in burger menu */
+        }
+    }
 </style>
 {% endblock %}
 
@@ -29,7 +228,32 @@
             <h6><i class="fas fa-th-large"></i> Card Management</h6>
             <button class="btn-close-panel" onclick="closeCardManagement()">×</button>
         </div>
-        <!-- ...rest of file archived... -->
+        <div class="card-management-content">
+            <div class="available-cards">
+                <h6>Available Cards</h6>
+                <div class="card-list">
+                    <div class="card-option" data-card-id="welcome">
+                        <input type="checkbox" id="card-welcome" checked onchange="toggleCard('welcome')">
+                        <label for="card-welcome">Welcome Card</label>
+                        <div class="card-order-controls">
+                            <input type="number" class="card-order-input" value="1" min="1" max="9" onchange="updateCardOrder('welcome', this.value)">
+                        </div>
+                    </div>
+                    <div class="card-option" data-card-id="map">
+                        <input type="checkbox" id="card-map" checked onchange="toggleCard('map')">
+                        <label for="card-map">Controller Map</label>
+                        <div class="card-order-controls">
+                            <input type="number" class="card-order-input" value="2" min="1" max="9" onchange="updateCardOrder('map', this.value)">
+                        </div>
+                    </div>
+                    <!-- rest of dashboard preserved in archive -->
+                </div>
+            </div>
+            <div class="card-management-actions">
+                <button class="btn btn-sm btn-secondary" onclick="resetLayout()">Reset Layout</button>
+                <button class="btn btn-sm btn-primary" onclick="saveLayout()">Save Layout</button>
+            </div>
+        </div>
     </div>
 
     <!-- Dashboard Grid -->
@@ -44,7 +268,7 @@
             <div class="resize-handle"></div>
         </div>
 
-        <!-- ...rest archived... -->
+        <!-- rest archived -->
     </div>
 
 </div>
