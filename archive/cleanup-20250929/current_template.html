@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - LXCloud{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern Dashboard Styles */
+    .dashboard-container { min-height: calc(100vh - 120px); background: #f8f9fa; padding: 0; }
+
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white; padding: 2rem 0; margin-bottom: 2rem;
+    }
+    /* ...existing content truncated in archive copy for brevity... */
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <!-- Edit Mode Toggle -->
+    <button class="edit-mode-toggle" id="editModeToggle" onclick="toggleEditMode()">
+        <i class="fas fa-edit"></i> <span id="editModeText">Edit Layout</span>
+    </button>
+
+    <!-- Card Management Panel -->
+    <div class="card-management-panel" id="cardManagementPanel" style="display: none;">
+        <div class="card-management-header">
+            <h6><i class="fas fa-th-large"></i> Card Management</h6>
+            <button class="btn-close-panel" onclick="closeCardManagement()">×</button>
+        </div>
+        <!-- ...rest of file archived... -->
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid" id="dashboardGrid">
+
+        <!-- Welcome Card -->
+        <div class="grid-item card-medium welcome-card" data-card-id="welcome">
+            <div class="card-content">
+                <h3>Welcome to LXCloud</h3>
+                <p>Your modern IoT dashboard</p>
+            </div>
+            <div class="resize-handle"></div>
+        </div>
+
+        <!-- ...rest archived... -->
+    </div>
+
+</div>
+{% endblock %}
