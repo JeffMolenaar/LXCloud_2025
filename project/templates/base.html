@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}LXCloud{% endblock %}</title>
     
+    <!-- Resource hints and preloads -->
+    {% block extra_head %}{% endblock %}
+    
     <!-- Enhanced Font Loading with Robust Fallbacks -->
     <style>
     /* Robust font system that always works */
@@ -118,6 +121,18 @@
     {% endif %}
     
     {% block extra_css %}{% endblock %}
+    
+    <!-- Custom CSS from UI Customization -->
+    {% if ui_customizations %}
+        {% for page_name, ui_config in ui_customizations.items() %}
+            {% if ui_config.get('custom_css') %}
+                <style type="text/css">
+                    /* Custom CSS for {{ page_name }} page */
+                    {{ ui_config.custom_css | safe }}
+                </style>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
 </head>
 <body>
     {% if current_user.is_authenticated %}
@@ -132,6 +147,10 @@
                     <div class="brand-icon">
                         {% if dashboard_ui.get('logo_filename') %}
                             <img src="{{ url_for('static', filename='uploads/' + dashboard_ui.logo_filename) }}" 
+                                 alt="{{ header_config.get('logo_text', 'LXCloud') }}" 
+                                 class="brand-logo">
+                        {% elif header_config.get('logo_filename') %}
+                            <img src="{{ url_for('static', filename='uploads/ui/logos/' + header_config.logo_filename) }}" 
                                  alt="{{ header_config.get('logo_text', 'LXCloud') }}" 
                                  class="brand-logo">
                         {% else %}

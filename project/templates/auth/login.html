@@ -2,16 +2,50 @@
 
 {% block title %}Login - LXCloud{% endblock %}
 
+{% block extra_head %}
+<!-- Preload login images for instant display -->
+{% if login_config and login_config.get('login_background') %}
+<link rel="preload" 
+      href="{{ url_for('static', filename='uploads/ui/' + login_config.get('login_background')) }}" 
+      as="image" 
+      type="image/{{ login_config.get('login_background').split('.')[-1] if '.' in login_config.get('login_background') else 'jpeg' }}">
+{% endif %}
+{% if login_config and login_config.get('login_logo') %}
+<link rel="preload" 
+      href="{{ url_for('static', filename='uploads/ui/' + login_config.get('login_logo')) }}" 
+      as="image" 
+      type="image/{{ login_config.get('login_logo').split('.')[-1] if '.' in login_config.get('login_logo') else 'png' }}">
+{% endif %}
+{% endblock %}
+
 {% block extra_css %}
 <style>
 .nextcloud-login {
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    {% if login_config and login_config.get('login_background') %}
+        background: url('{{ url_for("static", filename="uploads/ui/" + login_config.get("login_background")) }}') center/cover no-repeat;
+        position: relative;
+    {% else %}
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    {% endif %}
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+
+{% if login_config and login_config.get('login_background') %}
+.nextcloud-login::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1;
+}
+{% endif %}
 
 .login-container {
     background: rgba(255, 255, 255, 0.95);
@@ -22,6 +56,10 @@
     width: 100%;
     max-width: 400px;
     margin: 20px;
+    {% if login_config and login_config.get('login_background') %}
+        position: relative;
+        z-index: 2;
+    {% endif %}
 }
 
 .login-header {
@@ -30,15 +68,24 @@
 }
 
 .login-logo {
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+    {% if login_config and login_config.get('login_logo') %}
+        width: auto;
+        height: auto;
+        max-width: 200px;
+        max-height: 100px;
+        margin: 0 auto 20px;
+        display: block;
+    {% else %}
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+    {% endif %}
 }
 
 .login-logo i {
@@ -227,7 +274,13 @@
     <div class="login-container">
         <div class="login-header">
             <div class="login-logo">
-                <i class="fas fa-cloud"></i>
+                {% if login_config and login_config.get('login_logo') %}
+                    <img src="{{ url_for('static', filename='uploads/ui/' + login_config.get('login_logo')) }}" 
+                         alt="Login Logo" 
+                         style="width: 100%; height: 100%; object-fit: contain;">
+                {% else %}
+                    <i class="fas fa-cloud"></i>
+                {% endif %}
             </div>
             <h1 class="login-title">LXCloud</h1>
             <p class="login-subtitle">Sign in to your account</p>

@@ -163,12 +163,16 @@ class UICustomization(db.Model):
     __tablename__ = "ui_customization"
 
     id = db.Column(db.Integer, primary_key=True)
-    page_name = db.Column(db.String(100), nullable=False)  # dashboard, login, etc.
+    # dashboard, __login__, etc.
+    page_name = db.Column(db.String(100), unique=True, nullable=False)
     custom_css = db.Column(db.Text, nullable=True)
     header_config = db.Column(db.Text, nullable=True)  # JSON
     footer_config = db.Column(db.Text, nullable=True)  # JSON
-    marker_config = db.Column(db.Text, nullable=True)  # JSON for marker configurations
+    # JSON for marker configurations
+    marker_config = db.Column(db.Text, nullable=True)
     map_config = db.Column(db.Text, nullable=True)
+    # Nieuw: login_config kolom voor login pagina configuratie
+    login_config = db.Column(db.Text, nullable=True)
     # JSON for OpenStreetMap / map settings
     logo_filename = db.Column(
         db.String(255), nullable=True
@@ -211,7 +215,7 @@ class UICustomization(db.Model):
         self.marker_config = json.dumps(config_dict)
 
     def get_map_config(self):
-        """Return map (OpenStreetMap) configuration as a dict, or an empty dict on error."""
+        """Return map config as dict, or empty dict on error."""
         try:
             return json.loads(self.map_config) if self.map_config else {}
         except Exception:
@@ -228,6 +232,50 @@ class UICustomization(db.Model):
     def set_custom_css(self, css_content):
         """Store custom CSS content."""
         self.custom_css = css_content
+
+    def get_login_config(self):
+        """Get login config; migrate from map_config if needed."""
+        try:
+            # Prefer login_config column
+            if self.login_config:
+                cfg = json.loads(self.login_config)
+            else:
+                # Backwards compat: read from map_config and migrate
+                cfg = json.loads(self.map_config) if self.map_config else {}
+                # Ensure keys exist
+                if 'login_logo' not in cfg:
+                    cfg['login_logo'] = None
+                if 'login_background' not in cfg:
+                    cfg['login_background'] = None
+                # Persist into login_config for future reads
+                try:
+                    self.login_config = json.dumps(cfg)
+                except Exception:
+                    pass
+            # Always guarantee both keys
+            if 'login_logo' not in cfg:
+                cfg['login_logo'] = None
+            if 'login_background' not in cfg:
+                cfg['login_background'] = None
+            return cfg
+        except Exception:
+            return {'login_logo': None, 'login_background': None}
+
+    def set_login_config(self, config_dict):
+        """Store login config into login_config with guaranteed keys."""
+        try:
+            cfg = dict(config_dict or {})
+            if 'login_logo' not in cfg:
+                cfg['login_logo'] = None
+            if 'login_background' not in cfg:
+                cfg['login_background'] = None
+            self.login_config = json.dumps(cfg)
+        except Exception:
+            # If serialization fails, store empty default
+            self.login_config = json.dumps({
+                'login_logo': None,
+                'login_background': None
+            })
 
 
 class Addon(db.Model):

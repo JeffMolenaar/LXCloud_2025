@@ -1,571 +1,1297 @@
 {% extends "base.html" %}
 
-{% block title %}UI Customization | LXCloud Admin{% endblock %}
+{% block title %}UI Customization - LXCloud{% endblock %}
 
-{% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <!-- Modern Header with Gradient -->
-                <div class="card-header bg-gradient text-white border-0">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h4 class="mb-1">
-                                <i class="fas fa-paint-brush me-2"></i>
-                                UI Customization Dashboard
-                            </h4>
-                            <p class="mb-0 opacity-75">
-                                <i class="fas fa-magic me-1"></i>
-                                Personalize your application experience
-                            </p>
-                        </div>
-                        <div class="text-end">
-                            <span class="badge bg-light text-dark fs-6">
-                                <i class="fas fa-palette me-1"></i>UI Settings
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Modern Navigation Pills -->
-                <div class="card-body p-0">
-                    <div class="px-4 pt-4 pb-2">
-                        <ul class="nav nav-pills nav-fill modern-nav" id="customization-nav" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="header-tab" data-bs-toggle="pill" data-bs-target="#header-pane" type="button" role="tab">
-                                    <i class="fas fa-window-maximize me-2"></i>Header
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="footer-tab" data-bs-toggle="pill" data-bs-target="#footer-pane" type="button" role="tab">
-                                    <i class="fas fa-window-minimize me-2"></i>Footer
-                                </button>
-                            </li>
-                            {% if page_name == 'dashboard' %}
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="markers-tab" data-bs-toggle="pill" data-bs-target="#markers-pane" type="button" role="tab">
-                                    <i class="fas fa-map-marker-alt me-2"></i>Markers
-                                </button>
-                            </li>
-                            {% endif %}
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="osm-tab" data-bs-toggle="pill" data-bs-target="#osm-pane" type="button" role="tab">
-                                    <i class="fas fa-globe-europe me-2"></i>OpenStreetMap
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="css-tab" data-bs-toggle="pill" data-bs-target="#css-pane" type="button" role="tab">
-                                    <i class="fas fa-code me-2"></i>CSS
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    <!-- Progress Bar -->
-                    <div class="px-4 pb-3">
-                        <div class="progress modern-progress">
-                            <div class="progress-bar" role="progressbar" style="width: 25%" id="main-progress"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab Content -->
-                <div class="card-body pt-0">
-                    <div class="tab-content" id="customization-content">
-                        <form method="POST" action="{{ url_for('admin.save_ui_customization', page_name=page_name) }}" enctype="multipart/form-data">
-                            
-                            <!-- Header Configuration -->
-                            <div class="tab-pane fade show active" id="header-pane" role="tabpanel">
-                                <div class="row g-4">
-                                    <div class="col-lg-8">
-                                        <div class="card modern-card">
-                                            <div class="card-header bg-primary bg-opacity-10">
-                                                <h5 class="text-primary mb-0">
-                                                    <i class="fas fa-window-maximize me-2"></i>Header Settings
-                                                </h5>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="mb-4">
-                                                    <label class="form-label fw-semibold">
-                                                        <i class="fas fa-font me-1"></i>Logo Text
-                                                    </label>
-                                                    <input type="text" class="form-control modern-input" name="header_logo_text" 
-                                                           value="{{ customization.get_header_config().get('logo_text', 'LXCloud') }}"
-                                                           placeholder="Enter your brand name">
-                                                </div>
-                                                
-                                                <div class="mb-4">
-                                                    <label class="form-label fw-semibold">
-                                                        <i class="fas fa-image me-1"></i>Logo Image
-                                                    </label>
-                                                    <input type="file" class="form-control modern-input" name="logo_file" accept="image/*">
-                                                    <div class="form-text">PNG, JPG, or SVG. Recommended: 40x40px</div>
-                                                </div>
-                                                
-                                                <div class="row g-3">
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold">Background Color</label>
-                                                        <input type="color" class="form-control form-control-color modern-color" 
-                                                               name="header_bg_color" 
-                                                               value="{{ customization.get_header_config().get('background_color', '#2c3e50') }}">
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold">Text Color</label>
-                                                        <input type="color" class="form-control form-control-color modern-color" 
-                                                               name="header_text_color" 
-                                                               value="{{ customization.get_header_config().get('text_color', '#ffffff') }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4">
-                                        <div class="card modern-card bg-light">
-                                            <div class="card-body text-center">
-                                                <i class="fas fa-eye fa-3x text-muted mb-3"></i>
-                                                <h6>Live Preview</h6>
-                                                <p class="text-muted small">Changes will be visible after saving</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Footer Configuration -->
-                            <div class="tab-pane fade" id="footer-pane" role="tabpanel">
-                                <div class="row g-4">
-                                    <div class="col-lg-8">
-                                        <div class="card modern-card">
-                                            <div class="card-header bg-secondary bg-opacity-10">
-                                                <h5 class="text-secondary mb-0">
-                                                    <i class="fas fa-window-minimize me-2"></i>Footer Settings
-                                                </h5>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="mb-4">
-                                                    <label class="form-label fw-semibold">
-                                                        <i class="fas fa-font me-1"></i>Footer Text
-                                                    </label>
-                                                    <input type="text" class="form-control modern-input" name="footer_text" 
-                                                           value="{{ customization.get_footer_config().get('text', '© 2025 LXCloud') }}"
-                                                           placeholder="© 2025 Your Company">
-                                                </div>
-                                                
-                                                <div class="row g-3">
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold">Background Color</label>
-                                                        <input type="color" class="form-control form-control-color modern-color" 
-                                                               name="footer_bg_color" 
-                                                               value="{{ customization.get_footer_config().get('background_color', '#34495e') }}">
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold">Text Color</label>
-                                                        <input type="color" class="form-control form-control-color modern-color" 
-                                                               name="footer_text_color" 
-                                                               value="{{ customization.get_footer_config().get('text_color', '#ffffff') }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4">
-                                        <div class="card modern-card bg-light">
-                                            <div class="card-body text-center">
-                                                <i class="fas fa-tools fa-3x text-muted mb-3"></i>
-                                                <h6>Footer Preview</h6>
-                                                <p class="text-muted small">Customize your footer appearance</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Markers Configuration (Dashboard only) -->
-                            {% if page_name == 'dashboard' %}
-                            <div class="tab-pane fade" id="markers-pane" role="tabpanel">
-                                <div class="card modern-card">
-                                    <div class="card-header bg-warning bg-opacity-10">
-                                        <h5 class="text-warning mb-0">
-                                            <i class="fas fa-map-marker-alt me-2"></i>Controller Markers
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="text-muted mb-4">Customize map markers for different controller types.</p>
-                                        
-                                        {% set marker_config = customization.get_marker_config() %}
-                                        {% set controller_types = [
-                                            ('speedradar', 'Speed Radar', 'fas fa-tachometer-alt'),
-                                            ('beaufortmeter', 'Beaufort Meter', 'fas fa-wind'),
-                                            ('weatherstation', 'Weather Station', 'fas fa-cloud-sun'),
-                                            ('aicamera', 'AI Camera', 'fas fa-camera'),
-                                            ('default', 'Default', 'fas fa-microchip')
-                                        ] %}
-                                        
-                                        <div class="row g-4">
-                                            {% for controller_type, display_name, default_icon in controller_types %}
-                                            <div class="col-lg-6">
-                                                <div class="card border-0 shadow-sm">
-                                                    <div class="card-header bg-light">
-                                                        <h6 class="mb-0">
-                                                            <i class="{{ default_icon }} me-2"></i>{{ display_name }}
-                                                        </h6>
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <!-- Online/Offline markers simplified -->
-                                                        <div class="row g-2">
-                                                            <div class="col-6">
-                                                                <label class="form-label small">Online Color</label>
-                                                                <input type="color" class="form-control form-control-color" 
-                                                                       name="marker_{{ controller_type }}_online_color" 
-                                                                       value="{{ marker_config.get(controller_type, {}).get('online', {}).get('color', '#28a745') }}">
-                                                            </div>
-                                                            <div class="col-6">
-                                                                <label class="form-label small">Offline Color</label>
-                                                                <input type="color" class="form-control form-control-color" 
-                                                                       name="marker_{{ controller_type }}_offline_color" 
-                                                                       value="{{ marker_config.get(controller_type, {}).get('offline', {}).get('color', '#dc3545') }}">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            <!-- OpenStreetMap Configuration -->
-                            <div class="tab-pane fade" id="osm-pane" role="tabpanel">
-                                <div class="card modern-card">
-                                    <div class="card-header bg-info bg-opacity-10">
-                                        <h5 class="text-info mb-0">
-                                            <i class="fas fa-globe-europe me-2"></i>OpenStreetMap Settings
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="text-muted mb-3">Configure OpenStreetMap display options for map pages.</p>
-                                        <div class="row g-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label small">Default Tile Source</label>
-                                                <select class="form-select modern-input" name="osm_tile_source">
-                                                    <option value="osm" {% if customization.get_map_config().get('tile_source') == 'osm' %}selected{% endif %}>OpenStreetMap</option>
-                                                    <option value="toner" {% if customization.get_map_config().get('tile_source') == 'toner' %}selected{% endif %}>Stamen Toner</option>
-                                                    <option value="watercolor" {% if customization.get_map_config().get('tile_source') == 'watercolor' %}selected{% endif %}>Stamen Watercolor</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label small">Default Zoom</label>
-                                                <input type="number" class="form-control modern-input" name="osm_default_zoom" value="{{ customization.get_map_config().get('default_zoom', 12) }}" min="0" max="20">
-                                            </div>
-                                        </div>
-                                        <div class="row g-3 mt-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label small">Show Attribution</label>
-                                                <select class="form-select modern-input" name="osm_show_attribution">
-                                                    <option value="true" {% if customization.get_map_config().get('show_attribution', True) %}selected{% endif %}>Yes</option>
-                                                    <option value="false" {% if not customization.get_map_config().get('show_attribution', True) %}selected{% endif %}>No</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label small">Max Bounds (bbox)</label>
-                                                <input type="text" class="form-control modern-input" name="osm_max_bounds" placeholder="minLon,minLat,maxLon,maxLat" value="{{ customization.get_map_config().get('max_bounds', '') }}">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- CSS Configuration -->
-                            <div class="tab-pane fade" id="css-pane" role="tabpanel">
-                                <div class="card modern-card">
-                                    <div class="card-header bg-success bg-opacity-10">
-                                        <h5 class="text-success mb-0">
-                                            <i class="fas fa-code me-2"></i>Custom CSS
-                                        </h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold">CSS Code</label>
-                                            <textarea class="form-control font-monospace modern-textarea" 
-                                                      name="custom_css" rows="15" 
-                                                      placeholder="/* Enter your custom CSS here */&#10;.navbar-brand { font-weight: bold; }&#10;.card { border-radius: 10px; }">{{ customization.get_custom_css(page_name) }}</textarea>
-                                            <div class="form-text">Add custom styles for the {{ page_name }} page</div>
-                                        </div>
-                                        
-                                        <!-- Quick CSS Examples -->
-                                        <div class="row g-2 mb-3">
-                                            <div class="col-md-3">
-                                                <button type="button" class="btn btn-outline-primary btn-sm w-100 css-example" 
-                                                        data-css=".card { border-radius: 15px !important; }">
-                                                    <i class="fas fa-shapes me-1"></i>Rounded
-                                                </button>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm w-100 css-example" 
-                                                        data-css=".card:hover { transform: translateY(-2px); }">
-                                                    <i class="fas fa-magic me-1"></i>Hover Effects
-                                                </button>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <button type="button" class="btn btn-outline-info btn-sm w-100 css-example" 
-                                                        data-css="body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }">
-                                                    <i class="fas fa-palette me-1"></i>Gradient BG
-                                                </button>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <button type="button" class="btn btn-outline-dark btn-sm w-100 css-example" 
-                                                        data-css=".card { box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important; }">
-                                                    <i class="fas fa-sun me-1"></i>Shadows
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Save Section -->
-                            <div class="mt-5">
-                                <div class="card border-0 bg-light">
-                                    <div class="card-body text-center">
-                                        <h5 class="card-title text-success mb-3">
-                                            <i class="fas fa-save me-2"></i>Save Your Changes
-                                        </h5>
-                                        <p class="text-muted mb-4">Apply your customizations to the {{ page_name }} page</p>
-                                        
-                                        <div class="d-flex justify-content-center gap-3">
-                                            <button type="button" class="btn btn-outline-secondary" id="resetBtn">
-                                                <i class="fas fa-undo me-2"></i>Reset
-                                            </button>
-                                            <button type="submit" class="btn btn-success btn-lg px-5">
-                                                <i class="fas fa-check me-2"></i>Save Customizations
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modern JavaScript -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Tab switching with progress
-    const tabButtons = document.querySelectorAll('[data-bs-toggle="pill"]');
-    const progressBar = document.getElementById('main-progress');
-    const progressSteps = {
-        'header-pane': 25,
-        'footer-pane': 50,
-        'markers-pane': 70,
-        'osm-pane': 85,
-        'css-pane': 100
-    };
-    
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const target = this.getAttribute('data-bs-target').replace('#', '');
-            const progress = progressSteps[target] || 25;
-            progressBar.style.width = progress + '%';
-        });
-    });
-    
-    // CSS Examples
-    const cssExamples = document.querySelectorAll('.css-example');
-    const cssTextarea = document.querySelector('textarea[name="custom_css"]');
-    
-    cssExamples.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const css = this.getAttribute('data-css');
-            cssTextarea.value += '\n' + css;
-            
-            // Visual feedback
-            this.classList.add('btn-success');
-            this.innerHTML = '<i class="fas fa-check me-1"></i>Added!';
-            setTimeout(() => {
-                this.classList.remove('btn-success');
-                this.innerHTML = this.innerHTML.replace('<i class="fas fa-check me-1"></i>Added!', this.getAttribute('data-original'));
-            }, 1500);
-        });
-        
-        // Store original text
-        btn.setAttribute('data-original', btn.innerHTML);
-    });
-    
-    // Reset button
-    document.getElementById('resetBtn').addEventListener('click', function() {
-        if (confirm('Reset all changes? This cannot be undone.')) {
-            document.querySelector('form').reset();
-        }
-    });
-    
-    // Enhanced form controls
-    const colorInputs = document.querySelectorAll('input[type="color"]');
-    colorInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            this.style.transform = 'scale(1.1)';
-            setTimeout(() => this.style.transform = 'scale(1)', 200);
-        });
-    });
-});
-</script>
-
-<!-- Modern CSS Styles -->
+{% block extra_css %}
 <style>
-/* Gradient Header */
-.bg-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* Cloud Consistent Styling */
+.ui-customization-container {
+    min-height: calc(100vh - 120px);
+    background: #f8f9fa;
+    padding: 0;
 }
 
-/* Modern Navigation Pills */
-.modern-nav {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    border-radius: 25px;
-    padding: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.modern-nav .nav-link {
-    border-radius: 20px;
-    padding: 12px 20px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    border: none;
-    background: transparent;
-    color: #6c757d;
-}
-
-.modern-nav .nav-link.active {
+.ui-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    transform: translateY(-1px);
+    padding: 2rem 0;
+    margin-bottom: 2rem;
 }
 
-.modern-nav .nav-link:hover:not(.active) {
+.ui-header h1 {
+    margin: 0;
+    font-weight: 300;
+    letter-spacing: -1px;
+}
+
+.ui-header p {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+}
+
+.page-selector-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.customization-tabs {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.nav-pills-custom {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.nav-pills-custom .nav-link {
+    border-radius: 8px;
+    padding: 0.75rem 1.25rem;
+    color: #6c757d;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    transition: all 0.3s ease;
+    margin-right: 0.5rem;
+}
+
+.nav-pills-custom .nav-link:hover {
     background: rgba(102, 126, 234, 0.1);
     color: #667eea;
 }
 
-/* Progress Bar */
-.modern-progress {
-    height: 6px;
-    background: rgba(102, 126, 234, 0.1);
-    border-radius: 10px;
+.nav-pills-custom .nav-link.active {
+    background: #667eea;
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
-.modern-progress .progress-bar {
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    border-radius: 10px;
-    transition: width 0.5s ease;
+.tab-content-custom {
+    padding: 2rem;
 }
 
-/* Modern Cards */
-.modern-card {
-    border: none;
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
+.config-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #e9ecef;
 }
 
-.modern-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+.config-card h6 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
 }
 
-/* Form Controls */
-.modern-input {
-    border-radius: 10px;
-    border: 2px solid #e9ecef;
-    padding: 12px 15px;
-    transition: all 0.3s ease;
+.form-group-inline {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
-.modern-input:focus {
+.form-control-modern {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.form-control-modern:focus {
     border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
-    transform: scale(1.01);
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
 }
 
-.modern-color {
-    height: 50px;
-    border-radius: 10px;
+.color-input {
+    width: 60px;
+    height: 40px;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    cursor: pointer;
+}
+
+.marker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.marker-card {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.marker-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.marker-card-header {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+}
+
+.marker-icon {
+    width: 40px;
+    height: 40px;
+    background: #667eea;
+    color: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.25rem;
+}
+
+.marker-card-body {
+    padding: 1rem;
+}
+
+.marker-states {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.marker-state {
+    text-align: center;
+}
+
+.marker-state h6 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.online-state h6 {
+    color: #28a745;
+}
+
+.offline-state h6 {
+    color: #dc3545;
+}
+
+.icon-upload-zone {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
+    margin-bottom: 0.75rem;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: rgba(248, 249, 250, 0.5);
 }
 
-.modern-color:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+.icon-upload-zone:hover {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
 }
 
-.modern-textarea {
-    border-radius: 10px;
-    border: 2px solid #e9ecef;
-    font-family: 'Courier New', monospace;
-    line-height: 1.6;
+.icon-upload-zone.drag-over {
+    border-color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+    transform: scale(1.02);
+}
+
+.upload-icon {
+    font-size: 2rem;
+    color: #adb5bd;
+    margin-bottom: 0.5rem;
     transition: all 0.3s ease;
 }
 
-.modern-textarea:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+.icon-upload-zone:hover .upload-icon {
+    color: #667eea;
+    transform: scale(1.1);
 }
 
-/* Button Enhancements */
-.btn {
-    border-radius: 10px;
+.upload-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.icon-preview {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.icon-preview img {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    object-fit: contain;
+    background: #f8f9fa;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    margin-bottom: 0.5rem;
+}
+
+.remove-icon-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #dc3545;
+    color: white;
+    border: none;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.remove-icon-btn:hover {
+    background: #c82333;
+    transform: scale(1.1);
+}
+
+.icon-filename {
+    font-size: 0.75rem;
+    color: #495057;
+    font-weight: 500;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.btn-primary-custom {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 2rem;
     font-weight: 500;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    color: white;
 }
 
-.btn-success {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+.btn-primary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.btn-secondary-custom {
+    background: #6c757d;
     border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
-.btn-success:hover {
+.btn-secondary-custom:hover {
+    background: #5a6268;
+    color: white;
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
 }
 
-/* Animations */
-.tab-pane {
-    animation: fadeInUp 0.4s ease forwards;
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
 }
 
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.alert-custom {
+    border: none;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
 }
 
-/* Responsive */
+.alert-info-custom {
+    background: rgba(102, 126, 234, 0.1);
+    color: #495057;
+    border-left: 4px solid #667eea;
+}
+
+.success-indicator {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #28a745;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+}
+
 @media (max-width: 768px) {
-    .modern-nav {
-        flex-direction: column;
-        border-radius: 15px;
+    .form-group-inline {
+        grid-template-columns: 1fr;
     }
     
-    .modern-nav .nav-link {
-        margin-bottom: 5px;
-        text-align: center;
+    .marker-states {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .marker-grid {
+        grid-template-columns: 1fr;
     }
 }
+
+/* Additional styling for new tabs */
+.alert-warning-custom {
+    background: #fff3cd;
+    border: 1px solid #ffecb5;
+    color: #856404;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.alert-info-custom {
+    background: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.form-range {
+    margin-top: 0.5rem;
+}
+
+.logo-preview img, .background-preview img {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 0.5rem;
+    background: white;
+    display: block;
+}
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="ui-customization-container">
+    <!-- Header Section -->
+    <div class="ui-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <h1><i class="fas fa-paint-brush me-3"></i>UI Customization</h1>
+                    <p>Personaliseer de uitstraling van je LXCloud omgeving met moderne drag & drop interface</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid px-4">
+        <!-- Page Selector -->
+        <div class="page-selector-section">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="mb-0">Selecteer Pagina</h5>
+                    <small class="text-muted">Kies welke pagina je wilt aanpassen</small>
+                </div>
+                <div class="col-md-6">
+                    <select class="form-select form-control-modern" id="pageSelector">
+                        <option value="dashboard" {% if page_name == 'dashboard' %}selected{% endif %}>
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </option>
+                        <option value="__login__" {% if page_name == '__login__' %}selected{% endif %}>
+                            <i class="fas fa-sign-in-alt"></i> Login Pagina
+                        </option>
+                        <option value="controllers" {% if page_name == 'controllers' %}selected{% endif %}>
+                            <i class="fas fa-microchip"></i> Controllers
+                        </option>
+                        <option value="profile" {% if page_name == 'profile' %}selected{% endif %}>
+                            <i class="fas fa-user"></i> Profiel
+                        </option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customization Tabs -->
+        <div class="customization-tabs">
+            <ul class="nav nav-pills nav-pills-custom" id="customizationTabs">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#header-tab">
+                        <i class="fas fa-window-maximize me-2"></i>Header
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#footer-tab">
+                        <i class="fas fa-window-minimize me-2"></i>Footer
+                    </button>
+                </li>
+                {% if page_name == 'dashboard' %}
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#markers-tab">
+                        <i class="fas fa-map-marker-alt me-2"></i>Markers
+                    </button>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#css-tab">
+                        <i class="fas fa-code me-2"></i>Custom CSS
+                    </button>
+                </li>
+                {% if page_name == '__login__' %}
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#login-tab">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login Pagina
+                    </button>
+                </li>
+                {% endif %}
+            </ul>
+
+            <form method="POST" action="{{ url_for('admin.save_ui_customization', page_name=page_name) }}" enctype="multipart/form-data">
+                <div class="tab-content tab-content-custom">
+                    
+                    <!-- Header Tab -->
+                    <div class="tab-pane fade show active" id="header-tab">
+                        <div class="config-card">
+                            <h6><i class="fas fa-palette me-2"></i>Header Configuratie</h6>
+                            
+                            <div class="form-group-inline">
+                                <div>
+                                    <label class="form-label">Logo Tekst</label>
+                                    <input type="text" class="form-control form-control-modern" 
+                                           name="header_logo_text" 
+                                           value="{{ customization.get_header_config().get('logo_text', 'LXCloud') }}"
+                                           placeholder="LXCloud">
+                                </div>
+                                <div>
+                                    <label class="form-label">Logo Afbeelding</label>
+                                    <div class="icon-upload-zone" data-controller="header" data-state="logo">
+                                        {% if customization.logo_filename %}
+                                        <div class="icon-preview">
+                                            <img src="{{ url_for('static', filename='uploads/' + customization.logo_filename) }}" alt="Header Logo">
+                                            <div class="icon-filename">{{ customization.logo_filename }}</div>
+                                            <div class="success-indicator"><i class="fas fa-check"></i></div>
+                                        </div>
+                                        {% else %}
+                                        <div class="upload-icon">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                        </div>
+                                        <div class="upload-text">Sleep logo hier<br>of klik om te uploaden</div>
+                                        {% endif %}
+                                        <input type="file" accept="image/png,image/jpeg,image/svg+xml" hidden>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">PNG, JPG, SVG - Max 2MB</small>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group-inline">
+                                <div>
+                                    <label class="form-label">Achtergrondkleur</label>
+                                    <input type="color" class="color-input" 
+                                           name="header_bg_color" 
+                                           value="{{ customization.get_header_config().get('background_color', '#2c3e50') }}">
+                                </div>
+                                <div>
+                                    <label class="form-label">Tekstkleur</label>
+                                    <input type="color" class="color-input" 
+                                           name="header_text_color" 
+                                           value="{{ customization.get_header_config().get('text_color', '#ffffff') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Tab -->
+                    <div class="tab-pane fade" id="footer-tab">
+                        <div class="config-card">
+                            <h6><i class="fas fa-info-circle me-2"></i>Footer Configuratie</h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Footer Tekst</label>
+                                <input type="text" class="form-control form-control-modern" 
+                                       name="footer_text" 
+                                       value="{{ customization.get_footer_config().get('text', '© 2025 LXCloud') }}"
+                                       placeholder="© 2025 LXCloud">
+                            </div>
+                            
+                            <div class="form-group-inline">
+                                <div>
+                                    <label class="form-label">Achtergrondkleur</label>
+                                    <input type="color" class="color-input" 
+                                           name="footer_bg_color" 
+                                           value="{{ customization.get_footer_config().get('background_color', '#34495e') }}">
+                                </div>
+                                <div>
+                                    <label class="form-label">Tekstkleur</label>
+                                    <input type="color" class="color-input" 
+                                           name="footer_text_color" 
+                                           value="{{ customization.get_footer_config().get('text_color', '#ffffff') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Markers Tab -->
+                    {% if page_name == 'dashboard' %}
+                    <div class="tab-pane fade" id="markers-tab">
+                        <div class="alert alert-info-custom">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Sleep iconen naar de upload zones om custom markers te maken. Ondersteunde formaten: PNG, JPG, SVG.
+                        </div>
+                        
+                        {% set marker_config = customization.get_marker_config() %}
+                        {% set controller_types = [
+                            ('speedradar', 'Speed Radar', 'fas fa-tachometer-alt'),
+                            ('beaufortmeter', 'Beaufort Meter', 'fas fa-wind'),
+                            ('weatherstation', 'Weather Station', 'fas fa-cloud-sun'),
+                            ('aicamera', 'AI Camera', 'fas fa-camera'),
+                            ('default', 'Default', 'fas fa-microchip')
+                        ] %}
+                        
+                        <div class="marker-grid">
+                            {% for controller_type, display_name, icon_class in controller_types %}
+                            <div class="marker-card">
+                                <div class="marker-card-header">
+                                    <div class="marker-icon">
+                                        <i class="{{ icon_class }}"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ display_name }}</strong>
+                                        <div class="text-muted small">{{ controller_type }}</div>
+                                    </div>
+                                </div>
+                                <div class="marker-card-body">
+                                    <div class="marker-states">
+                                        <!-- Online State -->
+                                        <div class="marker-state online-state">
+                                            <h6>Online</h6>
+                                            <div class="icon-upload-zone" data-controller="{{ controller_type }}" data-state="online">
+                                                {% set online_icon = marker_config.get(controller_type, {}).get('online', {}).get('custom_icon') %}
+                                                {% if online_icon %}
+                                                <div class="icon-preview">
+                                                    <img src="{{ url_for('static', filename='uploads/' + online_icon) }}" alt="Online Icon">
+                                                    <div class="icon-filename">{{ online_icon }}</div>
+                                                    <button type="button" class="remove-icon-btn" data-controller="{{ controller_type }}" data-state="online">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                    <div class="success-indicator">
+                                                        <i class="fas fa-check"></i>
+                                                    </div>
+                                                </div>
+                                                {% else %}
+                                                <div class="upload-icon">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                </div>
+                                                <div class="upload-text">
+                                                    Sleep icon hier<br>of klik om te uploaden
+                                                </div>
+                                                {% endif %}
+                                                <input type="file" name="marker_{{ controller_type }}_online_icon_file" accept="image/png,image/jpeg,image/svg+xml" hidden>
+                                            </div>
+                                            <input type="color" class="color-input mx-auto" 
+                                                   name="marker_{{ controller_type }}_online_color" 
+                                                   value="{{ marker_config.get(controller_type, {}).get('online', {}).get('color', '#28a745') }}"
+                                                   title="Fallback kleur">
+                                        </div>
+                                        
+                                        <!-- Offline State -->
+                                        <div class="marker-state offline-state">
+                                            <h6>Offline</h6>
+                                            <div class="icon-upload-zone" data-controller="{{ controller_type }}" data-state="offline">
+                                                {% set offline_icon = marker_config.get(controller_type, {}).get('offline', {}).get('custom_icon') %}
+                                                {% if offline_icon %}
+                                                <div class="icon-preview">
+                                                    <img src="{{ url_for('static', filename='uploads/' + offline_icon) }}" alt="Offline Icon">
+                                                    <div class="icon-filename">{{ offline_icon }}</div>
+                                                    <button type="button" class="remove-icon-btn" data-controller="{{ controller_type }}" data-state="offline">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                    <div class="success-indicator">
+                                                        <i class="fas fa-check"></i>
+                                                    </div>
+                                                </div>
+                                                {% else %}
+                                                <div class="upload-icon">
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                </div>
+                                                <div class="upload-text">
+                                                    Sleep icon hier<br>of klik om te uploaden
+                                                </div>
+                                                {% endif %}
+                                                <input type="file" name="marker_{{ controller_type }}_offline_icon_file" accept="image/png,image/jpeg,image/svg+xml" hidden>
+                                            </div>
+                                            <input type="color" class="color-input mx-auto" 
+                                                   name="marker_{{ controller_type }}_offline_color" 
+                                                   value="{{ marker_config.get(controller_type, {}).get('offline', {}).get('color', '#dc3545') }}"
+                                                   title="Fallback kleur">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Icon Size Configuration -->
+                                    <div class="mt-3">
+                                        <label class="form-label small">Icon Hoogte (px)</label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <input type="range" class="form-range" 
+                                                   name="marker_{{ controller_type }}_icon_height" 
+                                                   min="16" max="64" step="4"
+                                                   value="{{ marker_config.get(controller_type, {}).get('icon_height', '32px').replace('px', '') }}"
+                                                   id="height_{{ controller_type }}">
+                                            <span class="badge bg-secondary" id="height_display_{{ controller_type }}">
+                                                {{ marker_config.get(controller_type, {}).get('icon_height', '32px') }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Custom CSS Tab -->
+                    <div class="tab-pane fade" id="css-tab">
+                        <div class="config-card">
+                            <h6><i class="fas fa-code me-2"></i>Custom CSS</h6>
+                            <p class="text-muted mb-3">Voeg aangepaste CSS toe die op alle pagina's wordt toegepast. Wees voorzichtig met wijzigingen.</p>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">CSS Code</label>
+                                <textarea class="form-control form-control-modern" 
+                                          name="custom_css" 
+                                          rows="12" 
+                                          placeholder="/* Voeg hier je custom CSS toe */
+.header {
+    background-color: #your-color;
+}
+
+.btn-primary {
+    background-color: #custom-blue;
+}">{{ customization.custom_css or '' }}</textarea>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i> CSS wordt automatisch toegepast op alle pagina's. Test wijzigingen eerst in een development omgeving.
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-warning-custom">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Let op:</strong> Ongeldige CSS kan de website layout verstoren. Maak een backup voordat je grote wijzigingen maakt.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if page_name == '__login__' %}
+                    <!-- Login Pagina Tab -->
+                    <div class="tab-pane fade" id="login-tab">
+                        <div class="config-card">
+                            <h6><i class="fas fa-sign-in-alt me-2"></i>Login Pagina Configuratie</h6>
+                            
+                            <div class="marker-grid">
+                                <!-- Login Logo Card -->
+                                <div class="marker-card">
+                                    <div class="marker-card-header">
+                                        <div class="marker-icon">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                        <div>
+                                            <strong>Login Logo</strong>
+                                            <div class="text-muted small">Hoofdlogo op login pagina</div>
+                                        </div>
+                                    </div>
+                                    <div class="marker-card-body">
+                                        <div class="marker-states">
+                                            <div class="marker-state" style="grid-column: 1 / -1;">
+                                                <h6>Upload Logo</h6>
+                                                <div class="icon-upload-zone" data-controller="login" data-state="logo">
+                                                    {% if login_config.get('login_logo') %}
+                                                    <div class="icon-preview">
+                                                        <img src="{{ url_for('static', filename='uploads/ui/' + login_config.get('login_logo')) }}" alt="Login Logo">
+                                                        <div class="icon-filename">{{ login_config.get('login_logo') }}</div>
+                                                        <button type="button" class="remove-icon-btn" data-controller="login" data-state="logo">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                        <div class="success-indicator">
+                                                            <i class="fas fa-check"></i>
+                                                        </div>
+                                                    </div>
+                                                    {% else %}
+                                                    <div class="upload-icon">
+                                                        <i class="fas fa-cloud-upload-alt"></i>
+                                                    </div>
+                                                    <div class="upload-text">
+                                                        Sleep logo hier<br>of klik om te uploaden
+                                                    </div>
+                                                    {% endif %}
+                                                    <input type="file" accept="image/png,image/jpeg,image/svg+xml" hidden>
+                                                </div>
+                                                <small class="text-muted d-block mt-2">PNG, JPG, SVG - Max 2MB</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Login Background Card -->
+                                <div class="marker-card">
+                                    <div class="marker-card-header">
+                                        <div class="marker-icon">
+                                            <i class="fas fa-paint-brush"></i>
+                                        </div>
+                                        <div>
+                                            <strong>Login Achtergrond</strong>
+                                            <div class="text-muted small">Achtergrondafbeelding login pagina</div>
+                                        </div>
+                                    </div>
+                                    <div class="marker-card-body">
+                                        <div class="marker-states">
+                                            <div class="marker-state" style="grid-column: 1 / -1;">
+                                                <h6>Upload Achtergrond</h6>
+                                                <div class="icon-upload-zone" data-controller="login" data-state="background">
+                                                    {% if login_config.get('login_background') %}
+                                                    <div class="icon-preview">
+                                                        <img src="{{ url_for('static', filename='uploads/ui/' + login_config.get('login_background')) }}" alt="Login Background" style="width: 100%; height: 80px; object-fit: cover;">
+                                                        <div class="icon-filename">{{ login_config.get('login_background') }}</div>
+                                                        <button type="button" class="remove-icon-btn" data-controller="login" data-state="background">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                        <div class="success-indicator">
+                                                            <i class="fas fa-check"></i>
+                                                        </div>
+                                                    </div>
+                                                    {% else %}
+                                                    <div class="upload-icon">
+                                                        <i class="fas fa-cloud-upload-alt"></i>
+                                                    </div>
+                                                    <div class="upload-text">
+                                                        Sleep achtergrond hier<br>of klik om te uploaden
+                                                    </div>
+                                                    {% endif %}
+                                                    <input type="file" accept="image/png,image/jpeg" hidden>
+                                                </div>
+                                                <small class="text-muted d-block mt-2">PNG, JPG - Max 5MB</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-secondary-custom" id="resetBtn">
+                        <i class="fas fa-undo me-2"></i>Reset
+                    </button>
+                    <button type="submit" class="btn btn-primary-custom">
+                        <i class="fas fa-save me-2"></i>Wijzigingen Opslaan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const PAGE_NAME = '{{ page_name }}';
+    // Page selector
+    const pageSelector = document.getElementById('pageSelector');
+    pageSelector.addEventListener('change', function() {
+        window.location.href = `/admin/ui-customization/${this.value}`;
+    });
+    
+    // Icon upload functionality with modern drag & drop
+    document.querySelectorAll('.icon-upload-zone').forEach(zone => {
+        // Click to upload (always find current input to avoid stale refs after innerHTML changes)
+        zone.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('remove-icon-btn') && !e.target.closest('.remove-icon-btn')) {
+                const inputEl = zone.querySelector('input[type="file"]');
+                if (inputEl) inputEl.click();
+            }
+        });
+        
+        // Drag and drop events
+        zone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            zone.classList.add('drag-over');
+        });
+        
+        zone.addEventListener('dragleave', (e) => {
+            if (!zone.contains(e.relatedTarget)) {
+                zone.classList.remove('drag-over');
+            }
+        });
+        
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0], zone, null);
+            }
+        });
+        
+        // File input change (delegate at zone level so it also works after DOM updates)
+        zone.addEventListener('change', (e) => {
+            if (e.target && e.target.matches('input[type="file"]') && e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0], zone, e.target);
+            }
+        });
+    });
+    
+    // Remove icon buttons
+    document.querySelectorAll('.remove-icon-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const zone = btn.closest('.icon-upload-zone');
+            const controller = btn.dataset.controller;
+            const state = btn.dataset.state;
+            removeIcon(zone, controller, state);
+        });
+    });
+    
+    // Height sliders
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
+        const controllerId = slider.id.replace('height_', '');
+        const display = document.getElementById(`height_display_${controllerId}`);
+        
+        slider.addEventListener('input', function() {
+            const value = this.value + 'px';
+            display.textContent = value;
+        });
+    });
+    
+    // Reset button
+    document.getElementById('resetBtn').addEventListener('click', function() {
+        if (confirm('Alle wijzigingen resetten? Dit kan niet ongedaan worden gemaakt.')) {
+            location.reload();
+        }
+    });
+});
+
+function handleFileUpload(file, zone, input) {
+    if (!file.type.startsWith('image/')) {
+        showAlert('Alleen afbeeldingen zijn toegestaan', 'danger');
+        return;
+    }
+
+    const controller = zone.dataset.controller;
+    const state = zone.dataset.state;
+
+    // Max size rules: markers 2MB, login logo 2MB, login background 5MB
+    const maxSize = (controller === 'login')
+        ? (state === 'background' ? 5 * 1024 * 1024 : 2 * 1024 * 1024)
+        : 2 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+        const mb = Math.round(maxSize / (1024 * 1024));
+        showAlert(`Bestand te groot! Maximum ${mb}MB toegestaan`, 'danger');
+        return;
+    }
+
+    // Toon direct lokale preview met "uploading" indicator
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const imgStyle = controller === 'login' && state === 'background'
+            ? 'style="width: 100%; height: 80px; object-fit: cover;"'
+            : '';
+        zone.innerHTML = `
+            <div class="icon-preview">
+                <img src="${e.target.result}" alt="${controller} ${state}" ${imgStyle}>
+                <div class="icon-filename">${file.name}</div>
+                <div class="text-muted small" style="margin-top:4px; display:flex; align-items:center; gap:6px;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Uploaden...
+                </div>
+            </div>
+        `;
+    };
+    reader.readAsDataURL(file);
+
+    if (controller === 'login') {
+        // Login uploads: separate endpoints
+        const formData = new FormData();
+        formData.append('file', file);
+        const endpoint = state === 'logo' ? '/admin/upload-login-logo' : '/admin/upload-login-background';
+
+        fetch(endpoint, { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const src = data.url || `/static/uploads/ui/${data.filename}`;
+
+                    zone.innerHTML = `
+                        <div class="icon-preview">
+                            <img src="${src}" alt="Login ${state}" ${state === 'background' ? 'style=\"width: 100%; height: 80px; object-fit: cover;\"' : ''}>
+                            <div class="icon-filename">${data.filename || file.name}</div>
+                            <button type="button" class="remove-icon-btn" data-controller="login" data-state="${state}"><i class="fas fa-times"></i></button>
+                            <div class="success-indicator"><i class="fas fa-check"></i></div>
+                        </div>
+                    `;
+
+                    const removeBtn = zone.querySelector('.remove-icon-btn');
+                    removeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        removeIcon(zone, 'login', state);
+                    });
+
+                    showAlert(`✅ Login ${state} geüpload!`, 'success');
+                } else {
+                    // Restore upload zone on error
+                    zone.innerHTML = `
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="upload-text">
+                            Sleep ${state === 'logo' ? 'logo' : 'achtergrond'} hier<br>of klik om te uploaden
+                        </div>
+                        <input type="file" accept="image/png,image/jpeg${state === 'logo' ? ',image/svg+xml' : ''}" hidden>
+                    `;
+                    showAlert(`❌ Upload mislukt: ${data.error}`, 'danger');
+                }
+            })
+            .catch(err => {
+                console.error('Login upload error:', err);
+                zone.innerHTML = `
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">
+                        Sleep ${state === 'logo' ? 'logo' : 'achtergrond'} hier<br>of klik om te uploaden
+                    </div>
+                    <input type="file" accept="image/png,image/jpeg${state === 'logo' ? ',image/svg+xml' : ''}" hidden>
+                `;
+                showAlert('❌ Upload mislukt: Netwerk fout', 'danger');
+            });
+        return;
+    }
+
+    // Marker uploads: existing endpoint
+    // Header AJAX upload
+    if (controller === 'header') {
+        const form = new FormData();
+        form.append('logo_file', file);
+        // Upload naar bestaande save endpoint met page_name
+        fetch(`/admin/ui-customization/${PAGE_NAME}`, { method: 'POST', body: form })
+            .then(r => r.text()) // save route redirect/flash; geen JSON
+            .then(() => {
+                // Toon succes preview (blijft hetzelfde)
+                zone.innerHTML = `
+                    <div class="icon-preview">
+                        <img src="${zone.querySelector('img') ? zone.querySelector('img').src : ''}" alt="Header Logo">
+                        <div class="icon-filename">${file.name}</div>
+                        <div class="success-indicator"><i class="fas fa-check"></i></div>
+                    </div>
+                `;
+                showAlert('✅ Header logo geüpload!', 'success');
+            })
+            .catch(err => {
+                console.error('Header upload error:', err);
+                zone.innerHTML = `
+                    <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <div class="upload-text">Sleep logo hier<br>of klik om te uploaden</div>
+                    <input type="file" accept="image/png,image/jpeg,image/svg+xml" hidden>
+                `;
+                showAlert('❌ Upload mislukt: Netwerk fout', 'danger');
+            });
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('controller_type', controller);
+    formData.append('state', state);
+    formData.append('page_name', 'dashboard');
+
+    fetch('/admin/upload-marker-icon', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                zone.innerHTML = `
+                    <div class="icon-preview">
+                        <img src="${data.icon_url}" alt="${state} Icon">
+                        <div class="icon-filename">${data.filename}</div>
+                        <button type="button" class="remove-icon-btn" data-controller="${controller}" data-state="${state}"><i class="fas fa-times"></i></button>
+                        <div class="success-indicator"><i class="fas fa-check"></i></div>
+                    </div>
+                `;
+
+                const removeBtn = zone.querySelector('.remove-icon-btn');
+                removeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeIcon(zone, controller, state);
+                });
+
+                showAlert(`✅ ${controller} ${state} icon geüpload!`, 'success');
+            } else {
+                zone.innerHTML = `
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">
+                        Sleep icon hier<br>of klik om te uploaden
+                    </div>
+                    <input type="file" name="marker_${controller}_${state}_icon_file" accept="image/png,image/jpeg,image/svg+xml" hidden>
+                `;
+                showAlert(`❌ Upload mislukt: ${data.error}`, 'danger');
+            }
+        })
+        .catch(err => {
+            console.error('Marker upload error:', err);
+            zone.innerHTML = `
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">
+                    Sleep icon hier<br>of klik om te uploaden
+                </div>
+                <input type="file" name="marker_${controller}_${state}_icon_file" accept="image/png,image/jpeg,image/svg+xml" hidden>
+            `;
+            showAlert('❌ Upload mislukt: Netwerk fout', 'danger');
+        });
+}
+
+function removeIcon(zone, controller, state) {
+    if (!confirm(`Weet je zeker dat je het ${state} icon voor ${controller} wilt verwijderen?`)) {
+        return;
+    }
+    
+    // Handle login removals differently
+    if (controller === 'login') {
+        const endpoint = state === 'logo' ? '/admin/remove-login-logo' : '/admin/remove-login-background';
+        
+        fetch(endpoint, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reset upload zone to empty state
+                zone.innerHTML = `
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">
+                        Sleep ${state === 'logo' ? 'logo' : 'achtergrond'} hier<br>of klik om te uploaden
+                    </div>
+                    <input type="file" accept="image/png,image/jpeg${state === 'logo' ? ',image/svg+xml' : ''}" hidden>
+                `;
+                
+                showAlert(`✅ Login ${state} verwijderd!`, 'success');
+            } else {
+                showAlert(`❌ Verwijderen mislukt: ${data.error}`, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Remove error:', error);
+            showAlert('❌ Verwijderen mislukt: Netwerk fout', 'danger');
+        });
+        return;
+    }
+    
+    // Original marker removal code
+    fetch('/admin/remove-marker-icon', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            page_name: 'dashboard',
+            controller_type: controller,
+            state: state
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reset upload zone to empty state
+            zone.innerHTML = `
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">
+                    Sleep icon hier<br>of klik om te uploaden
+                </div>
+                <input type="file" name="marker_${controller}_${state}_icon_file" accept="image/png,image/jpeg,image/svg+xml" hidden>
+            `;
+            
+            // Re-attach upload events
+            const input = zone.querySelector('input[type="file"]');
+            
+            zone.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('remove-icon-btn') && !e.target.closest('.remove-icon-btn')) {
+                    input.click();
+                }
+            });
+            
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('drag-over');
+            });
+            
+            zone.addEventListener('dragleave', (e) => {
+                if (!zone.contains(e.relatedTarget)) {
+                    zone.classList.remove('drag-over');
+                }
+            });
+            
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileUpload(files[0], zone, input);
+                }
+            });
+            
+            input.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0], zone, input);
+                }
+            });
+            
+            showAlert(data.message, 'success');
+        } else {
+            showAlert('Fout bij verwijderen: ' + data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error removing icon:', error);
+        showAlert('Fout bij verwijderen van icon', 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 350px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+    alertDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+
+
+function handleLoginFileUpload(file, zone, state) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const uploadType = state === 'logo' ? 'login-logo' : 'login-background';
+    
+    // Show loading state
+    zone.innerHTML = `
+        <div class="upload-loading">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <div>Uploading...</div>
+        </div>
+    `;
+    
+    // Upload file via AJAX to existing endpoints
+    fetch(`/admin/upload-${uploadType}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success preview
+            const imagePath = state === 'logo' ? 
+                `uploads/ui/logos/${data.filename}` : 
+                `uploads/ui/backgrounds/${data.filename}`;
+            
+            zone.innerHTML = `
+                <div class="icon-preview">
+                    <img src="/static/${imagePath}" alt="Login ${state}" ${state === 'background' ? 'style="width: 100%; height: 80px; object-fit: cover;"' : ''}>
+                    <div class="icon-filename">${data.filename}</div>
+                    <button type="button" class="remove-icon-btn" data-controller="login" data-state="${state}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="success-indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </div>
+            `;
+            
+            // Re-attach remove event
+            const removeBtn = zone.querySelector('.remove-icon-btn');
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeIcon(zone, 'login', state);
+            });
+            
+            showAlert(`✅ Login ${state} uploaded successfully!`, 'success');
+        } else {
+            // Restore upload zone on error
+            zone.innerHTML = `
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">
+                    Sleep ${state === 'logo' ? 'logo' : 'achtergrond'} hier<br>of klik om te uploaden
+                </div>
+            `;
+            showAlert(`❌ Upload failed: ${data.error}`, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        // Restore upload zone on error
+        zone.innerHTML = `
+            <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div class="upload-text">
+                Sleep ${state === 'logo' ? 'logo' : 'achtergrond'} hier<br>of klik om te uploaden
+            </div>
+        `;
+        showAlert('❌ Upload failed: Network error', 'danger');
+    });
+}
+
+</script>
 {% endblock %}

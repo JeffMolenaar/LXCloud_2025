@@ -6,26 +6,35 @@ import qrcode
 import io
 import base64
 
-from app.models import db, User
+from app.models import db, User, UICustomization
 from app.forms import RegistrationForm, LoginForm
 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    # Get login configuration
+    login_config = {}
+    try:
+        login_customization = UICustomization.query.filter_by(page_name='__login__').first()
+        if login_customization:
+            login_config = login_customization.get_login_config()
+    except Exception:
+        pass
+    
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         two_factor_token = request.form.get('two_factor_token', '')
-        
+
         user = User.query.filter_by(username=username).first()
-        
+
         if user and user.check_password(password):
             if user.two_factor_enabled:
                 if not two_factor_token:
                     # First step - password correct, need 2FA
                     session['2fa_user_id'] = user.id
-                    return render_template('auth/login.html', needs_2fa=True)
+                    return render_template('auth/login.html', needs_2fa=True, login_config=login_config)
                 else:
                     # Second step - verify 2FA
                     if user.verify_2fa_token(two_factor_token):
@@ -44,8 +53,9 @@ def login():
                 return redirect(url_for('dashboard.index'))
         else:
             flash('Invalid username or password', 'error')
-    
-    return render_template('auth/login.html')
+
+    return render_template('auth/login.html', login_config=login_config)
+
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():

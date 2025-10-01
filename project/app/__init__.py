@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.config import Config
 from app.models import db, User, UICustomization
 
+ 
 def create_app():
     # Get the project root directory with robust path resolution
     # Try multiple approaches to find the correct project root
@@ -26,20 +27,28 @@ def create_app():
         cwd_static_folder = os.path.join(cwd_project_root, 'static')
         
         if os.path.exists(cwd_template_folder):
-            print(f"Template folder not found at {template_folder}, using fallback: {cwd_template_folder}")
+            print(
+                f"Template folder not found at {template_folder}, "
+                f"using fallback: {cwd_template_folder}"
+            )
             project_root = cwd_project_root
             template_folder = cwd_template_folder
             static_folder = cwd_static_folder
     
     # Method 3: Last resort - check common deployment paths
     if not os.path.exists(template_folder):
-        deployment_paths = ['/home/lxcloud/LXCloud', '/app', os.path.expanduser('~/LXCloud')]
+        deployment_paths = [
+            '/home/lxcloud/LXCloud', '/app', os.path.expanduser('~/LXCloud')
+        ]
         for deployment_root in deployment_paths:
             deployment_template_folder = os.path.join(deployment_root, 'templates')
             deployment_static_folder = os.path.join(deployment_root, 'static')
             
             if os.path.exists(deployment_template_folder):
-                print(f"Template folder not found at {template_folder}, using deployment path: {deployment_template_folder}")
+                print(
+                    f"Template folder not found at {template_folder}, "
+                    f"using deployment path: {deployment_template_folder}"
+                )
                 project_root = deployment_root
                 template_folder = deployment_template_folder
                 static_folder = deployment_static_folder
@@ -56,22 +65,24 @@ def create_app():
         try:
             with open(auth_template, 'r') as f:
                 f.read(1)  # Read first character to test readability
-            print(f"Auth login template is readable")
+            print("Auth login template is readable")
         except Exception as e:
             print(f"Auth login template exists but is not readable: {e}")
     
     if not os.path.exists(template_folder):
-        print(f"ERROR: Template folder not found. Debugging info:")
+        print("ERROR: Template folder not found. Debugging info:")
         print(f"  - Current working directory: {os.getcwd()}")
         print(f"  - __file__: {__file__}")
         print(f"  - Absolute __file__: {os.path.abspath(__file__)}")
-        print(f"  - Directory contents at project_root:")
+        print("  - Directory contents at project_root:")
         try:
             project_contents = os.listdir(project_root)
             print(f"    {project_contents}")
         except Exception as e:
             print(f"    Could not list directory: {e}")
-        raise RuntimeError(f"Template folder not found. Tried: {template_folder}")
+        raise RuntimeError(
+            f"Template folder not found. Tried: {template_folder}"
+        )
     
     # Validate critical templates exist
     critical_templates = [
@@ -100,28 +111,28 @@ def create_app():
                 template_folder=template_folder,
                 static_folder=static_folder)
     
-    # Try to detect if MySQL is available and fallback to SQLite if not
+    # Use MariaDB database configuration
     original_config = Config()
     mysql_uri = original_config.SQLALCHEMY_DATABASE_URI
-    sqlite_uri = original_config.SQLITE_FALLBACK_URI
     
-    # Test database connectivity before initializing
+    # Test database connectivity
     database_uri = mysql_uri
     try:
-        print("Testing database connectivity...")
+        print("Testing MariaDB database connectivity...")
         from config.database_config import get_database_config
         db_config = get_database_config()
         
         if db_config.test_connection():
-            print("MariaDB/MySQL database connection successful")
+            print("MariaDB database connection successful")
         else:
-            raise Exception("Database connection test failed")
+            raise Exception("MariaDB connection test failed")
     except Exception as e:
-        print(f"MariaDB/MySQL connection failed: {e}")
-        print("Falling back to SQLite database")
-        database_uri = sqlite_uri
+        print(f"MariaDB connection failed: {e}")
+        print("ERROR: MariaDB is required for this application!")
+        print("Please ensure MariaDB is running and the database 'lxcloud' exists.")
+        raise Exception("Database connection failed - MariaDB required")
     
-    # Set the final database URI
+    # Set the MariaDB database URI
     app.config.from_object(Config)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
     
@@ -156,6 +167,9 @@ def create_app():
     def inject_config():
         # Get UI customizations for the current page
         ui_customizations = {}
+        global_custom_css = None
+        login_config = {}
+        
         try:
             customizations = UICustomization.query.all()
             for customization in customizations:
@@ -165,6 +179,23 @@ def create_app():
                     'logo_filename': getattr(customization, 'logo_filename', None),
                     'custom_css': customization.custom_css
                 }
+            
+            # Get global custom CSS from the configuration
+            global_config = UICustomization.get_config()
+            global_custom_css = global_config.get('custom_css')
+            
+            # Get login configuration
+            login_customization = UICustomization.query.filter_by(page_name='__login__').first()
+            if login_customization:
+                login_config = login_customization.get_login_config()
+                # Fallback for JSON parsing
+                if not login_config and login_customization.map_config:
+                    try:
+                        import json
+                        login_config = json.loads(login_customization.map_config)
+                    except (json.JSONDecodeError, TypeError):
+                        login_config = {}
+            
         except Exception as e:
             print(f"Warning: Could not load UI customizations: {e}")
             # Continue without UI customizations
@@ -172,6 +203,8 @@ def create_app():
         return dict(
             version=Config.get_version(),
             ui_customizations=ui_customizations,
+            global_custom_css=global_custom_css,
+            login_config=login_config,
             format_local_datetime=format_local_datetime
         )
     
@@ -183,6 +216,14 @@ def create_app():
         from app.routes.users import users_bp
         from app.routes.admin import admin_bp
         from app.routes.api import api_bp
+        
+        # Import debug route for testing
+        import sys
+        debug_route_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'debug_route.py')
+        if os.path.exists(debug_route_path):
+            sys.path.insert(0, os.path.dirname(debug_route_path))
+            from debug_route import debug_bp
+        
     except ImportError as e:
         print(f"Import error: {e}")
         raise
@@ -193,6 +234,27 @@ def create_app():
     app.register_blueprint(users_bp, url_prefix='/users')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(api_bp, url_prefix='/api')
+    
+    # Favicon route to prevent 404 errors
+    @app.route('/favicon.ico')
+    def favicon():
+        from flask import send_from_directory
+        favicon_path = os.path.join(app.static_folder, 'favicon.ico')
+        if os.path.exists(favicon_path):
+            return send_from_directory(
+                app.static_folder, 'favicon.ico', 
+                mimetype='image/vnd.microsoft.icon'
+            )
+        # Return empty response with 204 (No Content) if no favicon
+        from flask import make_response
+        response = make_response('', 204)
+        return response
+    
+    # Register debug blueprint if available
+    try:
+        app.register_blueprint(debug_bp, url_prefix='/debug')
+    except NameError:
+        pass  # debug_bp not available
     
     # Add global error handlers for API routes to ensure JSON responses
     @app.errorhandler(404)
@@ -286,52 +348,11 @@ def create_app():
             print("Initializing database...")
             db.create_all()
             
-            # Add migration for logo_filename column if it doesn't exist
-            try:
-                # Try to add the column if it doesn't exist
-                with db.engine.connect() as conn:
-                    # Check if column exists first
-                    result = conn.execute(db.text("PRAGMA table_info(ui_customization)"))
-                    columns = [row[1] for row in result.fetchall()]
-                    
-                    if 'logo_filename' not in columns:
-                        print("Adding logo_filename column to ui_customization table...")
-                        conn.execute(db.text("ALTER TABLE ui_customization ADD COLUMN logo_filename VARCHAR(255)"))
-                        conn.commit()
-                        print("Logo filename column added successfully")
-            except Exception as e:
-                print(f"Could not add logo_filename column (might already exist): {e}")
-            
-            # Add migration for timeout_seconds column if it doesn't exist
-            try:
-                # Try to add the column if it doesn't exist
-                with db.engine.connect() as conn:
-                    # Check if column exists first - handle both SQLite and MySQL
-                    try:
-                        if database_uri.startswith('sqlite'):
-                            # SQLite: Use PRAGMA table_info
-                            result = conn.execute(db.text("PRAGMA table_info(controllers)"))
-                            columns = [row[1] for row in result.fetchall()]
-                        else:
-                            # MySQL: Use INFORMATION_SCHEMA
-                            database_name = database_uri.split('/')[-1]
-                            result = conn.execute(db.text(
-                                "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
-                                "WHERE TABLE_SCHEMA = :db_name AND TABLE_NAME = 'controllers'"
-                            ), {"db_name": database_name})
-                            columns = [row[0] for row in result.fetchall()]
-                    except Exception as e:
-                        print(f"Could not check for timeout_seconds column: {e}")
-                        columns = []
-                    
-                    if 'timeout_seconds' not in columns:
-                        print("Adding timeout_seconds column to controllers table...")
-                        conn.execute(db.text("ALTER TABLE controllers ADD COLUMN timeout_seconds INTEGER"))
-                        conn.commit()
-                        print("Timeout seconds column added successfully")
-            except Exception as e:
-                print(f"Could not add timeout_seconds column (might already exist): {e}")
-            
+            # NOTE: All DDL migrations removed to prevent metadata locks
+            # Tables created via db.create_all() from model definitions
+            # All columns defined in models.py are automatically created
+            print("Database schema created from model definitions")
+
             print("Database initialized successfully")
             
             # Create default admin user if it doesn't exist
@@ -350,6 +371,9 @@ def create_app():
                 
         except Exception as e:
             print(f"Database initialization failed: {e}")
-            print("Application will continue but database functionality may be limited")
+            print(
+                "Application will continue but database "
+                "functionality may be limited"
+            )
     
     return app
